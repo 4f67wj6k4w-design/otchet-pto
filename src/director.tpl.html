@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2E671F">
+<meta name="robots" content="noindex">
+<title>Отчёт ПТО — ГК КРАШМАШ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+[hidden]{display:none!important}
+html,body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px)}
+{{CSS}}
+{{PTOCSS}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brandrow">
+      <div class="ttl"><div class="obj">Отчёт ПТО · план / факт выполнения</div><h1>Сводка для руководителя</h1></div>
+      <img src="{{LOGO}}" alt="Группа компаний КРАШМАШ" width="120" height="48">
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-sum" aria-selected="true" data-v="sum">Сводка</button>
+      <button role="tab" id="tab-obj" aria-selected="false" data-v="obj">Объекты</button>
+      <button role="tab" id="tab-ks" aria-selected="false" data-v="ks">КС и оплаты</button>
+    </nav>
+  </header>
+  <div id="status" class="banner" hidden></div>
+  <section class="card">
+    <div class="per">
+      <div class="seg" id="kind" role="group" aria-label="Вид периода">
+        <button type="button" data-k="week" aria-pressed="false">Неделя</button>
+        <button type="button" data-k="month" aria-pressed="true">Месяц</button>
+        <button type="button" data-k="quarter" aria-pressed="false">Квартал</button>
+        <button type="button" data-k="year" aria-pressed="false">Год</button>
+      </div>
+      <div class="pnav">
+        <button type="button" class="btn" id="p-prev" aria-label="Предыдущий период">‹</button>
+        <select id="p-sel" aria-label="Период"></select>
+        <button type="button" class="btn" id="p-next" aria-label="Следующий период">›</button>
+      </div>
+    </div>
+    <div class="hint" id="upd"></div>
+  </section>
+
+  <div id="v-sum">
+    <div class="secttl">Выполнение за период</div>
+    <div class="tiles" id="t-per"></div>
+    <div class="secttl">С начала года и прогноз на год</div>
+    <div class="tiles" id="t-ytd"></div>
+    <div class="secttl">КС периода по текущему статусу</div>
+    <div class="tiles" id="t-st"></div>
+    <div class="secttl">Деньги и портфель</div>
+    <div class="tiles" id="t-money"></div>
+    <div class="secttl" id="note-ttl">Главное за месяц</div>
+    <div class="note" id="note"></div>
+    <div class="grid2">
+      <section class="card"><h2 id="c1-t">План и факт по месяцам, млн руб</h2><div id="c1"></div></section>
+      <section class="card"><h2 id="c2-t">Накопительно: план, факт и прогноз, млн руб</h2><div id="c2"></div></section>
+      <section class="card"><h2>Ожидаемые поступления денег, млн руб</h2><div id="c3"></div><div class="hint">Просрочено — оплата по КС, срок которой уже прошёл. Дальше — по сроку оплаты договора; «по плану работ» — оценка: план месяца × 95% приходит в следующем месяце.</div></section>
+      <section class="card"><h2>По ответственным за период</h2><div class="tablewrap"><table class="t" id="resp-t"></table></div></section>
+    </div>
+    <button type="button" class="btn small" id="copy" style="margin-top:12px">Скопировать текст сводки</button>
+  </div>
+
+  <div id="v-obj" hidden>
+    <section class="card"><h2><span id="obj-ttl">План / факт по объектам</span><span id="obj-cnt"></span></h2>
+      <div class="tablewrap"><table class="t" id="obj-t"></table></div>
+      <div class="hint">Цвет %: красный — меньше 80%, жёлтый — 80–99%, зелёный — 100% и больше. План не больше остатка по договору. Показаны объекты в работе и объекты с планом или фактом.</div>
+    </section>
+    <section class="card"><h2>Крупнейшие договоры в работе: выполнено и остаток</h2><div id="c4"></div></section>
+  </div>
+
+  <div id="v-ks" hidden>
+    <section class="card"><h2><span>КС выбранного периода</span><span id="ks-cnt"></span></h2>
+      <div class="seg wrap3" id="ks-f" style="margin-bottom:8px">
+        <button type="button" data-f="" aria-pressed="true">Все</button>
+        <button type="button" data-f="review" aria-pressed="false">На согласов.</button>
+        <button type="button" data-f="agreed" aria-pressed="false">Не подписаны</button>
+        <button type="button" data-f="signed" aria-pressed="false">Ждут оплаты</button>
+        <button type="button" data-f="paid" aria-pressed="false">Оплачены</button>
+      </div>
+      <div class="list" id="ks-out"></div>
+    </section>
+    <section class="card"><h2><span>Просроченные оплаты на сегодня</span><span id="od-cnt"></span></h2><div class="list" id="od-out"></div>
+      <div class="hint">Все неоплаченные КС, у которых ожидаемая дата оплаты уже прошла (дата КС + срок оплаты договора; не подписана — +15 дней, не согласована — +30 дней).</div></section>
+    <section class="card"><h2>Гарантийные удержания к возврату</h2><div class="list" id="gar-out"></div></section>
+  </div>
+  <div class="foot">Данные из базы ПТО. Пока страница открыта, она обновляется каждые 10 минут.</div>
+</div>
+<script>{{CALC}}</script>
+<script>{{UI}}</script>
+<script>
+(function(){
+"use strict";
+const {$,el}=U;
+const db=U.db("pto-director");
+let RAW=null,M=null,kind=U.sget("pto-d-kind")||"month",period=null,view=U.sget("pto-d-tab")||"sum",ksF="";
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function status(t,cls){const s=$("status");s.hidden=!t;s.className="banner"+(cls?" "+cls:"");s.textContent=t||"";}
+function show(v){view=v;["sum","obj","ks"].forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-d-tab",v);if(M)draw();}
+async function load(quiet){
+  if(!db){status("Откройте страницу по ссылке руководителя (в ней адрес базы).","bad");return;}
+  if(!quiet)status("Загрузка…");
+  try{const j=await U.get(db,{a:"all"});RAW=j.data;status("");
+    $("upd").dataset.t="Обновлено в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});recalc();}
+  catch(e){status("Не удалось загрузить: "+(e.message||"нет связи"),"bad");}
+}
+function recalc(){
+  const today=U.todayISO();
+  M=PTO.compute(RAW,{kind,period,today});period=M.period.key;
+  const sel=$("p-sel");sel.innerHTML="";M.list.forEach(p=>{const o=el("option",null,p.label);o.value=p.key;if(p.key===period)o.selected=true;sel.appendChild(o);});
+  document.querySelectorAll("#kind button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===kind)));
+  $("upd").textContent=($("upd").dataset.t||"")+" · "+(M.ksCount?"КС за период: "+M.ksCount+" шт.":"⚠ за выбранный период КС в журнале нет")+" · данные по "+PTO.monthLabel(M.B20).toLowerCase();
+  draw();
+}
+function tile(host,label,val,unit,sub,cls,title){
+  const t=el("div","tile"+(cls?" "+cls:""));t.appendChild(el("small",null,label));
+  const b=el("b");b.textContent=val;if(unit){b.appendChild(el("u",null,unit));}if(title)b.title=title;t.appendChild(b);
+  if(sub){const s=el("div","s");sub.forEach((x,i)=>{if(i)s.appendChild(document.createTextNode(" · "));if(typeof x==="string")s.appendChild(document.createTextNode(x));else{const e=el("em",x.cls||null,x.v);s.appendChild(e);}});t.appendChild(s);}
+  host.appendChild(t);return t;
+}
+const M_=v=>U.mln(v);const R_=v=>U.rub0(v)+" руб";
+function pctTile(host,label,v,sub){const t=tile(host,label,U.pct(v,1),"",sub);t.querySelector("b").className=U.pctClass(v);}
+function draw(){
+  if(view==="sum")drawSum();else if(view==="obj")drawObj();else drawKs();
+}
+function drawSum(){
+  const m=M,mo=m.money;
+  let h=$("t-per");h.innerHTML="";
+  tile(h,m.week?"План месяца":"План за период",M_(m.plan),"млн",[m.week?"на неделю план не задаётся":{v:String(m.objPlanned)},m.week?"":"объектов с планом"].filter(Boolean),"",R_(m.plan));
+  tile(h,m.factLabel,M_(m.fact),"млн",m.week?["факт месяца всего",{v:M_(m.factMonth)+" млн"}]:["к пр. периоду",{v:m.prevChange===null?"—":(m.prevChange>0?"+":"")+U.pct(m.prevChange,0),cls:m.prevChange===null?"":(m.prevChange<0?"bad":"ok")}],"",R_(m.fact));
+  pctTile(h,m.week?"Выполнение плана месяца":"Выполнение плана",m.pct,["отклонение",{v:(m.dev>0?"+":"")+M_(m.dev)+" млн",cls:m.dev<0?"bad":"ok"}]);
+  tile(h,"КС оформлено за период",String(m.ksCount),"шт.",["объектов в работе",{v:String(m.objLive)}]);
+  h=$("t-ytd");h.innerHTML="";
+  tile(h,"План с начала года",M_(m.planY),"млн",["план года всего",{v:M_(m.planYear)+" млн"}],"",R_(m.planY));
+  tile(h,"Факт с начала года",M_(m.factY),"млн",["отклонение",{v:(m.devY>0?"+":"")+M_(m.devY)+" млн",cls:m.devY<0?"bad":"ok"}],"",R_(m.factY));
+  pctTile(h,"Выполнение с начала года",m.pctY,["темп для прогноза",{v:U.pct(m.rate,1)}]);
+  tile(h,"Прогноз выполнения "+m.year+" года",M_(m.forecast),"млн",["разрыв с планом года",{v:(m.gap>0?"+":"")+M_(m.gap)+" млн",cls:m.gap<0?"bad":"ok"}],"",R_(m.forecast));
+  h=$("t-st");h.innerHTML="";
+  tile(h,"На согласовании у заказчика",M_(m.st.review.sum),"млн",["КС",{v:m.st.review.n+" шт."}]);
+  tile(h,"Согласовано, не подписано",M_(m.st.agreed.sum),"млн",["КС",{v:m.st.agreed.n+" шт."}]);
+  tile(h,"Подписано, ждёт оплаты (к оплате)",M_(m.st.signed.sum),"млн",["КС",{v:m.st.signed.n+" шт."}]);
+  tile(h,"Оплачено (КС-2)",M_(m.st.paid.sum),"млн",["КС",{v:m.st.paid.n+" шт."}]);
+  h=$("t-money");h.innerHTML="";
+  tile(h,mo.expectTileCur?"Ожидаемые поступления в текущем месяце":"Ожидаемые поступления в периоде",M_(mo.expectTile),"млн",["просрочено оплат на сегодня",{v:M_(mo.overdue)+" млн",cls:mo.overdue>0?"bad":""}]);
+  tile(h,"Поступило денег от заказчиков в периоде",M_(mo.got),"млн",["в т.ч. авансы",{v:M_(mo.adv)+" млн"}]);
+  tile(h,"Гарантийные удержания: срок возврата в периоде",M_(mo.garIn),"млн",["всего не возвращено",{v:M_(mo.garAll)+" млн"}]);
+  tile(h,"Остаток по договорам на конец периода",M_(mo.remain),"млн",["портфель выполнен на",{v:U.pct(mo.portfolioPct,0)}]);
+  $("note-ttl").textContent="Главное за месяц «"+PTO.monthLabel(m.commentMonth)+"» — комментарий начальника ПТО";
+  $("note").textContent=m.comment||"— комментарий не заполнен —";$("note").classList.toggle("empty",!m.comment);
+  // графики
+  const plan=css("--c-plan"),fact=css("--c-fact"),bad=css("--bad");
+  const cm=m.chartMonths;
+  $("c1-t").textContent="План и факт по месяцам "+m.year+" г., млн руб";
+  U.chart($("c1"),{cats:cm.map(x=>x.label),series:[{name:"План",color:plan,values:cm.map(x=>x.plan)},{name:"Факт (КС-2)",color:fact,values:cm.map(x=>x.fact)}],
+    tipTitle:i=>PTO.monthLabel(cm[i].m),extraTip:i=>cm[i].plan&&cm[i].fact!=null?[{name:"Выполнение",color:"transparent",val:U.pct(cm[i].fact/cm[i].plan,0)}]:[]});
+  $("c2-t").textContent="Накопительно за "+m.year+" г.: план, факт и прогноз, млн руб";
+  U.chart($("c2"),{cats:cm.map(x=>x.label),series:[{name:"План нарастающим",color:plan,kind:"line",values:cm.map(x=>x.cumPlan)},{name:"Факт нарастающим",color:fact,kind:"line",values:cm.map(x=>x.cumFact)},{name:"Прогноз (план × темп)",color:fact,kind:"line",dash:true,values:cm.map(x=>x.cumFc)}],tipTitle:i=>PTO.monthLabel(cm[i].m)});
+  const ex=m.chartExpect;
+  U.chart($("c3"),{cats:ex.map(x=>x.label),series:[{name:"По КС (просрочено — красным)",color:fact,colors:ex.map(x=>x.over?bad:fact),values:ex.map(x=>x.over?x.sum:x.ks)},{name:"По плану работ (оценка)",color:plan,values:ex.map(x=>x.over?null:x.plan)}]});
+  const rt=$("resp-t");rt.innerHTML="";
+  rt.innerHTML='<thead><tr><th>Ответственный</th><th>Объектов</th><th>План</th><th>Факт</th><th>%</th><th>% с н.г.</th><th>Остаток по дог.</th></tr></thead>';
+  const tb=el("tbody");m.byResp.forEach(g=>{const tr=el("tr");tr.appendChild(el("td",null,g.resp));
+    [String(g.live),M_(g.planP),M_(g.factPct)].forEach(v=>tr.appendChild(el("td","n",v)));
+    tr.appendChild(el("td","n "+U.pctClass(g.pct),U.pct(g.pct)));tr.appendChild(el("td","n "+U.pctClass(g.pctY),U.pct(g.pctY)));tr.appendChild(el("td","n",M_(g.remain)));tb.appendChild(tr);});
+  rt.appendChild(tb);
+}
+function drawObj(){
+  const m=M;$("obj-ttl").textContent="План / факт по объектам — "+m.period.label+(m.week?" (факт недели; % — к плану месяца)":"");
+  $("obj-cnt").textContent=m.rows.length+" объектов · млн руб";
+  const t=$("obj-t");t.innerHTML='<thead><tr><th>Объект</th><th>План</th><th>Факт</th><th>%</th><th>Откл.</th><th>План с н.г.</th><th>Факт с н.г.</th><th>% с н.г.</th><th>Договор</th><th>Выполнено</th><th>Остаток</th><th>% дог.</th><th>Поступило</th></tr></thead>';
+  const tb=el("tbody");
+  m.rows.forEach(r=>{const tr=el("tr");const n=el("td","nm");n.appendChild(document.createTextNode(r.name));n.appendChild(el("small",null,[r.resp,r.status!=="В работе"?r.status:""].filter(Boolean).join(" · ")));tr.appendChild(n);
+    const c=(v,cls)=>tr.appendChild(el("td","n"+(cls?" "+cls:""),v));
+    c(M_(r.planP));c(M_(m.week?r.factP:r.factPct));c(U.pct(r.pct),U.pctClass(r.pct));c((r.dev>0?"+":"")+M_(r.dev),r.dev<0?"bad":"");c(M_(r.planY));c(M_(r.factY));c(U.pct(r.pctY),U.pctClass(r.pctY));
+    c(r.sum?M_(r.sum):"—");c(M_(r.doneEnd));c(r.sum?M_(r.remainEnd):"—",r.remainEnd<0?"bad":"");c(U.pct(r.pctC));c(r.got?M_(r.got):"—");tb.appendChild(tr);});
+  t.appendChild(tb);
+  const tf=el("tfoot");const tr=el("tr");tr.appendChild(el("td",null,"ИТОГО"));
+  const s=f=>m.rows.reduce((a,r)=>a+(f(r)||0),0);
+  [M_(m.plan),M_(m.fact),U.pct(m.pct),M_(m.dev),M_(m.planY),M_(m.factY),U.pct(m.pctY),M_(s(r=>r.sum)),M_(s(r=>r.doneEnd)),M_(m.money.remain),"",M_(m.money.got)].forEach(v=>tr.appendChild(el("td","n",v)));
+  tf.appendChild(tr);t.appendChild(tf);
+  U.hbars($("c4"),{rows:m.topContracts,series:[{key:"done",name:"Выполнено",color:css("--c-fact")},{key:"remain",name:"Остаток",color:css("--c-rest")}],label:r=>U.pct(r.done/(r.done+r.remain||1))});
+}
+function ksRow(k,showExp){
+  const b=el("div","li");
+  const d=el("div","d",k.date?U.ru(k.date):"без даты");d.appendChild(el("small",null,k.month?PTO.monthLabel(k.month):""));b.appendChild(d);
+  const o=el("div","o");o.appendChild(el("b",null,k.obj));o.appendChild(el("small",null,[k.num,k.resp].filter(Boolean).join(" · ")));b.appendChild(o);
+  const x=el("div","x");x.appendChild(el("span","st "+k.st,k.stLabel));if(k.pay==="Частично")x.appendChild(el("span","pill","оплачена частично"));b.appendChild(x);
+  const v=el("div","v",U.mln(k.ks2,2)+" млн");v.appendChild(el("small",null,"КС-2"));b.appendChild(v);
+  const p=el("div","v",k.st==="paid"?"—":U.mln(k.toPay,2)+" млн");
+  const od=k.expect&&k.expect<U.todayISO();p.appendChild(el("small",od?"over":null,k.st==="paid"?(k.payDate?"оплачена "+U.ru(k.payDate):"оплачена"):(k.expect?(od?"просрочено с ":"оплата ~")+U.ru(k.expect):"")));b.appendChild(p);
+  return b;
+}
+function drawKs(){
+  const m=M,list=m.ksList.filter(k=>!ksF||k.st===ksF);
+  $("ks-cnt").textContent=list.length+" шт. · "+U.mln(list.reduce((a,k)=>a+(+k.ks2||0),0))+" млн";
+  const o=$("ks-out");o.innerHTML="";
+  if(!list.length)o.appendChild(el("div","empty","КС нет."));
+  else{const hd=el("div","li hd");["Дата / месяц","Объект / КС","Статус","КС-2","К оплате"].forEach((t,i)=>hd.appendChild(el("div",i>2?"v":null,t)));o.appendChild(hd);list.forEach(k=>o.appendChild(ksRow(k)));}
+  const by=PTO.index(RAW),today=U.todayISO();
+  const od=(RAW.ks||[]).map(k=>PTO.enrichKs(k,by)).filter(k=>k.expect&&k.expect<today).sort((a,b)=>a.expect.localeCompare(b.expect));
+  $("od-cnt").textContent=od.length+" шт. · "+U.mln(od.reduce((a,k)=>a+(k.toPay||0),0))+" млн к оплате";
+  const oo=$("od-out");oo.innerHTML="";if(!od.length)oo.appendChild(el("div","empty","Просроченных оплат нет."));od.forEach(k=>oo.appendChild(ksRow(k)));
+  const g=$("gar-out");g.innerHTML="";
+  const gl=(RAW.gar||[]).filter(x=>x.status!=="Оплачена").sort((a,b)=>(a.due||"9").localeCompare(b.due||"9"));
+  if(!gl.length)g.appendChild(el("div","empty","Невозвращённых удержаний нет."));
+  gl.forEach(x=>{const b=el("div","li");const d=el("div","d",x.due?U.ru(x.due):"без срока");if(x.due&&x.due<today)d.appendChild(el("small","over","срок прошёл"));b.appendChild(d);
+    const o2=el("div","o");o2.appendChild(el("b",null,x.obj));o2.appendChild(el("small",null,[x.party,x.note].filter(Boolean).join(" · ")));b.appendChild(o2);
+    b.appendChild(el("div","x",""));b.appendChild(el("div","v",U.mln(x.sum,2)+" млн"));b.appendChild(el("div","v",x.status||""));g.appendChild(b);});
+}
+function text(){
+  const m=M,mo=m.money,L=[];
+  L.push("ОТЧЁТ ПТО — "+m.period.label);
+  L.push("План: "+M_(m.plan)+" млн, факт: "+M_(m.fact)+" млн, выполнение "+U.pct(m.pct,1)+" ("+(m.dev>0?"+":"")+M_(m.dev)+" млн)");
+  L.push("С начала года: план "+M_(m.planY)+", факт "+M_(m.factY)+" млн ("+U.pct(m.pctY,1)+"). Прогноз года: "+M_(m.forecast)+" млн при плане "+M_(m.planYear)+" млн");
+  L.push("КС периода: на согласовании "+M_(m.st.review.sum)+" млн ("+m.st.review.n+"), не подписаны "+M_(m.st.agreed.sum)+" млн ("+m.st.agreed.n+"), ждут оплаты "+M_(m.st.signed.sum)+" млн ("+m.st.signed.n+"), оплачены "+M_(m.st.paid.sum)+" млн ("+m.st.paid.n+")");
+  L.push("Просрочено оплат на сегодня: "+M_(mo.overdue)+" млн. Поступило за период: "+M_(mo.got)+" млн. Остаток по договорам: "+M_(mo.remain)+" млн");
+  const low=m.rows.filter(r=>r.planP>0&&r.pct!==null&&r.pct<0.8).sort((a,b)=>a.dev-b.dev).slice(0,5);
+  if(low.length){L.push("Отстают от плана:");low.forEach(r=>L.push("• "+r.name+": "+U.pct(r.pct)+" ("+M_(r.dev)+" млн)"));}
+  if(m.comment)L.push("Главное: "+m.comment);
+  return L.join("\n");
+}
+$("copy").onclick=()=>{if(!M)return;const t=text();const done=ok=>status(ok?"Текст сводки скопирован":"Не удалось скопировать",ok?"okb":"bad");
+  try{navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));}catch(e){done(false);}setTimeout(()=>status(""),2500);};
+document.querySelectorAll("#kind button").forEach(b=>b.onclick=()=>{kind=b.dataset.k;U.sset("pto-d-kind",kind);period=null;if(RAW)recalc();});
+document.querySelectorAll("#ks-f button").forEach(b=>b.onclick=()=>{ksF=b.dataset.f;document.querySelectorAll("#ks-f button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));drawKs();});
+$("p-sel").onchange=()=>{period=$("p-sel").value;recalc();};
+const step=n=>{const i=M.list.findIndex(p=>p.key===period)+n;if(i>=0&&i<M.list.length){period=M.list[i].key;recalc();}};
+$("p-prev").onclick=()=>step(-1);$("p-next").onclick=()=>step(1);
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(M&&view==="sum")drawSum();},200);});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(M)draw();});
+setInterval(()=>{if(!document.hidden)load(true);},600000);
+show(["sum","obj","ks"].includes(view)?view:"sum");load();
+})();
+</script>
+</body>
+</html>

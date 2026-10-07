@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2E671F">
+<meta name="robots" content="noindex">
+<title>Отчёт ПТО — ГК КРАШМАШ</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+[hidden]{display:none!important}
+html,body{margin:0}
+:root{padding-top:env(safe-area-inset-top,0px)}
+{{CSS}}
+{{PTOCSS}}
+.who{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.who label{flex:1 1 220px}
+.objrow{display:grid;grid-template-columns:minmax(0,1.5fr) 120px 150px 120px 120px;gap:4px 12px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font:inherit;color:inherit;width:100%}
+.objrow:hover{background:var(--sunk)}
+.objrow .v{font-family:var(--f-num);text-align:right;font-size:14px}
+.objrow .v small{display:block;color:var(--muted);font:11px var(--f-ui)}
+.objrow .o small{display:block;color:var(--muted);font-size:12px}
+.objrow.hd{cursor:default;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
+@media (max-width:760px){.objrow{grid-template-columns:1fr 1fr}.objrow .o{grid-column:1/-1}.objrow.hd{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brandrow">
+      <div class="ttl"><div class="obj">Все объекты · <span id="who-h">ПТО</span></div><h1>Отчёт ПТО</h1></div>
+      <img src="{{LOGO}}" alt="Группа компаний КРАШМАШ" width="120" height="48">
+    </div>
+    <nav class="tabs" role="tablist">
+      <button role="tab" id="tab-ks" aria-selected="true" data-v="ks">Журнал КС</button>
+      <button role="tab" id="tab-money" aria-selected="false" data-v="money">Деньги</button>
+      <button role="tab" id="tab-plan" aria-selected="false" data-v="plan">План</button>
+      <button role="tab" id="tab-obj" aria-selected="false" data-v="obj">Объекты</button>
+      <button role="tab" id="tab-more" aria-selected="false" data-v="more">Ещё</button>
+    </nav>
+  </header>
+  <div id="status" class="banner" hidden></div>
+
+  <section class="card" id="who-card" hidden>
+    <h2>Кто вносит данные</h2>
+    <div class="who"><label class="f">Ваша фамилия (пишется в журнал изменений базы)<input id="who-in" autocomplete="family-name" placeholder="Например: Иванов"></label>
+      <button type="button" class="btn primary" id="who-ok">Готово</button></div>
+  </section>
+
+  <!-- ЖУРНАЛ КС -->
+  <div id="v-ks">
+    <section class="card">
+      <div class="toolbar">
+        <label class="f">Поиск<input id="ks-q" type="search" placeholder="объект, № КС, примечание"></label>
+        <label class="f">Объект<select id="ks-obj"></select></label>
+        <label class="f">Статус<select id="ks-st">
+          <option value="">Все КС</option><option value="open">Все неоплаченные</option><option value="review">На согласовании</option><option value="agreed">Согласована, не подписана</option>
+          <option value="signed">Подписана, ждёт оплаты</option><option value="paid">Оплачена</option><option value="overdue">Оплата просрочена</option><option value="ctrl">Ошибки заполнения</option></select></label>
+        <label class="f">Отчётный месяц<select id="ks-m"></select></label>
+        <button type="button" class="btn primary" id="ks-add">+ Новая КС</button>
+      </div>
+      <div class="sumline" id="ks-sum"></div>
+    </section>
+    <section class="card"><div class="list" id="ks-out"><div class="empty">Загрузка…</div></div>
+      <button type="button" class="btn small" id="ks-more" hidden style="margin-top:8px">Показать ещё</button></section>
+  </div>
+
+  <!-- ДЕНЬГИ -->
+  <div id="v-money" hidden>
+    <section class="card"><h2><span>Поступления денег от заказчиков</span><span id="pay-cnt"></span></h2>
+      <div class="toolbar" style="margin-bottom:6px"><label class="f">Объект<select id="pay-obj"></select></label><label class="f">Месяц<select id="pay-m"></select></label>
+        <button type="button" class="btn primary" id="pay-add">+ Поступление</button></div>
+      <div class="hint" style="margin-bottom:6px">Каждая оплата по выписке банка — отдельной строкой. Частичная оплата — тоже отдельной строкой.</div>
+      <div class="list" id="pay-out"></div></section>
+    <section class="card"><h2><span>Гарантийные удержания к возврату</span><span id="gar-cnt"></span></h2>
+      <div class="toolbar" style="margin-bottom:6px"><span></span><button type="button" class="btn primary" id="gar-add">+ Удержание</button></div>
+      <div class="list" id="gar-out"></div></section>
+  </div>
+
+  <!-- ПЛАН -->
+  <div id="v-plan" hidden>
+    <section class="card">
+      <div class="toolbar">
+        <label class="f">Год<select id="pl-y"></select></label>
+        <label class="f">Объекты<select id="pl-f"><option value="live">В работе и с планом</option><option value="all">Все</option></select></label>
+      </div>
+      <div class="hint">Одна ячейка = план выполнения объекта на месяц, руб. Под ячейкой мелко — факт КС-2 за месяц. Изменённые ячейки подсвечены, сохраняются кнопкой внизу.</div>
+    </section>
+    <section class="card"><div class="tablewrap"><table class="t plan-t" id="pl-t"></table></div></section>
+  </div>
+
+  <!-- ОБЪЕКТЫ -->
+  <div id="v-obj" hidden>
+    <section class="card">
+      <div class="toolbar">
+        <label class="f">Поиск<input id="ob-q" type="search" placeholder="название, ответственный"></label>
+        <label class="f">Статус<select id="ob-st"><option value="live">Все, кроме завершённых</option><option value="">Все</option><option>В работе</option><option>Нет ДС</option><option>Нет договора</option><option>Приостановлен</option><option>Завершён</option><option value="ctrl">С замечаниями</option></select></label>
+        <button type="button" class="btn primary" id="ob-add">+ Объект</button>
+      </div>
+      <div class="sumline" id="ob-sum"></div>
+    </section>
+    <section class="card"><div class="list" id="ob-out"></div></section>
+  </div>
+
+  <!-- ЕЩЁ -->
+  <div id="v-more" hidden>
+    <section class="card"><h2>Главное за месяц — комментарий начальника ПТО</h2>
+      <div class="row"><label class="f" style="flex:0 1 220px">Месяц<select id="nt-m"></select></label></div>
+      <label class="f" style="margin-top:8px">Текст (выводится руководителю на «Сводке»)<textarea id="nt-t" rows="5" placeholder="Что главное за месяц: срывы, риски, договорённости с заказчиками…"></textarea></label>
+      <div style="margin-top:8px"><button type="button" class="btn primary" id="nt-save">Сохранить комментарий</button></div></section>
+    <section class="card"><h2>Списки выбора</h2>
+      <div class="row"><label class="f">Ответственные (руководители объектов) — по одной фамилии в строке<textarea id="ls-r" rows="7"></textarea></label>
+        <label class="f">Специалисты ПТО — по одному в строке<textarea id="ls-p" rows="7"></textarea></label></div>
+      <div style="margin-top:8px"><button type="button" class="btn" id="ls-save">Сохранить списки</button></div></section>
+    <section class="card"><h2>Кто вносит данные</h2>
+      <div class="who"><label class="f">Фамилия на этом устройстве<input id="who-in2"></label><button type="button" class="btn" id="who-ok2">Сохранить</button></div></section>
+    <section class="card"><h2>Как заполнять</h2>
+      <ol style="margin:0;padding-left:20px;line-height:1.5">
+        <li><b>Раз в месяц</b> — вкладка «План»: план выполнения по каждому объекту на месяц.</li>
+        <li><b>По каждой КС</b> — «Журнал КС» → «+ Новая КС»: дата, объект, № КС, сумма КС-2. Отчётный месяц подставится по дате сам; «К оплате КС-3» — если пусто, считается по % удержания договора.</li>
+        <li><b>По мере движения КС</b> открывайте ту же КС и меняйте статусы: согласование → подписание → оплата, после оплаты — дата оплаты. Новую строку для той же КС не заводите — будет двойной счёт.</li>
+        <li><b>Деньги от заказчика</b> — «Деньги» → «+ Поступление», по выписке банка.</li>
+        <li><b>В конце месяца</b> начальник ПТО пишет «Главное за месяц» (здесь, выше).</li>
+        <li>Новый объект — «Объекты» → «+ Объект». Объект закрыт — статус «Завершён», не удалять.</li>
+      </ol>
+      <div class="hint">Все изменения пишутся в Google Таблицу «База ПТО» и на лист «Журнал изменений» (кто и когда).</div></section>
+  </div>
+  <div class="foot" id="foot">Отчёт ПТО · ГК КРАШМАШ</div>
+</div>
+
+<div class="savebar" id="pl-bar" hidden><div class="in"><div class="msg" id="pl-msg"></div>
+  <button type="button" class="btn" id="pl-undo">Отменить</button><button type="button" class="btn primary" id="pl-save">Сохранить план</button></div></div>
+
+<dialog class="ed" id="ed"><form method="dialog" id="ed-f">
+  <div class="eh"><h3 id="ed-t"></h3><button type="button" id="ed-x" aria-label="Закрыть">×</button></div>
+  <div class="eb" id="ed-b"></div>
+  <div class="ef"><button type="button" class="btn danger" id="ed-del">Удалить</button><span class="grow"></span>
+    <button type="button" class="btn" id="ed-c">Отмена</button><button type="submit" class="btn primary" id="ed-s">Сохранить</button></div>
+</form></dialog>
+
+<script>{{CALC}}</script>
+<script>{{UI}}</script>
+<script>
+(function(){
+"use strict";
+const {$,el}=U;
+const db=U.db("pto-db");
+let RAW=null,view=U.sget("pto-tab")||"ks",who=U.sget("pto-who")||"",ksLimit=150;
+const STATUSES=["В работе","Нет ДС","Нет договора","Приостановлен","Завершён"];
+const PAYKIND=["Оплата КС","Аванс","Возврат ГУ","Прочее"];
+const SCHED=["Ежемесячно (25–30 число)","Дважды в месяц (15 и 30 число)"];
+
+function status(t,cls,ms){const s=$("status");s.hidden=!t;s.className="banner"+(cls?" "+cls:"");s.textContent=t||"";clearTimeout(status.t);if(ms)status.t=setTimeout(()=>{s.hidden=true;},ms);}
+function setWho(v){who=(v||"").trim();U.sset("pto-who",who);$("who-h").textContent=who||"ПТО";$("who-card").hidden=!!who;$("who-in2").value=who;}
+function show(v){
+  if(view==="plan"&&v!=="plan"&&Object.keys(planCh).length&&!confirm("План не сохранён. Уйти без сохранения?"))return;
+  if(v!=="plan"){planCh={};$("pl-bar").hidden=true;}
+  view=v;["ks","money","plan","obj","more"].forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-tab",v);render();}
+
+// ---------- загрузка / запись ----------
+async function load(quiet){
+  if(!db){status("Откройте страницу по ссылке ПТО (в ней адрес базы).","bad");return;}
+  if(!RAW){try{RAW=JSON.parse(U.sget("pto-cache")||"null");}catch(e){}if(RAW)render();}
+  if(!quiet)status("Загрузка базы…");
+  try{const j=await U.get(db,{a:"all"});if(j.role!=="pto"){status("Эта ссылка — только для просмотра. Для ввода нужна ссылка ПТО.","bad");}else status("");
+    RAW=j.data;U.sset("pto-cache",JSON.stringify(RAW));$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
+  catch(e){status("Не удалось загрузить базу: "+(e.message||"нет связи")+(RAW?" — показана сохранённая копия":""),"bad");}
+}
+const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects"};
+async function save(t,rows,extra){
+  if(!who){status("Сначала укажите свою фамилию (вверху страницы).","bad");$("who-card").hidden=false;$("who-in").focus();throw new Error("who");}
+  const j=await U.post(db,Object.assign({a:"save",t,rows,by:who},extra||{}));
+  if(j.conflicts&&j.conflicts.length){await load(true);throw new Error("Эту запись только что изменил другой сотрудник. Данные обновлены — откройте и внесите изменение ещё раз.");}
+  const arr=RAW[TBL[t]];
+  (j.saved||[]).forEach(s=>{const r=rows.find(x=>x.id===s.id);const row=Object.assign({},r,{upd:s.upd,by:who});delete row.base;const i=arr.findIndex(x=>x.id===s.id);if(i>=0)arr[i]=Object.assign({},arr[i],row);else arr.push(row);});
+  if(extra&&extra.del)extra.del.forEach(id=>{const i=arr.findIndex(x=>x.id===id);if(i>=0)arr.splice(i,1);});
+  if(extra&&extra.rename){const {from,to}=extra.rename;["ks","pays","gar"].forEach(k=>RAW[k].forEach(r=>{if(r.obj===from)r.obj=to;}));RAW.plan.forEach(p=>{if(p.obj===from){p.obj=to;p.id=to+"|"+p.month;}});}
+  U.sset("pto-cache",JSON.stringify(RAW));return j;
+}
+async function del(t,id){
+  if(!who){status("Сначала укажите свою фамилию.","bad");throw new Error("who");}
+  await U.post(db,{a:"del",t,ids:[id],by:who});
+  const arr=RAW[TBL[t]];const i=arr.findIndex(x=>x.id===id);if(i>=0)arr.splice(i,1);U.sset("pto-cache",JSON.stringify(RAW));
+}
+
+// ---------- справочники для выбора ----------
+const objNames=()=>RAW.objects.map(o=>o.name);
+function objSelect(sel,val,all){
+  sel.innerHTML="";if(all){const o=el("option",null,all);o.value="";sel.appendChild(o);}
+  else{const o=el("option",null,"— выберите объект —");o.value="";sel.appendChild(o);}
+  const live=RAW.objects.filter(o=>o.status!=="Завершён"),done=RAW.objects.filter(o=>o.status==="Завершён");
+  [["В работе и прочие",live],["Завершённые",done]].forEach(([g,list])=>{if(!list.length)return;const og=el("optgroup");og.label=g;list.forEach(o=>{const op=el("option",null,o.name);op.value=o.name;og.appendChild(op);});sel.appendChild(og);});
+  if(val&&!objNames().includes(val)){const op=el("option",null,val+" (нет в справочнике)");op.value=val;sel.appendChild(op);}
+  sel.value=val||"";
+}
+function monthList(){
+  const ms=new Set();const y=+U.todayISO().slice(0,4);
+  for(let yy=2025;yy<=y+1;yy++)for(let m=1;m<=12;m++)ms.add(yy+"-"+String(m).padStart(2,"0"));
+  RAW.ks.forEach(k=>k.month&&ms.add(k.month));RAW.plan.forEach(p=>ms.add(p.month));
+  return [...ms].sort();
+}
+function monthSelect(sel,val,all){sel.innerHTML="";if(all!==undefined){const o=el("option",null,all);o.value="";sel.appendChild(o);}
+  monthList().slice().reverse().forEach(m=>{const o=el("option",null,PTO.monthLabel(m));o.value=m;sel.appendChild(o);});sel.value=val||"";}
+
+// ---------- окно редактирования ----------
+let ED=null;
+function field(spec,val){
+  const w=el("label","f");const lt=el("span",null,spec.label);if(spec.req)lt.appendChild(el("b","flagtxt"," *"));w.appendChild(lt);let inp;
+  if(spec.type==="seg")w.style.flex="2 1 "+(spec.opts.length>2?300:240)+"px";
+  if(spec.type==="seg"){
+    inp=el("div","seg"+(spec.opts.length>2?" wrap3":""));inp.setAttribute("role","group");inp.dataset.v=val||"";
+    spec.opts.forEach(o=>{const b=el("button",null,o);b.type="button";b.setAttribute("aria-pressed",String(o===val));b.onclick=()=>{inp.dataset.v=o;inp.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));ED.calc&&ED.calc();};inp.appendChild(b);});
+    inp.getV=()=>inp.dataset.v;
+  }else if(spec.type==="select"||spec.type==="obj"||spec.type==="month"){
+    inp=el("select");
+    if(spec.type==="obj")objSelect(inp,val);
+    else if(spec.type==="month")monthSelect(inp,val,"—");
+    else{(spec.blank!==false?[""]:[]).concat(spec.opts).forEach(o=>{const op=el("option",null,o===""?"—":String(o));op.value=o;inp.appendChild(op);});
+      if(val!==undefined&&val!==null&&val!==""&&!spec.opts.map(String).includes(String(val))){const op=el("option",null,String(val));op.value=val;inp.appendChild(op);}inp.value=val==null?"":String(val);}
+    inp.getV=()=>inp.value;
+  }else if(spec.type==="textarea"){inp=el("textarea");inp.rows=spec.rows||2;inp.value=val||"";inp.getV=()=>inp.value.trim();}
+  else{
+    inp=el("input");
+    if(spec.type==="date"){inp.type="date";inp.value=val||"";inp.getV=()=>inp.value;}
+    else if(spec.type==="num"||spec.type==="pct"){inp.inputMode="decimal";inp.autocomplete="off";
+      const v=spec.type==="pct"?(val==null||val===""?"":String(+(val*100).toFixed(4)).replace(".",",")):(val==null||val===""?"":U.rub(val));inp.value=v;
+      inp.getV=()=>{const n=U.parseNum(inp.value);if(n===null)return null;if(isNaN(n))return NaN;return spec.type==="pct"?n/100:n;};
+      inp.addEventListener("blur",()=>{const n=U.parseNum(inp.value);if(n!==null&&!isNaN(n)&&spec.type==="num")inp.value=U.rub(n);});}
+    else{inp.type="text";inp.value=val||"";inp.getV=()=>inp.value.trim();if(spec.list){const id="dl-"+spec.f;let dl=document.getElementById(id);if(!dl){dl=el("datalist");dl.id=id;document.body.appendChild(dl);}dl.innerHTML="";spec.list().forEach(x=>dl.appendChild(Object.assign(el("option"),{value:x})));inp.setAttribute("list",id);}}
+    if(spec.ph)inp.placeholder=spec.ph;
+  }
+  inp.addEventListener("input",()=>ED.calc&&ED.calc());inp.addEventListener("change",()=>ED.calc&&ED.calc());
+  w.appendChild(inp);w.inp=inp;return w;
+}
+function openEd(cfg){
+  ED=cfg;ED.inp={};$("ed-t").textContent=cfg.title;const b=$("ed-b");b.innerHTML="";
+  cfg.layout.forEach(line=>{const row=el("div","row");line.forEach(spec=>{const w=field(spec,cfg.row[spec.f]);if(spec.grow)w.style.flex=spec.grow;ED.inp[spec.f]=w.inp;row.appendChild(w);});b.appendChild(row);});
+  ED.calcBox=el("div","calc");ED.calcBox.hidden=true;b.appendChild(ED.calcBox);
+  ED.warnBox=el("div","warnbox");ED.warnBox.hidden=true;b.appendChild(ED.warnBox);
+  if(cfg.meta){b.appendChild(el("div","hint",cfg.meta));}
+  const d=$("ed-del");d.hidden=!cfg.onDelete;d.classList.remove("armed");d.textContent="Удалить";
+  $("ed-s").disabled=false;$("ed-s").textContent="Сохранить";
+  if(cfg.init)cfg.init();if(ED.calc)ED.calc();
+  $("ed").showModal();
+  const first=b.querySelector("input,select,textarea");if(first&&cfg.isNew)setTimeout(()=>first.focus(),50);
+}
+const val=f=>ED.inp[f].getV();
+function setCalc(items){const c=ED.calcBox;c.innerHTML="";c.hidden=!items.length;items.forEach(([l,v])=>{const s=el("span",null,l+" ");s.appendChild(el("b",null,v));c.appendChild(s);});}
+function setWarn(t,bad){ED.warnBox.hidden=!t;ED.warnBox.textContent=t||"";ED.warnBox.className="warnbox"+(bad?" bad":"");}
+$("ed-x").onclick=$("ed-c").onclick=()=>$("ed").close();
+$("ed-f").addEventListener("submit",async ev=>{ev.preventDefault();
+  const s=$("ed-s");if(s.disabled)return;
+  let row;try{row=ED.collect();}catch(e){setWarn(e.message,true);return;}
+  s.disabled=true;s.textContent="Сохраняю…";
+  try{await ED.onSave(row);$("ed").close();status("Сохранено","okb",2500);render();}
+  catch(e){if(e.message!=="who")setWarn("Не сохранилось: "+e.message,true);else $("ed").close();}
+  finally{s.disabled=false;s.textContent="Сохранить";}
+});
+$("ed-del").onclick=async()=>{const d=$("ed-del");if(!d.classList.contains("armed")){d.classList.add("armed");d.textContent="Точно удалить?";return;}
+  d.disabled=true;try{await ED.onDelete();$("ed").close();status("Удалено","okb",2500);render();}catch(e){if(e.message!=="who")setWarn("Не удалилось: "+e.message,true);}finally{d.disabled=false;}};
+const need=(v,name)=>{if(v===null||v===undefined||v==="")throw new Error("Заполните: "+name);return v;};
+const numOk=(v,name)=>{if(v!==null&&isNaN(v))throw new Error("Неверное число: "+name);return v;};
+
+// ---------- ЖУРНАЛ КС ----------
+function ksEditor(k){
+  const isNew=!k;k=k||{id:U.uid("k"),date:U.todayISO(),month:"",agr:"Не согласована",sign:"Не подписана",pay:"Не оплачена"};
+  let monthTouched=!!k.month&&k.month!==(k.date||"").slice(0,7);
+  openEd({title:isNew?"Новая КС":"КС: "+(k.num||k.obj),row:k,isNew,
+    meta:isNew?"":"Изменено: "+(k.upd?new Date(k.upd).toLocaleString("ru-RU"):"при переносе из Excel")+(k.by?" · "+k.by:""),
+    layout:[
+      [{f:"date",label:"Дата КС",type:"date"},{f:"month",label:"Отчётный месяц",type:"month"}],
+      [{f:"obj",label:"Объект",type:"obj",req:1}],
+      [{f:"num",label:"№ КС / описание",ph:"например: №25 (15.01–30.01)",grow:"2 1 240px"},{f:"period",label:"Период работ",ph:"01.01–15.01"}],
+      [{f:"ks2",label:"Выполнение КС-2, руб",type:"num",req:1},{f:"ks3",label:"К оплате КС-3, руб",type:"num",ph:"по % удержания"}],
+      [{f:"agr",label:"Согласование",type:"seg",opts:["Согласована","Не согласована"]}],
+      [{f:"sign",label:"Подписание",type:"seg",opts:["Подписана","Не подписана"]},{f:"signDate",label:"Дата подписания",type:"date"}],
+      [{f:"pay",label:"Оплата",type:"seg",opts:["Оплачена","Частично","Не оплачена"]},{f:"payDate",label:"Дата оплаты",type:"date"}],
+      [{f:"note",label:"Примечание",type:"textarea"}]
+    ],
+    init(){
+      if(!k.month&&k.date)ED.inp.month.value=k.date.slice(0,7);
+      ED.inp.date.addEventListener("change",()=>{if(!monthTouched&&val("date"))ED.inp.month.value=val("date").slice(0,7);ED.calc();});
+      ED.inp.month.addEventListener("change",()=>{monthTouched=val("month")!==(val("date")||"").slice(0,7);});
+    },
+    calc(){
+      const r=collectKs(true);const by=PTO.index(RAW);const e=PTO.enrichKs(r,by);const o=by[r.obj];
+      const it=[];
+      if(r.ks2&&!isNaN(r.ks2)){it.push(["К оплате:",U.rub(e.toPay)+(r.ks3==null&&o?" (удержание "+U.pct(o.ret,1)+")":"")]);}
+      it.push(["Статус:",e.stLabel]);
+      if(e.expect)it.push(["Ожидаемая оплата:",U.ru(e.expect)]);
+      if(o)it.push(["Ответственный:",[o.resp,o.pto].filter(Boolean).join(", ")||"—"]);
+      setCalc(it);
+      const dup=r.obj&&r.num&&RAW.ks.find(x=>x.id!==k.id&&x.obj===r.obj&&x.num.trim().toLowerCase()===r.num.toLowerCase());
+      const wr=[];
+      if(dup)wr.push("Такая КС по этому объекту уже есть в журнале ("+(dup.date?U.ru(dup.date):PTO.monthLabel(dup.month))+"). Если это та же КС — закройте окно и откройте её, чтобы поменять статус; новая строка даст двойной счёт.");
+      if(r.pay==="Оплачена"&&!r.payDate)wr.push("Укажите дату оплаты.");
+      if(r.date&&r.month&&r.month!==r.date.slice(0,7))wr.push("Отчётный месяц ("+PTO.monthLabel(r.month)+") не совпадает с месяцем даты КС — проверьте, что это так и нужно.");
+      setWarn(wr.join(" "),!!dup);
+    },
+    collect(){const r=collectKs(false);need(r.obj,"объект");need(r.ks2,"сумма КС-2");numOk(r.ks2,"КС-2");numOk(r.ks3,"КС-3");need(r.month,"отчётный месяц");return r;},
+    async onSave(r){r.base=k.upd||"";await save("K",[r]);},
+    onDelete:isNew?null:async()=>{await del("K",k.id);}
+  });
+  function collectKs(){return {id:k.id,date:val("date"),month:val("month"),obj:val("obj"),num:val("num"),period:val("period"),ks2:val("ks2"),ks3:val("ks3"),agr:val("agr"),sign:val("sign"),pay:val("pay"),payDate:val("payDate"),signDate:val("signDate"),note:val("note")};}
+}
+function renderKs(){
+  const fo=$("ks-obj"),fv=fo.value;objSelect(fo,fv,"Все объекты");
+  const fm=$("ks-m"),mv=fm.value;fm.innerHTML="";fm.appendChild(Object.assign(el("option",null,"Все месяцы"),{value:""}));
+  [...new Set(RAW.ks.map(k=>k.month).filter(Boolean))].sort().reverse().forEach(m=>fm.appendChild(Object.assign(el("option",null,PTO.monthLabel(m)),{value:m})));fm.value=mv;
+  const by=PTO.index(RAW),today=U.todayISO(),q=$("ks-q").value.trim().toLowerCase(),st=$("ks-st").value;
+  let list=RAW.ks.map(k=>PTO.enrichKs(k,by)).filter(k=>(!fv||k.obj===fv)&&(!mv||k.month===mv)&&(!q||(k.obj+" "+k.num+" "+k.note+" "+k.period).toLowerCase().includes(q)));
+  if(st==="open")list=list.filter(k=>k.st!=="paid");else if(st==="overdue")list=list.filter(k=>k.expect&&k.expect<today);else if(st==="ctrl")list=list.filter(k=>k.ctrl||(k.pay==="Оплачена"&&!k.payDate));else if(st)list=list.filter(k=>k.st===st);
+  list.sort((a,b)=>(b.wdate||"").localeCompare(a.wdate||"")||(b.upd||"").localeCompare(a.upd||""));
+  const s2=list.reduce((a,k)=>a+(+k.ks2||0),0),tp=list.filter(k=>k.st!=="paid").reduce((a,k)=>a+(k.toPay||0),0);
+  $("ks-sum").innerHTML="";const sl=$("ks-sum");
+  [["КС: ",list.length+" шт."],[" · КС-2: ",U.rub0(s2)+" руб"],[" · не оплачено (к оплате): ",U.rub0(tp)+" руб"]].forEach(([l,v])=>{sl.appendChild(document.createTextNode(l));sl.appendChild(el("b",null,v));});
+  const o=$("ks-out");o.innerHTML="";
+  if(!list.length){o.appendChild(el("div","empty","Ничего не найдено."));$("ks-more").hidden=true;return;}
+  const hd=el("div","li hd");["Дата / месяц","Объект / № КС","Статус","КС-2, руб","К оплате, руб"].forEach((t,i)=>hd.appendChild(el("div",i>2?"v":null,t)));o.appendChild(hd);
+  list.slice(0,ksLimit).forEach(k=>{
+    const b=el("button","li");b.type="button";b.onclick=()=>ksEditor(RAW.ks.find(x=>x.id===k.id));
+    const d=el("div","d",k.date?U.ru(k.date):"без даты");d.appendChild(el("small",null,k.month?PTO.monthLabel(k.month):"месяц не указан"));b.appendChild(d);
+    const ob=el("div","o");ob.appendChild(el("b",null,k.obj||"— без объекта —"));ob.appendChild(el("small",null,[k.num,k.period].filter(Boolean).join(" · ")));b.appendChild(ob);
+    const x=el("div","x");x.appendChild(el("span","st "+k.st,k.stLabel));if(k.pay==="Частично")x.appendChild(el("span","pill","частично"));
+    const warn=k.ctrl||(k.pay==="Оплачена"&&!k.payDate?"нет даты оплаты":"");if(warn){x.appendChild(document.createElement("br"));x.appendChild(el("span","flagtxt","⚠ "+warn));}b.appendChild(x);
+    b.appendChild(el("div","v",U.rub(k.ks2)));
+    const p=el("div","v",k.st==="paid"?"—":U.rub(k.toPay));const od=k.expect&&k.expect<today;
+    p.appendChild(el("small",od?"over":null,k.st==="paid"?(k.payDate?"оплачена "+U.ru(k.payDate):""):(k.expect?(od?"просрочено с ":"ожид. ")+U.ru(k.expect):"")));b.appendChild(p);
+    o.appendChild(b);});
+  $("ks-more").hidden=list.length<=ksLimit;
+}
+["ks-q","ks-obj","ks-st","ks-m"].forEach(id=>$(id).addEventListener(id==="ks-q"?"input":"change",()=>{ksLimit=150;renderKs();}));
+$("ks-more").onclick=()=>{ksLimit+=300;renderKs();};
+$("ks-add").onclick=()=>ksEditor(null);
+
+// ---------- ДЕНЬГИ ----------
+function payEditor(p){
+  const isNew=!p;p=p||{id:U.uid("p"),date:U.todayISO(),kind:"Оплата КС"};
+  openEd({title:isNew?"Новое поступление":"Поступление",row:p,isNew,meta:isNew?"":"Изменено: "+(p.upd?new Date(p.upd).toLocaleString("ru-RU"):"—")+(p.by?" · "+p.by:""),
+    layout:[[{f:"date",label:"Дата поступления",type:"date",req:1},{f:"sum",label:"Сумма, руб",type:"num",req:1}],[{f:"obj",label:"Объект",type:"obj",req:1}],
+      [{f:"kind",label:"Вид поступления",type:"seg",opts:PAYKIND}],[{f:"basis",label:"№ КС / основание",list:()=>RAW.ks.filter(k=>k.obj===(ED&&ED.inp.obj?val("obj"):"")&&k.pay!=="Оплачена").map(k=>k.num)}],[{f:"note",label:"Примечание",type:"textarea"}]],
+    init(){ED.inp.obj.addEventListener("change",()=>{const dl=document.getElementById("dl-basis");if(dl){dl.innerHTML="";RAW.ks.filter(k=>k.obj===val("obj")&&k.pay!=="Оплачена").forEach(k=>dl.appendChild(Object.assign(el("option"),{value:k.num})));}});},
+    calc(){const r={kind:val("kind"),basis:val("basis"),obj:val("obj")};
+      const k=r.kind==="Оплата КС"&&r.basis&&RAW.ks.find(x=>x.obj===r.obj&&x.num===r.basis);
+      setWarn(k&&k.pay!=="Оплачена"?"Не забудьте отметить в «Журнале КС», что эта КС оплачена (статус «Оплачена» и дата оплаты).":"",false);},
+    collect(){const r={id:p.id,date:need(val("date"),"дата"),obj:need(val("obj"),"объект"),sum:numOk(need(val("sum"),"сумма"),"сумма"),kind:need(val("kind"),"вид"),basis:val("basis"),note:val("note")};return r;},
+    async onSave(r){r.base=p.upd||"";await save("P",[r]);},onDelete:isNew?null:async()=>{await del("P",p.id);}});
+}
+function garEditor(g){
+  const isNew=!g;g=g||{id:U.uid("g"),status:"Не оплачена"};
+  openEd({title:isNew?"Новое гарантийное удержание":"Гарантийное удержание",row:g,isNew,
+    layout:[[{f:"obj",label:"Объект",list:objNames,req:1}],[{f:"due",label:"Срок возврата",type:"date"},{f:"sum",label:"Сумма ГУ, руб",type:"num",req:1}],
+      [{f:"status",label:"Статус оплаты",type:"seg",opts:["Оплачена","Частично","Не оплачена"]}],[{f:"party",label:"Контрагент"}],[{f:"note",label:"Примечание",type:"textarea"}]],
+    calc(){setWarn(val("due")?"":"Без срока возврата удержание не попадёт в ожидаемые поступления периода — укажите дату, если она известна.",false);},
+    collect(){return {id:g.id,obj:need(val("obj"),"объект"),due:val("due"),sum:numOk(need(val("sum"),"сумма"),"сумма"),status:val("status"),party:val("party"),note:val("note")};},
+    async onSave(r){r.base=g.upd||"";await save("G",[r]);},onDelete:isNew?null:async()=>{await del("G",g.id);}});
+}
+function renderMoney(){
+  const fo=$("pay-obj"),fv=fo.value;objSelect(fo,fv,"Все объекты");
+  const fm=$("pay-m"),mv=fm.value;fm.innerHTML="";fm.appendChild(Object.assign(el("option",null,"Все месяцы"),{value:""}));
+  [...new Set(RAW.pays.map(p=>(p.date||"").slice(0,7)).filter(Boolean))].sort().reverse().forEach(m=>fm.appendChild(Object.assign(el("option",null,PTO.monthLabel(m)),{value:m})));fm.value=mv;
+  const list=RAW.pays.filter(p=>(!fv||p.obj===fv)&&(!mv||(p.date||"").startsWith(mv))).sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  $("pay-cnt").textContent=list.length+" шт. · "+U.rub0(list.reduce((a,p)=>a+(+p.sum||0),0))+" руб";
+  const o=$("pay-out");o.innerHTML="";
+  if(!list.length)o.appendChild(el("div","empty","Поступлений пока нет. Нажмите «+ Поступление»."));
+  list.forEach(p=>{const b=el("button","li");b.type="button";b.onclick=()=>payEditor(p);
+    b.appendChild(el("div","d",U.ru(p.date)));const ob=el("div","o");ob.appendChild(el("b",null,p.obj));ob.appendChild(el("small",null,[p.basis,p.note].filter(Boolean).join(" · ")));b.appendChild(ob);
+    b.appendChild(el("div","x",p.kind||""));b.appendChild(el("div","v",U.rub(p.sum)));b.appendChild(el("div","v",""));o.appendChild(b);});
+  const today=U.todayISO(),gl=RAW.gar.slice().sort((a,b)=>(a.status==="Оплачена")-(b.status==="Оплачена")||(a.due||"9").localeCompare(b.due||"9"));
+  $("gar-cnt").textContent="не возвращено: "+U.rub0(gl.filter(g=>g.status!=="Оплачена").reduce((a,g)=>a+(+g.sum||0),0))+" руб";
+  const go=$("gar-out");go.innerHTML="";if(!gl.length)go.appendChild(el("div","empty","Удержаний нет."));
+  gl.forEach(g=>{const b=el("button","li");b.type="button";b.onclick=()=>garEditor(g);
+    const d=el("div","d",g.due?U.ru(g.due):"без срока");if(g.due&&g.due<today&&g.status!=="Оплачена")d.appendChild(el("small","over","срок прошёл"));b.appendChild(d);
+    const ob=el("div","o");ob.appendChild(el("b",null,g.obj));ob.appendChild(el("small",null,[g.party,g.note].filter(Boolean).join(" · ")));b.appendChild(ob);
+    b.appendChild(el("div","x",g.status||""));b.appendChild(el("div","v",U.rub(g.sum)));b.appendChild(el("div","v",""));go.appendChild(b);});
+}
+["pay-obj","pay-m"].forEach(id=>$(id).onchange=renderMoney);
+$("pay-add").onclick=()=>payEditor(null);$("gar-add").onclick=()=>garEditor(null);
+
+// ---------- ПЛАН ----------
+let planCh={};
+function planVal(obj,m){const p=RAW.plan.find(x=>x.obj===obj&&x.month===m);return p?+p.sum:null;}
+function renderPlan(){
+  const ys=new Set();const y0=+U.todayISO().slice(0,4);[y0-1,y0,y0+1].forEach(y=>ys.add(y));RAW.plan.forEach(p=>ys.add(+p.month.slice(0,4)));
+  const sy=$("pl-y"),yv=sy.value||String(y0);sy.innerHTML="";[...ys].sort().forEach(y=>sy.appendChild(Object.assign(el("option",null,y+" год"),{value:String(y)})));sy.value=yv;
+  const year=sy.value,months=[];for(let i=1;i<=12;i++)months.push(year+"-"+String(i).padStart(2,"0"));
+  const f=$("pl-f").value,curM=U.todayISO().slice(0,7);
+  const objs=RAW.objects.filter(o=>f==="all"||o.status!=="Завершён"||months.some(m=>planVal(o.name,m)));
+  const fact={};RAW.ks.forEach(k=>{if(k.month&&k.month.startsWith(year)){const key=k.obj+"|"+k.month;fact[key]=(fact[key]||0)+(+k.ks2||0);}});
+  const t=$("pl-t");t.innerHTML="";const th=el("thead"),hr=el("tr");hr.appendChild(el("th",null,"Объект"));months.forEach(m=>hr.appendChild(el("th",null,PTO.MN[+m.slice(5)-1].slice(0,3).toLowerCase())));hr.appendChild(el("th",null,"Итого года"));hr.appendChild(el("th",null,"Остаток дог. на 01.01"));th.appendChild(hr);t.appendChild(th);
+  const tb=el("tbody");
+  objs.forEach(o=>{const tr=el("tr");const n=el("td");n.appendChild(document.createTextNode(o.name));n.appendChild(el("small",null,[o.resp,o.status!=="В работе"?o.status:""].filter(Boolean).join(" · ")));tr.appendChild(n);
+    let tot=0;
+    months.forEach(m=>{const td=el("td");if(m<curM)td.className="past";const key=o.name+"|"+m;const v=key in planCh?planCh[key]:planVal(o.name,m);if(v)tot+=v;
+      const inp=el("input");inp.inputMode="decimal";inp.value=v?U.rub0(v):"";inp.setAttribute("aria-label",o.name+", "+PTO.monthLabel(m));if(key in planCh)inp.classList.add("ch");
+      inp.onchange=()=>{const nv=U.parseNum(inp.value);if(nv!==null&&isNaN(nv)){inp.value="";return;}const old=planVal(o.name,m);
+        if((nv||null)===(old||null))delete planCh[key];else planCh[key]=nv||null;inp.classList.toggle("ch",key in planCh);if(nv)inp.value=U.rub0(nv);planBar();renderPlanTotals();};
+      td.appendChild(inp);if(fact[key])td.appendChild(el("div","fact","ф "+U.mln(fact[key])+" млн"));tr.appendChild(td);});
+    const tc=el("td","tot",U.rub0(tot));tc.dataset.obj=o.name;tr.appendChild(tc);
+    const capY=!+o.sum?null:Math.max(0,+o.sum-(+o.done0||0)-RAW.ks.filter(k=>k.obj===o.name&&k.month&&k.month>=PTO.BASE&&k.month<year+"-01").reduce((a,k)=>a+(+k.ks2||0),0));
+    const cc=el("td","tot",capY===null?"нет суммы":U.rub0(capY));cc.dataset.cap=capY===null?"":capY;if(capY!==null&&tot>capY+0.5){cc.classList.add("bad");cc.title="План года больше остатка по договору";cc.textContent="⚠ "+cc.textContent;}tr.appendChild(cc);
+    tb.appendChild(tr);});
+  t.appendChild(tb);
+  const tf=el("tfoot"),fr=el("tr");fr.appendChild(el("td",null,"ИТОГО"));
+  months.forEach(m=>fr.appendChild(el("td","tot",U.mln(objs.reduce((a,o)=>{const key=o.name+"|"+m;return a+((key in planCh?planCh[key]:planVal(o.name,m))||0);},0))+" млн")));
+  fr.appendChild(el("td","tot",""));fr.appendChild(el("td","tot",""));tf.appendChild(fr);t.appendChild(tf);
+  planBar();
+}
+function renderPlanTotals(){document.querySelectorAll("#pl-t td.tot[data-obj]").forEach(td=>{const tr=td.parentElement;let s=0;tr.querySelectorAll("input").forEach(i=>{const v=U.parseNum(i.value);if(v)s+=v;});td.textContent=U.rub0(s);
+  const cc=td.nextSibling;const cap=cc.dataset.cap;if(cap!==""){const over=s>+cap+0.5;cc.classList.toggle("bad",over);cc.textContent=(over?"⚠ ":"")+U.rub0(+cap);}});}
+function planBar(){const n=Object.keys(planCh).length;$("pl-bar").hidden=!n||view!=="plan";$("pl-msg").textContent="Изменено ячеек: "+n;}
+$("pl-y").onchange=()=>{if(Object.keys(planCh).length&&!confirm("Изменения плана не сохранены. Сбросить их?")){return;}planCh={};renderPlan();};
+$("pl-f").onchange=renderPlan;
+$("pl-undo").onclick=()=>{planCh={};renderPlan();};
+$("pl-save").onclick=async()=>{const b=$("pl-save");b.disabled=true;b.textContent="Сохраняю…";
+  try{const rows=[],dels=[];Object.keys(planCh).forEach(key=>{const [obj,m]=[key.slice(0,key.lastIndexOf("|")),key.slice(key.lastIndexOf("|")+1)];const v=planCh[key];
+      const ex=RAW.plan.find(x=>x.obj===obj&&x.month===m);if(v)rows.push({id:ex?ex.id:key,obj,month:m,sum:v});else if(ex)dels.push(ex.id);});
+    await save("L",rows,{del:dels});planCh={};status("План сохранён","okb",2500);renderPlan();}
+  catch(e){if(e.message!=="who")status("План не сохранился: "+e.message,"bad");}finally{b.disabled=false;b.textContent="Сохранить план";}};
+addEventListener("beforeunload",e=>{if(Object.keys(planCh).length){e.preventDefault();e.returnValue="";}});
+
+// ---------- ОБЪЕКТЫ ----------
+function objEditor(o){
+  const isNew=!o;o=o||{id:U.uid("o"),status:"В работе",ret:0.05,payDays:30,done0:0,sched:SCHED[0]};
+  const used=!isNew&&(RAW.ks.some(k=>k.obj===o.name)||RAW.pays.some(p=>p.obj===o.name)||RAW.plan.some(p=>p.obj===o.name));
+  openEd({title:isNew?"Новый объект":o.name,row:o,isNew,
+    layout:[[{f:"name",label:"Название объекта",req:1}],
+      [{f:"resp",label:"Ответственный (руководитель)",type:"select",opts:RAW.lists.resp},{f:"pto",label:"Специалист ПТО",type:"select",opts:RAW.lists.pto}],
+      [{f:"status",label:"Статус",type:"select",opts:STATUSES,blank:false}],
+      [{f:"sum",label:"Сумма договора с ДС, руб",type:"num"},{f:"done0",label:"Выполнено до 01.01.2026, руб",type:"num"}],
+      [{f:"ret",label:"% удержания",type:"pct"},{f:"payDays",label:"Срок оплаты, дней",type:"select",opts:[10,15,30,45,60],blank:false},{f:"due",label:"Срок по договору",type:"date"}],
+      [{f:"sched",label:"График подачи КС заказчику",type:"select",opts:SCHED,blank:false}],
+      [{f:"note",label:"Примечание",type:"textarea"}]],
+    calc(){const nm=val("name");const wr=[];
+      if(nm&&RAW.objects.some(x=>x.id!==o.id&&x.name.trim().toLowerCase()===nm.toLowerCase()))wr.push("Объект с таким названием уже есть.");
+      if(!isNew&&nm&&nm!==o.name&&used)wr.push("Название поменяется во всех КС, поступлениях и плане этого объекта.");
+      setWarn(wr.join(" "),wr.length&&wr[0].startsWith("Объект с таким"));
+      if(!isNew){const r=PTO.objectRows(RAW,U.todayISO()).find(x=>x.id===o.id);if(r)setCalc([["Выполнено всего:",U.rub0(r.doneAll)],["Остаток:",r.remain==null?"—":U.rub0(r.remain)],["% выполнения:",U.pct(r.pct,1)],["Не оплачено по КС:",U.rub0(r.unpaid)],["Долг заказчика (подписано):",U.rub0(r.debt)],["Получено денег:",U.rub0(r.got)]]);}},
+    collect(){const nm=need(val("name"),"название");if(RAW.objects.some(x=>x.id!==o.id&&x.name.trim().toLowerCase()===nm.toLowerCase()))throw new Error("Объект с таким названием уже есть.");
+      return {id:o.id,name:nm,resp:val("resp"),pto:val("pto"),status:val("status"),sum:numOk(val("sum"),"сумма договора"),done0:numOk(val("done0"),"выполнено до 01.01.2026")||0,ret:numOk(val("ret"),"% удержания")||0,payDays:+val("payDays"),due:val("due"),sched:val("sched"),note:val("note")};},
+    async onSave(r){r.base=o.upd||"";await save("O",[r],!isNew&&r.name!==o.name?{rename:{from:o.name,to:r.name}}:null);},
+    onDelete:isNew?null:async()=>{if(used)throw new Error("по объекту есть КС, план или поступления — удалять нельзя. Закройте объект статусом «Завершён».");await del("O",o.id);}});
+}
+function renderObj(){
+  const rows=PTO.objectRows(RAW,U.todayISO()),q=$("ob-q").value.trim().toLowerCase(),st=$("ob-st").value;
+  const list=rows.filter(o=>(!q||(o.name+" "+o.resp+" "+o.pto).toLowerCase().includes(q))&&(st==="live"?o.status!=="Завершён":st==="ctrl"?!!o.ctrl:!st||o.status===st));
+  const s=f=>list.reduce((a,o)=>a+(+f(o)||0),0);
+  $("ob-sum").innerHTML="";const sl=$("ob-sum");[["Объектов: ",String(list.length)],[" · договоры: ",U.mln(s(o=>o.sum))+" млн"],[" · остаток: ",U.mln(s(o=>o.status!=="Завершён"&&o.remain>0?o.remain:0))+" млн"],[" · долг заказчиков (подписано): ",U.mln(s(o=>o.debt))+" млн"]].forEach(([l,v])=>{sl.appendChild(document.createTextNode(l));sl.appendChild(el("b",null,v));});
+  const out=$("ob-out");out.innerHTML="";
+  const hd=el("div","objrow hd");["Объект","Договор","Выполнено","Остаток","Не оплачено"].forEach((t,i)=>hd.appendChild(el("div",i?"v":null,t)));out.appendChild(hd);
+  list.forEach(o=>{const b=el("button","objrow");b.type="button";b.onclick=()=>objEditor(RAW.objects.find(x=>x.id===o.id));
+    const n=el("div","o");n.appendChild(el("b",null,o.name));n.appendChild(el("small",null,[o.resp,o.pto,o.status].filter(Boolean).join(" · ")));if(o.ctrl)n.appendChild(el("span","flagtxt","⚠ "+o.ctrl));b.appendChild(n);
+    const v=(t,sm,cls)=>{const e=el("div","v"+(cls?" "+cls:""),t);if(sm)e.appendChild(el("small",null,sm));b.appendChild(e);};
+    v(o.sum?U.mln(o.sum)+" млн":"нет суммы",o.payDays+" дн. · удерж. "+U.pct(o.ret,1));
+    v(U.mln(o.doneAll)+" млн",o.pct==null?"":U.pct(o.pct,1));
+    v(o.remain==null?"—":U.mln(o.remain)+" млн",o.due?"срок "+U.ru(o.due):"",o.remain<0?"bad":"");
+    v(U.mln(o.unpaid)+" млн",o.debt?"подписано: "+U.mln(o.debt)+" млн":"");
+    out.appendChild(b);});
+  if(!list.length)out.appendChild(el("div","empty","Ничего не найдено."));
+}
+$("ob-q").oninput=renderObj;$("ob-st").onchange=renderObj;$("ob-add").onclick=()=>objEditor(null);
+
+// ---------- ЕЩЁ ----------
+function renderMore(){
+  const mv=$("nt-m").value;const lastM=PTO.periods("month",RAW,U.todayISO()).length?(RAW.ks.map(k=>k.month).filter(Boolean).sort().pop()||U.todayISO().slice(0,7)):U.todayISO().slice(0,7);
+  monthSelect($("nt-m"),mv||lastM);noteFill();
+  $("ls-r").value=RAW.lists.resp.join("\n");$("ls-p").value=RAW.lists.pto.join("\n");
+}
+function noteFill(){const n=RAW.notes.find(x=>x.month===$("nt-m").value);$("nt-t").value=n?n.text:"";}
+$("nt-m").onchange=noteFill;
+$("nt-save").onclick=async()=>{const m=$("nt-m").value;if(!m)return;const ex=RAW.notes.find(x=>x.month===m);
+  try{await save("N",[{id:m,month:m,text:$("nt-t").value.trim(),base:ex?ex.upd||"":""}]);status("Комментарий сохранён","okb",2500);}catch(e){if(e.message!=="who")status("Не сохранилось: "+e.message,"bad");}};
+$("ls-save").onclick=async()=>{const split=s=>s.split("\n").map(x=>x.trim()).filter(Boolean);const lists={resp:split($("ls-r").value),pto:split($("ls-p").value)};
+  if(!who){status("Сначала укажите свою фамилию.","bad");return;}
+  try{await U.post(db,{a:"lists",lists,by:who});RAW.lists=lists;U.sset("pto-cache",JSON.stringify(RAW));status("Списки сохранены","okb",2500);}catch(e){status("Не сохранилось: "+e.message,"bad");}};
+$("who-ok").onclick=()=>{if($("who-in").value.trim())setWho($("who-in").value);};
+$("who-in").addEventListener("keydown",e=>{if(e.key==="Enter")$("who-ok").click();});
+$("who-ok2").onclick=()=>{setWho($("who-in2").value);status("Сохранено","okb",2000);};
+
+function render(){
+  if(!RAW)return;
+  if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();else renderMore();
+}
+document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&RAW&&!$("ed").open&&!Object.keys(planCh).length)load(true);});
+setWho(who);
+show(["ks","money","plan","obj","more"].includes(view)?view:"ks");load();
+})();
+</script>
+</body>
+</html>
