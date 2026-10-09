@@ -73,14 +73,14 @@ td.bad,span.bad{color:var(--bad)} td.ok,span.ok{color:var(--ok)} td.warnc,span.w
 .over{color:var(--bad);font-weight:600}
 /* строки списков (журнал, поступления) */
 .list{display:flex;flex-direction:column}
-.li{display:grid;grid-template-columns:96px minmax(0,1.6fr) minmax(0,1fr) 130px 120px;gap:4px 12px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font:inherit;color:inherit;width:100%}
+.li{display:grid;grid-template-columns:96px minmax(0,1.6fr) minmax(0,1fr) 130px 150px;gap:4px 12px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font:inherit;color:inherit;width:100%}
 .li:first-child{border-top:0}
 .li:hover{background:var(--sunk)}
 .li .d{font-family:var(--f-num);font-size:13px}
 .li .d small,.li .o small{display:block;color:var(--muted);font:12px var(--f-ui)}
 .li .o b{font-weight:600}
 .li .v{font-family:var(--f-num);text-align:right;font-size:14px}
-.li .v small{display:block;color:var(--muted);font-size:11px;white-space:nowrap}
+.li .v small{display:block;color:var(--muted);font-size:11px;overflow-wrap:anywhere}
 .li.hd{cursor:default;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}
 .li.hd:hover{background:none}
 @media (max-width:760px){

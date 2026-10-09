@@ -322,10 +322,10 @@ function renderKs(){
     const d=el("div","d",k.date?U.ru(k.date):"без даты");d.appendChild(el("small",null,k.month?PTO.monthLabel(k.month):"месяц не указан"));b.appendChild(d);
     const ob=el("div","o");ob.appendChild(el("b",null,k.obj||"— без объекта —"));ob.appendChild(el("small",null,[k.num,k.period].filter(Boolean).join(" · ")));b.appendChild(ob);
     const x=el("div","x");x.appendChild(el("span","st "+k.st,k.stLabel));if(k.pay==="Частично")x.appendChild(el("span","pill","частично"));
-    const warn=k.ctrl||(k.pay==="Оплачена"&&!k.payDate?"нет даты оплаты":"");if(warn){x.appendChild(document.createElement("br"));x.appendChild(el("span","flagtxt","⚠ "+warn));}b.appendChild(x);
+    const warn=k.ctrl;if(warn){x.appendChild(document.createElement("br"));x.appendChild(el("span","flagtxt","⚠ "+warn));}b.appendChild(x);
     b.appendChild(el("div","v",U.rub(k.ks2)));
     const p=el("div","v",k.st==="paid"?"—":U.rub(k.toPay));const od=k.expect&&k.expect<today;
-    p.appendChild(el("small",od?"over":null,k.st==="paid"?(k.payDate?"оплачена "+U.ru(k.payDate):""):(k.expect?(od?"просрочено с ":"ожид. ")+U.ru(k.expect):"")));b.appendChild(p);
+    p.appendChild(el("small",od?"over":null,k.st==="paid"?(k.payDate?"оплачена "+U.ru(k.payDate):""):(k.expect?(od?"просрочено с\u00a0":"ожид. ")+U.ru(k.expect):"")));b.appendChild(p);
     o.appendChild(b);});
   $("ks-more").hidden=list.length<=ksLimit;
 }

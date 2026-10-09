@@ -192,7 +192,7 @@ function ksRow(k,showExp){
   const x=el("div","x");x.appendChild(el("span","st "+k.st,k.stLabel));if(k.pay==="Частично")x.appendChild(el("span","pill","оплачена частично"));b.appendChild(x);
   const v=el("div","v",U.mln(k.ks2,2)+" млн");v.appendChild(el("small",null,"КС-2"));b.appendChild(v);
   const p=el("div","v",k.st==="paid"?"—":U.mln(k.toPay,2)+" млн");
-  const od=k.expect&&k.expect<U.todayISO();p.appendChild(el("small",od?"over":null,k.st==="paid"?(k.payDate?"оплачена "+U.ru(k.payDate):"оплачена"):(k.expect?(od?"просрочено с ":"оплата ~")+U.ru(k.expect):"")));b.appendChild(p);
+  const od=k.expect&&k.expect<U.todayISO();p.appendChild(el("small",od?"over":null,k.st==="paid"?(k.payDate?"оплачена "+U.ru(k.payDate):"оплачена"):(k.expect?(od?"просрочено с\u00a0":"оплата ~")+U.ru(k.expect):"")));b.appendChild(p);
   return b;
 }
 function drawKs(){
