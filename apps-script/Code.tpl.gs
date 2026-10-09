@@ -22,7 +22,9 @@ function out_(obj) {
   return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
 }
 function ss_() { return SpreadsheetApp.getActiveSpreadsheet(); }
-function tz_() { return ss_().getSpreadsheetTimeZone(); }
+// Часовой пояс таблицы; у таблицы, созданной из Excel, он бывает не задан — тогда Москва.
+let TZ_ = null;
+function tz_() { return TZ_ || (TZ_ = String(ss_().getSpreadsheetTimeZone() || Session.getScriptTimeZone() || '') || 'Europe/Moscow'); }
 
 function sheet_(t) {
   const name = SCHEMA[t][0], cols = SCHEMA[t][1];
