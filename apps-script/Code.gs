@@ -22,7 +22,7 @@ const TYPE = { plan: 'План', fact: 'Факт' };
 const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note'];
 
 // Листы и столбцы базы (порядок столбцов в таблице можно менять — ищутся по заголовку).
-const SCHEMA = {"O": ["Объекты", [["id", "ID", "s"], ["name", "Объект", "s"], ["resp", "Ответственный", "s"], ["pto", "Специалист ПТО", "s"], ["status", "Статус", "s"], ["sum", "Сумма договора с ДС, руб", "n"], ["done0", "Выполнено до 01.01.2026, руб", "n"], ["ret", "% удержания", "p"], ["payDays", "Срок оплаты, дней", "n"], ["due", "Срок по договору", "d"], ["sched", "График подачи КС", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "K": ["Журнал КС", [["id", "ID", "s"], ["date", "Дата КС", "d"], ["month", "Отчётный месяц", "m"], ["obj", "Объект", "s"], ["num", "№ КС / описание", "s"], ["period", "Период работ", "s"], ["ks2", "Выполнение КС-2, руб", "n"], ["ks3", "К оплате КС-3, руб", "n"], ["agr", "Согласование", "s"], ["sign", "Подписание", "s"], ["pay", "Оплата", "s"], ["payDate", "Дата оплаты", "d"], ["signDate", "Дата подписания", "d"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "P": ["Поступления", [["id", "ID", "s"], ["date", "Дата поступления", "d"], ["obj", "Объект", "s"], ["sum", "Сумма, руб", "n"], ["kind", "Вид поступления", "s"], ["basis", "№ КС / основание", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "L": ["План", [["id", "ID", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["sum", "План, руб", "n"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "G": ["Гарантии", [["id", "ID", "s"], ["obj", "Объект", "s"], ["due", "Срок возврата", "d"], ["sum", "Сумма ГУ, руб", "n"], ["status", "Статус оплаты", "s"], ["party", "Контрагент", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "N": ["Главное за месяц", [["id", "ID", "s"], ["month", "Месяц", "m"], ["text", "Комментарий начальника ПТО", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "S": ["Списки", [["resp", "Ответственные (руководители объектов)", "s"], ["pto", "Специалисты ПТО", "s"]]], "U": ["Сотрудники", [["id", "ID", "s"], ["name", "ФИО", "s"], ["role", "Роль", "s"], ["objects", "Объекты (через ;)", "s"], ["login", "Логин", "s"], ["password", "Пароль", "s"], ["mustChange", "Сменить пароль при входе", "s"], ["lastLogin", "Последний вход", "s"], ["key", "Ключ ссылки", "s"], ["active", "Активен", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "R": ["Отчёты", [["id", "ID", "s"], ["type", "Вид", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["status", "Статус", "s"], ["sentAt", "Отправлен", "s"], ["sentBy", "Кто отправил", "s"], ["decidedAt", "Решение", "s"], ["decidedBy", "Кто решил", "s"], ["comments", "Комментарии (JSON)", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]]};
+const SCHEMA = {"O": ["Объекты", [["id", "ID", "s"], ["name", "Объект", "s"], ["resp", "Ответственный", "s"], ["pto", "Специалист ПТО", "s"], ["status", "Статус", "s"], ["sum", "Сумма договора с ДС, руб", "n"], ["done0", "Выполнено до 01.01.2026, руб", "n"], ["ret", "% удержания", "p"], ["payDays", "Срок оплаты, дней", "n"], ["due", "Срок по договору", "d"], ["sched", "График подачи КС", "s"], ["contract", "№ договора", "s"], ["contractDate", "Дата договора", "d"], ["start", "Начало по договору", "d"], ["rp", "Код объекта в «Рапорте прораба»", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "K": ["Журнал КС", [["id", "ID", "s"], ["date", "Дата КС", "d"], ["month", "Отчётный месяц", "m"], ["obj", "Объект", "s"], ["num", "№ КС / описание", "s"], ["period", "Период работ", "s"], ["ks2", "Выполнение КС-2, руб", "n"], ["ks3", "К оплате КС-3, руб", "n"], ["agr", "Согласование", "s"], ["sign", "Подписание", "s"], ["pay", "Оплата", "s"], ["payDate", "Дата оплаты", "d"], ["signDate", "Дата подписания", "d"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "P": ["Поступления", [["id", "ID", "s"], ["date", "Дата поступления", "d"], ["obj", "Объект", "s"], ["sum", "Сумма, руб", "n"], ["kind", "Вид поступления", "s"], ["basis", "№ КС / основание", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "L": ["План", [["id", "ID", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["sum", "План, руб", "n"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "G": ["Гарантии", [["id", "ID", "s"], ["obj", "Объект", "s"], ["due", "Срок возврата", "d"], ["sum", "Сумма ГУ, руб", "n"], ["status", "Статус оплаты", "s"], ["party", "Контрагент", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "N": ["Главное за месяц", [["id", "ID", "s"], ["month", "Месяц", "m"], ["text", "Комментарий начальника ПТО", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "S": ["Списки", [["resp", "Ответственные (руководители объектов)", "s"], ["pto", "Специалисты ПТО", "s"]]], "U": ["Сотрудники", [["id", "ID", "s"], ["name", "ФИО", "s"], ["role", "Роль", "s"], ["objects", "Объекты (через ;)", "s"], ["login", "Логин", "s"], ["password", "Пароль", "s"], ["mustChange", "Сменить пароль при входе", "s"], ["lastLogin", "Последний вход", "s"], ["key", "Ключ ссылки", "s"], ["active", "Активен", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "R": ["Отчёты", [["id", "ID", "s"], ["type", "Вид", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["status", "Статус", "s"], ["sentAt", "Отправлен", "s"], ["sentBy", "Кто отправил", "s"], ["decidedAt", "Решение", "s"], ["decidedBy", "Кто решил", "s"], ["comments", "Комментарии (JSON)", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]]};
 const LOG_SHEET = 'Журнал изменений';
 
 function out_(obj) {
@@ -390,6 +390,105 @@ function dataFor_(me) {
   return d;
 }
 
+// ---------- «Рапорт прораба»: только чтение ----------
+// Скрипт ПТО читает таблицу рапортов напрямую. В базе рапортов ничего не меняется, прорабы работают как раньше.
+const RP_ID = '1pq2K-fqzqvop-KEYQV0QVNBDMJPnBIthg_JrO5Iiwp8';   // Google Таблица «Рапорты прорабов — ГК КРАШМАШ»
+function rpIso_(v) {
+  if (Object.prototype.toString.call(v) === '[object Date]') return Utilities.formatDate(v, tz_(), 'yyyy-MM-dd');
+  const s = String(v || '');
+  let m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/); if (m) return m[3] + '-' + m[2] + '-' + m[1];
+  m = s.match(/^\d{4}-\d{2}-\d{2}/); return m ? m[0] : '';
+}
+function rpAddDays_(iso, n) { const d = new Date(iso + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+/** Срок из паспорта объекта: start / due или строка «Сроки…: 01.09.2026 – 12.11.2026» (как в «Рапорте прораба»). */
+function rpDue_(c) {
+  const iso = function (s) { const m = /(\d{2})\.(\d{2})\.(\d{4})/.exec(s || ''); return m ? m[3] + '-' + m[2] + '-' + m[1] : null; };
+  let start = c.start || null, due = c.due || null;
+  (c.info || []).forEach(function (s) {
+    if (due || !/срок/i.test(s)) return;
+    const m = /(\d{2}\.\d{2}\.\d{4})\s*[–—-]\s*(\d{2}\.\d{2}\.\d{4})/.exec(s);
+    if (m) { start = start || iso(m[1]); due = iso(m[2]); }
+    else { const m2 = /до\s*(\d{2}\.\d{2}\.\d{4})/.exec(s); if (m2) due = iso(m2[1]); }
+  });
+  return { start: start, due: due };
+}
+/** Выполнено по работе на дату d (та же логика, что в «Рапорте прораба»: «выполнено ранее» — на дату d0date). */
+function rpCum_(c, rs, code, d) {
+  const d0 = (((c.works || []).filter(function (w) { return w.c === code; })[0]) || {}).d0 || 0, dd = c.d0date || '';
+  let t = +d0 || 0;
+  rs.forEach(function (r) {
+    const v = r.works && r.works[code]; if (typeof v !== 'number') return;
+    if (!dd) { if (r.date <= d) t += v; }
+    else if (r.date > dd && r.date <= d) t += v;
+    else if (r.date <= dd && r.date > d) t -= v;
+  });
+  return t;
+}
+function rpCfgs_(ss) {
+  const sh = ss.getSheetByName('Объекты'), n = sh ? sh.getLastRow() : 0, out = {};
+  if (n >= 2) sh.getRange(2, 1, n - 1, 4).getValues().forEach(function (v) {
+    try { const c = JSON.parse(v[3]); if (c && c.pid) out[c.pid] = c; } catch (e) { if (v[0]) out[String(v[0])] = { pid: String(v[0]), name: String(v[1] || v[0]), works: [] }; }
+  });
+  return out;
+}
+/** Запустите один раз из редактора после обновления скрипта: Google попросит разрешить доступ к таблице рапортов. */
+function checkRapport() {
+  const n = rpObjects_().length;
+  Logger.log('Доступ к «Рапорту прораба» есть, объектов: ' + n);
+  return n;
+}
+/** Список объектов «Рапорта прораба» — для привязки в справочнике ПТО. */
+function rpObjects_() {
+  const c = rpCfgs_(SpreadsheetApp.openById(RP_ID));
+  return Object.keys(c).map(function (p) { return { pid: p, name: c[p].name || p, closed: !!c[p].closed }; });
+}
+/** Рапорты по объектам, которые видит сотрудник: паспорт, сроки, выполнено по работам, вывоз, техника, рапорты за days дней. */
+function rpData_(me, days) {
+  const map = {};
+  readSheet_('O').forEach(function (o) { if (o.rp && sees_(me, o.name)) splitObjs_(String(o.rp).replace(/,/g, ';')).forEach(function (p) { map[p] = o.name; }); });
+  const pids = Object.keys(map);
+  if (!pids.length) return { objects: [], today: Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd') };
+  const ss = SpreadsheetApp.openById(RP_ID), cfg = rpCfgs_(ss), reps = {};
+  const sr = ss.getSheetByName('Рапорты'), nr = sr ? sr.getLastRow() : 0;
+  if (nr >= 2) sr.getRange(2, 1, nr - 1, 12).getValues().forEach(function (v) {
+    const pid = String(v[1] || ''); if (!map[pid]) return;
+    try { const r = JSON.parse(v[11]); if (r && r.date) (reps[pid] = reps[pid] || []).push(r); } catch (e) {}
+  });
+  const fin = {}, sf = ss.getSheetByName('Завершение'), nf = sf ? sf.getLastRow() : 0;
+  if (nf >= 2) sf.getRange(2, 1, nf - 1, 8).getValues().forEach(function (v) {
+    const pid = String(v[0] || ''); if (!map[pid]) return;
+    fin[pid] = { foreman: String(v[2] || ''), reportDate: rpIso_(v[3]), status: String(v[5] || ''), confirmed: rpIso_(v[6]) };
+  });
+  const today = Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd'), from = rpAddDays_(today, -(days || 31));
+  const objects = pids.map(function (p) {
+    const c = cfg[p] || { pid: p, name: p, works: [] };
+    const rs = (reps[p] || []).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.shift < b.shift ? -1 : 1); });
+    const dd = rpDue_(c);
+    const works = (c.works || []).map(function (w) {
+      return { c: w.c, n: w.n, u: w.u || '', t: +w.t || 0, done: rpCum_(c, rs, w.c, today),
+        d7: rs.filter(function (r) { return r.date > rpAddDays_(today, -8); }).reduce(function (a, r) { const x = r.works && r.works[w.c]; return a + (typeof x === 'number' ? x : 0); }, 0) };
+    });
+    const prog = works.filter(function (w) { return w.t > 0; });
+    const pct = prog.length ? prog.reduce(function (a, w) { return a + Math.max(0, Math.min(1, w.done / w.t)); }, 0) / prog.length : null;
+    const haul = {}, mach = {};
+    rs.forEach(function (r) {
+      (r.haul || []).forEach(function (h) { const k = h.m || '—'; const x = haul[k] = haul[k] || { m: k, t: 0, v: 0, w: 0 }; x.t += +h.t || 0; x.v += +h.v || 0; x.w += +h.w || 0; });
+      (r.mach || []).forEach(function (m) { const k = String(m.n || '—').trim(); const x = mach[k] = mach[k] || { n: k, h: 0, days: 0 }; x.h += +m.h || 0; if (+m.h > 0) x.days++; });
+    });
+    const day = function (r) {
+      return { date: r.date, shift: r.shift === 'N' ? 'Ночь' : 'День', foreman: r.foreman || '', idle: !!r.idle,
+        people: ((r.people && +r.people.own) || 0) + (r.subs || []).reduce(function (a, x) { return a + (+x.p || 0); }, 0),
+        subs: r.subs || [], works: r.works || {}, extra: r.extra || [], haul: r.haul || [], mach: r.mach || [], downtime: r.downtime || [], other: r.other || '' };
+    };
+    return { pid: p, obj: map[p], name: c.name || p, start: dd.start, due: dd.due, closed: !!c.closed, closedAt: c.closedAt || '',
+      finish: fin[p] || null, first: rs.length ? rs[0].date : '', last: rs.length ? rs[rs.length - 1].date : '', nRep: rs.length,
+      pct: pct, works: works, haul: Object.keys(haul).map(function (k) { return haul[k]; }), mach: Object.keys(mach).map(function (k) { return mach[k]; }),
+      foremen: rs.slice(-20).map(function (r) { return r.foreman; }).filter(function (x, i, a) { return x && a.indexOf(x) === i; }),
+      days: rs.filter(function (r) { return r.date >= from; }).map(day) };
+  });
+  return { objects: objects, today: today, from: from };
+}
+
 function doGet(e) {
   const p = (e && e.parameter) || {};
   const me = who_(p.k);
@@ -397,6 +496,13 @@ function doGet(e) {
   const pub = { role: me.role, name: me.name, objects: me.objects };
   if (p.a === 'ping') return out_({ ok: true, role: me.role, me: pub });
   if (p.a === 'all') return out_({ ok: true, role: me.role, me: pub, data: dataFor_(me), time: new Date().toISOString() });
+  if (p.a === 'rp' && me.role !== 'dir') {
+    try { return out_(Object.assign({ ok: true }, rpData_(me, Math.min(366, +p.days || 31)))); }
+    catch (err) { return out_({ ok: false, error: 'Нет доступа к базе «Рапорт прораба»: ' + String(err && err.message || err) }); }
+  }
+  if (p.a === 'rpobj' && (me.role === 'admin' || me.role === 'head')) {
+    try { return out_({ ok: true, objects: rpObjects_() }); } catch (err) { return out_({ ok: false, error: String(err && err.message || err) }); }
+  }
   if (p.a === 'log' && me.role === 'admin') return out_({ ok: true, log: readLog_(+p.n || 1500) });
   if (p.a === 'users' && me.role === 'admin') return out_({ ok: true, users: readSheet_('U') });
   return out_({ ok: false, error: 'action' });

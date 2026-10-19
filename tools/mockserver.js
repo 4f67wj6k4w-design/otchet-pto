@@ -39,8 +39,15 @@ for (const t in schema) {
   if (t === "S") { const n = Math.max(data.lists.resp.length, data.lists.pto.length); rows = []; for (let i = 0; i < n; i++) rows.push({ resp: data.lists.resp[i] || "", pto: data.lists.pto[i] || "" }); }
   (rows || []).forEach(r => sh.rows.push(cols.map(([f, , typ]) => { const v = r[f]; if (v == null || v === "") return ""; if (typ === "d") return toD(v); if (typ === "m") return toD(v + "-01"); return v; })));
 }
+// база «Рапорт прораба» для проверки (необязательно): node tools/mockserver.js data.json 8080 rp.json — {"Лист": [[заголовки], [строки]…]}
+const rpss = { getSheetByName: n => null };
+if (process.argv[4]) {
+  const rp = JSON.parse(fs.readFileSync(process.argv[4])), rs = {};
+  for (const n in rp) { const sh = new Sheet(n); sh.rows = rp[n].map(r => r.slice()); rs[n] = sh; }
+  rpss.getSheetByName = n => rs[n] || null;
+}
 const ctx = {
-  SpreadsheetApp: { getActiveSpreadsheet: () => ss },
+  SpreadsheetApp: { getActiveSpreadsheet: () => ss, openById: () => rpss },
   ContentService: { createTextOutput: s => ({ s, setMimeType() { return this; } }), MimeType: { JSON: "json" } },
   CacheService: { getScriptCache: () => ({ get: k => (global.__c = global.__c || {})[k] || null, put: (k, v) => { (global.__c = global.__c || {})[k] = v; }, remove: k => { if (global.__c) delete global.__c[k]; } }) },
   LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },

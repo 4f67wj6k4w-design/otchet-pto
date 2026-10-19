@@ -164,3 +164,25 @@ dialog.ed .rdf{display:flex;flex-direction:column;max-height:calc(100dvh - 24px)
 .chk input{width:auto;min-height:0}
 
 input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.55;cursor:not-allowed}
+/* Мои объекты */
+.my{display:grid;grid-template-columns:minmax(0,1.8fr) 120px 170px 130px;gap:4px 12px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font:inherit;color:inherit;width:100%}
+.my:hover{background:var(--sunk)}
+.my .o b{font-weight:600}.my .o small{display:block;color:var(--muted);font-size:12px}
+.my .v{font-family:var(--f-num);text-align:right;font-size:14px}.my .v small{display:block;color:var(--muted);font:11px var(--f-ui)}
+.my .v.bad{color:var(--bad)}
+.my.hd{cursor:default;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}.my.hd:hover{background:none}
+@media (max-width:760px){.my{grid-template-columns:1fr 1fr 1fr}.my .o{grid-column:1/-1}.my.hd{display:none}.my .v{text-align:left}}
+.myttl{font-size:19px;font-weight:600;color:var(--fg);margin:10px 0 2px}
+.hints{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.hint-l{font-size:13px;padding:5px 9px;border-radius:6px;border-left:4px solid var(--c-plan);background:var(--sunk)}
+.hint-l.warn{border-left-color:var(--warn)}.hint-l.bad{border-left-color:var(--bad);color:var(--bad)}
+.my .hints{margin:4px 0 0}.my .hint-l{font-size:12px;padding:2px 7px}
+.tiles+.btn,.hints+.tiles{margin-top:8px}
+.rpd{border-top:1px solid var(--line);padding:10px 2px;font-size:14px}
+.rpd-h{font-weight:600;margin-bottom:4px}
+.rpd-l{padding:1px 0 1px 10px;border-left:3px solid var(--line);margin:2px 0}
+.rpd-l.h{border-left-color:var(--c-plan)}.rpd-l.m{border-left-color:var(--muted)}.rpd-l.d{border-left-color:var(--bad);color:var(--bad)}
+.rpd-l.x{border-left-color:var(--warn);font-weight:600}.rpd-l.n{color:var(--muted)}.rpd-l.muted{color:var(--muted)}
+#v-my .pnav{margin:6px 0 4px;max-width:420px}
+#v-my .mini td.num,#v-my .mini th.num{text-align:right;font-family:var(--f-num);white-space:nowrap}
+@media (max-width:560px){#v-my .tiles{grid-template-columns:1fr 1fr}#v-my .tile b{font-size:17px}#v-my .tile small{min-height:0}}

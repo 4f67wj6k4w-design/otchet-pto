@@ -287,6 +287,28 @@ dialog.ed .rdf{display:flex;flex-direction:column;max-height:calc(100dvh - 24px)
 .chk input{width:auto;min-height:0}
 
 input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.55;cursor:not-allowed}
+/* Мои объекты */
+.my{display:grid;grid-template-columns:minmax(0,1.8fr) 120px 170px 130px;gap:4px 12px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font:inherit;color:inherit;width:100%}
+.my:hover{background:var(--sunk)}
+.my .o b{font-weight:600}.my .o small{display:block;color:var(--muted);font-size:12px}
+.my .v{font-family:var(--f-num);text-align:right;font-size:14px}.my .v small{display:block;color:var(--muted);font:11px var(--f-ui)}
+.my .v.bad{color:var(--bad)}
+.my.hd{cursor:default;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-weight:600}.my.hd:hover{background:none}
+@media (max-width:760px){.my{grid-template-columns:1fr 1fr 1fr}.my .o{grid-column:1/-1}.my.hd{display:none}.my .v{text-align:left}}
+.myttl{font-size:19px;font-weight:600;color:var(--fg);margin:10px 0 2px}
+.hints{display:flex;flex-direction:column;gap:4px;margin:8px 0}
+.hint-l{font-size:13px;padding:5px 9px;border-radius:6px;border-left:4px solid var(--c-plan);background:var(--sunk)}
+.hint-l.warn{border-left-color:var(--warn)}.hint-l.bad{border-left-color:var(--bad);color:var(--bad)}
+.my .hints{margin:4px 0 0}.my .hint-l{font-size:12px;padding:2px 7px}
+.tiles+.btn,.hints+.tiles{margin-top:8px}
+.rpd{border-top:1px solid var(--line);padding:10px 2px;font-size:14px}
+.rpd-h{font-weight:600;margin-bottom:4px}
+.rpd-l{padding:1px 0 1px 10px;border-left:3px solid var(--line);margin:2px 0}
+.rpd-l.h{border-left-color:var(--c-plan)}.rpd-l.m{border-left-color:var(--muted)}.rpd-l.d{border-left-color:var(--bad);color:var(--bad)}
+.rpd-l.x{border-left-color:var(--warn);font-weight:600}.rpd-l.n{color:var(--muted)}.rpd-l.muted{color:var(--muted)}
+#v-my .pnav{margin:6px 0 4px;max-width:420px}
+#v-my .mini td.num,#v-my .mini th.num{text-align:right;font-family:var(--f-num);white-space:nowrap}
+@media (max-width:560px){#v-my .tiles{grid-template-columns:1fr 1fr}#v-my .tile b{font-size:17px}#v-my .tile small{min-height:0}}
 
 .who{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
 .login{max-width:420px;margin-inline:auto;margin-top:28px}.login form{display:flex;flex-direction:column;gap:12px}.login h2{text-transform:none;letter-spacing:0;font-size:18px;color:var(--fg)}
@@ -310,7 +332,8 @@ input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.5
       <img src="data:image/jpeg;base64,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" alt="Группа компаний КРАШМАШ" width="120" height="48">
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" id="tab-rep" aria-selected="true" data-v="rep">Отчёты</button>
+      <button role="tab" id="tab-my" aria-selected="true" data-v="my">Мои объекты</button>
+      <button role="tab" id="tab-rep" aria-selected="false" data-v="rep">Отчёты</button>
       <button role="tab" id="tab-ks" aria-selected="false" data-v="ks">Журнал КС</button>
       <button role="tab" id="tab-money" aria-selected="false" data-v="money">Деньги</button>
       <button role="tab" id="tab-plan" aria-selected="false" data-v="plan">План</button>
@@ -338,7 +361,20 @@ input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.5
   </section>
 
   <!-- ОТЧЁТЫ -->
-  <div id="v-rep">
+  <!-- МОИ ОБЪЕКТЫ: договор, сроки, план/факт, рапорты прорабов -->
+  <div id="v-my" hidden>
+    <section class="card">
+      <div class="toolbar">
+        <label class="f">Объект<select id="my-o"></select></label>
+        <label class="f">Показать<select id="my-st"><option value="live">В работе (без завершённых)</option><option value="">Все</option></select></label>
+        <button type="button" class="btn" id="my-r">Обновить рапорты</button>
+      </div>
+      <div class="sumline" id="my-sum"></div>
+    </section>
+    <div id="my-out"><section class="card"><div class="empty">Загрузка…</div></section></div>
+  </div>
+
+  <div id="v-rep" hidden>
     <section class="card">
       <div class="toolbar">
         <label class="f">Показать<select id="rp-st">
@@ -752,7 +788,121 @@ function compute(data, opt) {
   return out;
 }
 
-const api = { BASE, compute, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
+// ---------- KPI отдела ПТО и специалистов (листы «KPI ПТО», «KPI специалистов») ----------
+const KPI_DEFAULT = {
+  w: [0.4, 0.15, 0.2, 0.1, 0.15],          // веса KPI 1–5
+  t: [1, 0.7, 0.9, 0, 1],                  // цели
+  thr: 0.7,                                // порог по KPI 1 (достижение)
+  scale: [[0, 0], [0.8, 0.5], [0.9, 0.8], [1, 1], [1.1, 1.2]],   // достижение от → коэффициент
+  fundA: 500000, fot: 2000000, fotPct: 0.2, volPct: 0.001, payPct: 0.001, cap: 1000000,
+  variant: "Б", share: {}
+};
+const KPI_NAMES = ["Выполнение плана закрытия", "Точность планирования", "Сроки КС: подача и подписание", "«Зависшие» КС", "Дисциплина данных"];
+function kpiSettings(data) {
+  const s = JSON.parse(JSON.stringify(KPI_DEFAULT));
+  (data.kpi || []).forEach(r => {
+    if (!r || !r.id) return;
+    let v = r.value; try { v = JSON.parse(r.value); } catch (e) {}
+    if (r.id.indexOf("share:") === 0) s.share[r.id.slice(6)] = +v || 0;
+    else if (r.id in s) s[r.id] = v;
+  });
+  return s;
+}
+const accepted = k => k.agr === "Согласована" || k.sign === "Подписана" || k.pay === "Оплачена";
+function kpi(data, opt) {
+  const today = opt.today, kind = opt.kind || "month";
+  const S = kpiSettings(data);
+  const byName = index(data);
+  const ks = (data.ks || []).map(k => enrichKs(k, byName));
+  const list = periods(kind, data, today);
+  const P = list.find(x => x.key === opt.period) || defaultPeriod(kind, data, today);
+  const a = ym(P.start), b = ym(P.end), n = (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + +b.slice(5) - +a.slice(5) + 1;
+  const inP = k => k.month && k.month >= a && k.month <= b;
+  const pos = k => num(k.ks2) > 0;
+  const sum = (arr, f) => arr.reduce((s, x) => s + num(f ? f(x) : x.ks2), 0);
+  const planOf = (name, x, y) => (data.plan || []).filter(p => p.obj === name && p.month >= x && p.month <= y).reduce((s, p) => s + num(p.sum), 0);
+  const cap = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < a)));
+  const aq = k => has(k.ks2) ? (k.date || (k.month ? eom(k.month) : "")) : "";
+  const hang = k => has(k.ks2) && aq(k) && aq(k) <= addDays(P.end, -30) && k.month && k.month <= b && !accepted(k);
+  const signedOk = k => k.signDate && k.month && k.signDate <= addDays(eom(k.month), 15);
+  const sentOk = k => k.date && k.month && k.date <= eom(k.month);
+  const months = []; for (let m = a; m <= b; m = addM(m, 1)) months.push(m);
+  // по объектам — столбцы Расчёт!CA…CT
+  const rows = (data.objects || []).map(o => {
+    const mine = ks.filter(k => k.obj === o.name), pk = mine.filter(inP);
+    const CA = Math.min(planOf(o.name, a, b), cap(o));
+    const CB = sum(pk.filter(accepted));
+    const CC = CA ? CB / CA : null;
+    const CD = CA > 0 ? (CC >= 0.8 && CC <= 1.2 ? 1 : 0) : null;
+    const CP = months.filter(m => planOf(o.name, m, m) > 0).length;
+    const CR = CP * (/^Дважды/.test(o.sched || "") ? 2 : 1);
+    return {
+      name: o.name, resp: o.resp || "", pto: o.pto || "", CA, CB, CC, CD, CR,
+      CH: pk.filter(pos).length, CI: pk.filter(signedOk).length, CJ: pk.filter(k => k.signDate).length,
+      CK: sum(mine.filter(hang)), CL: sum(pk), CM: pk.filter(k => pos(k) && k.date).length,
+      CT: Math.min(pk.filter(sentOk).length, CR), hangN: mine.filter(k => hang(k) && pos(k)).length
+    };
+  });
+  const coefOf = x => { let c = 0; S.scale.forEach(([from, k]) => { if (x >= from) c = k; }); return c; };
+  const total = (ach) => {                                    // итоговый коэффициент: веса показателей без данных перераспределяются
+    if (!(typeof ach[0] === "number") || ach[0] < S.thr) return 0;
+    let ws = 0, sm = 0;
+    ach.forEach((x, i) => { if (typeof x === "number") { ws += S.w[i]; sm += coefOf(x) * S.w[i]; } });
+    return ws ? sm / ws : 0;
+  };
+  const tg = (v, i) => v === null ? null : (S.t[i] === 0 ? 1 : v / S.t[i]);
+  // отдел — лист «KPI ПТО»
+  const pk = ks.filter(inP);
+  const R = f => rows.reduce((s, r) => s + num(f(r)), 0);
+  const E = {
+    E18: R(r => r.CA), E19: sum(pk), E20: R(r => r.CB), E21: rows.filter(r => r.CA > 0).length, E22: R(r => r.CD),
+    E23: pk.filter(pos).length, E24: pk.filter(k => k.signDate).length, E25: pk.filter(signedOk).length,
+    E26: R(r => r.CR), E27: R(r => r.CT), E28: sum(ks.filter(hang)), E29: ks.filter(k => hang(k) && pos(k)).length,
+    E34: (data.pays || []).filter(p => p.date >= P.start && p.date <= P.end).reduce((s, p) => s + num(p.sum), 0)
+  };
+  const signedP = pk.filter(k => k.sign === "Подписана");
+  E.E30 = E.E23 === 0 ? 1 : Math.max(0, 1 - pk.filter(k => k.ctrl).length / E.E23);
+  E.E31 = months.filter(m => (data.notes || []).some(x => x.month === m && String(x.text || "").trim())).length / n;
+  E.E32 = E.E23 === 0 ? 1 : pk.filter(k => pos(k) && k.date).length / E.E23;
+  E.E33 = signedP.length === 0 ? 1 : signedP.filter(k => k.signDate).length / signedP.length;
+  const v3 = (E.E26 === 0 && E.E24 === 0) ? null : (E.E24 > 0
+    ? ((E.E26 === 0 ? E.E25 / Math.max(1, E.E23) : E.E27 / E.E26) + E.E25 / Math.max(1, E.E23)) / 2 : E.E27 / E.E26);
+  const v = [E.E18 ? E.E20 / E.E18 : null, E.E21 ? E.E22 / E.E21 : null, v3,
+    (E.E23 > 0 || E.E28 > 0) ? Math.min(1, E.E28 / Math.max(1, E.E19)) : null, (E.E30 + E.E31 + E.E32 + E.E33) / 4];
+  const ach = [tg(v[0], 0), tg(v[1], 1), tg(v[2], 2), v[3] === null ? null : Math.max(0, 1 - v[3]), tg(v[4], 4)];
+  const dept = { items: KPI_NAMES.map((name, i) => ({ name, value: v[i], target: S.t[i], ach: ach[i], coef: ach[i] === null ? null : coefOf(ach[i]), w: S.w[i] })),
+    coef: total(ach), thrOk: typeof ach[0] === "number" && ach[0] >= S.thr, src: E };
+  // фонд
+  const capN = num(S.cap) > 0 ? num(S.cap) * n : INF;
+  const fund = [
+    { key: "А", name: "Фиксированный фонд", base: num(S.fundA) * n },
+    { key: "Б", name: "% от ФОТ отдела", base: num(S.fot) * n * num(S.fotPct) },
+    { key: "В", name: "% от закрытого объёма", base: Math.min(E.E20 * num(S.volPct), capN) },
+    { key: "Г", name: "% от поступивших денег", base: Math.min(E.E34 * num(S.payPct), capN) }
+  ].map(f => Object.assign(f, { pay: f.base * dept.coef, max: f.base * Math.max(...S.scale.map(x => x[1])) }));
+  const chosen = fund.find(f => f.key === S.variant) || fund[1];
+  // специалисты — лист «KPI специалистов»
+  const names = [];
+  rows.forEach(r => { if (r.pto && names.indexOf(r.pto) < 0) names.push(r.pto); });
+  const people = names.map(nm => {
+    const my = rows.filter(r => r.pto === nm), T = f => my.reduce((s, r) => s + num(f(r)), 0);
+    const D_ = T(r => r.CA), E_ = T(r => r.CB), nPlan = my.filter(r => r.CA > 0).length;
+    const CH = T(r => r.CH), CI = T(r => r.CI), CJ = T(r => r.CJ), CR = T(r => r.CR), CT = T(r => r.CT), CK = T(r => r.CK), CL = T(r => r.CL), CM = T(r => r.CM);
+    const F = D_ ? E_ / D_ / (S.t[0] || 1) : null;
+    const G = nPlan ? T(r => r.CD) / nPlan / (S.t[1] || 1) : null;
+    const H = (CR === 0 && CJ === 0) ? null : (CJ > 0 ? (CR === 0 ? CI / Math.max(1, CH) : (CT / CR + CI / Math.max(1, CH)) / 2) : CT / CR) / (S.t[2] || 1);
+    const I = (CH === 0 && CK === 0) ? null : Math.max(0, 1 - Math.min(1, CK / Math.max(1, CL)));
+    const J = CH === 0 ? null : CM / CH;
+    const achP = [F, G, H, I, J], coef = total(achP);
+    const share = nm in S.share ? S.share[nm] : 1 / names.length;
+    return { name: nm, objects: my.length, plan: D_, fact: E_, ach: achP, coefs: achP.map(x => x === null ? null : coefOf(x)), coef,
+      share, base: chosen.base * share, pay: chosen.base * share * coef, rows: my.filter(r => r.CA || r.CB || r.CK) };
+  });
+  return { period: P, list, months: n, settings: S, dept, fund, chosen, people, rows: rows.filter(r => r.CA || r.CB || r.CK),
+    shareSum: people.reduce((s, p) => s + p.share, 0) };
+}
+
+const api = { BASE, compute, kpi, kpiSettings, KPI_DEFAULT, KPI_NAMES, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
 root.PTO = api;
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
@@ -897,7 +1047,7 @@ let db=null;
 if(H0.get("u")&&H0.get("k")){db={u:H0.get("u"),k:H0.get("k")};U.sset("pto-db",JSON.stringify(db));}
 else{try{db=JSON.parse(U.sget("pto-db")||"null");}catch(e){}const hu=H0.get("u");if(hu&&(!db||db.u!==hu))db={u:hu,k:""};}
 const viaLogin=!H0.get("k");
-let RAW=null,ME=null,view=U.sget("pto-tab")||"rep",ksLimit=150,USERS=null,LOG=null;
+let RAW=null,ME=null,view=U.sget("pto-tab2")||"my",RP=null,RPOBJ=null,MYSEL="",MYDAY="",ksLimit=150,USERS=null,LOG=null;
 const SCH={
  "O": [
   "Объекты",
@@ -955,6 +1105,26 @@ const SCH={
    [
     "sched",
     "График подачи КС",
+    "s"
+   ],
+   [
+    "contract",
+    "№ договора",
+    "s"
+   ],
+   [
+    "contractDate",
+    "Дата договора",
+    "d"
+   ],
+   [
+    "start",
+    "Начало по договору",
+    "d"
+   ],
+   [
+    "rp",
+    "Код объекта в «Рапорте прораба»",
     "s"
    ],
    [
@@ -1374,10 +1544,10 @@ const RS={draft:"Черновик",sent:"На проверке",ret:"На дор
 const RSC={"Черновик":"draft","На проверке":"sent","На доработке":"ret","Согласован":"ok"};
 const ROLE_RU={spec:"Специалист ПТО",head:"Начальник ПТО",admin:"Администратор",dir:"Руководитель"};
 const STATUS_FIELDS=["agr","sign","pay","payDate","signDate","note"];
-const ALLTABS=["rep","ks","money","plan","obj","users","hist","more"];
+const ALLTABS=["my","rep","ks","money","plan","obj","users","hist","more"];
 const isHead=()=>!!ME&&(ME.role==="head"||ME.role==="admin");
 const isAdmin=()=>!!ME&&ME.role==="admin";
-function tabsFor(){if(!ME)return ["rep"];if(ME.role==="admin")return ALLTABS;if(ME.role==="head")return ["rep","ks","money","plan","obj","more"];return ["rep","ks","plan","obj","more"];}
+function tabsFor(){if(!ME)return ["my"];if(ME.role==="admin")return ALLTABS;if(ME.role==="head")return ["my","rep","ks","money","plan","obj","more"];return ["my","rep","ks","plan","obj","more"];}
 const STATUSES=["В работе","Нет ДС","Нет договора","Приостановлен","Завершён"];
 const PAYKIND=["Оплата КС","Аванс","Возврат ГУ","Прочее"];
 const SCHED=["Ежемесячно (25–30 число)","Дважды в месяц (15 и 30 число)"];
@@ -1388,14 +1558,14 @@ function applyRole(){
   const tabs=tabsFor();ALLTABS.forEach(x=>{$("tab-"+x).hidden=!tabs.includes(x);});
   $("logout").hidden=!viaLogin;document.querySelector(".tabs").hidden=false;$("login").hidden=true;
   $("ob-add").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();
-  if(!tabs.includes(view))show("rep");
+  if(!tabs.includes(view))show(tabs[0]);
   else ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==view;$("tab-"+x).setAttribute("aria-selected",String(x===view));});
 }
 function show(v){
-  if(!tabsFor().includes(v))v="rep";
+  if(!tabsFor().includes(v))v=tabsFor()[0];
   if(view==="plan"&&v!=="plan"&&Object.keys(planCh).length&&!confirm("План не сохранён. Уйти без сохранения?"))return;
   if(v!=="plan"){planCh={};$("pl-bar").hidden=true;}
-  view=v;ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-tab",v);render();}
+  view=v;ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-tab2",v);render();}
 
 // ---------- загрузка / запись ----------
 async function load(quiet){
@@ -1697,18 +1867,23 @@ function objEditor(o){
       [{f:"resp",label:"Ответственный (руководитель)",type:"select",opts:RAW.lists.resp},{f:"pto",label:"Специалист ПТО",type:"select",opts:RAW.lists.pto}],
       [{f:"status",label:"Статус",type:"select",opts:STATUSES,blank:false}],
       [{f:"sum",label:"Сумма договора с ДС, руб",type:"num"},{f:"done0",label:"Выполнено до 01.01.2026, руб",type:"num"}],
-      [{f:"ret",label:"% удержания",type:"pct"},{f:"payDays",label:"Срок оплаты, дней",type:"select",opts:[10,15,30,45,60],blank:false},{f:"due",label:"Срок по договору",type:"date"}],
+      [{f:"contract",label:"№ договора"},{f:"contractDate",label:"Дата договора",type:"date"}],
+      [{f:"start",label:"Начало работ по договору",type:"date"},{f:"due",label:"Окончание по договору",type:"date"}],
+      [{f:"ret",label:"% удержания",type:"pct"},{f:"payDays",label:"Срок оплаты, дней",type:"select",opts:[10,15,30,45,60],blank:false}],
+      [{f:"rp",label:"Объект в «Рапорте прораба»",type:"select",opts:(RPOBJ||[]).map(x=>x.pid)}],
       [{f:"sched",label:"График подачи КС заказчику",type:"select",opts:SCHED,blank:false}],
       [{f:"note",label:"Примечание",type:"textarea"}]],
-    init(){if(!isHead()){Object.values(ED.inp).forEach(disableInp);$("ed-s").hidden=true;$("ed-del").hidden=true;ED.lockBox.textContent="Справочник объектов ведёт начальник ПТО.";ED.lockBox.hidden=false;}},
+    init(){const rs=ED.inp.rp;rs.querySelectorAll("option").forEach(op=>{if(!op.value){op.textContent="— не связан —";return;}const x=(RPOBJ||[]).find(r=>r.pid===op.value);op.textContent=x?x.name+(x.closed?" (закрыт)":""):op.value+(RPOBJ?" (нет в рапортах)":"");});
+      if(!RPOBJ&&isHead())loadRpObj().then(()=>{if(ED&&ED.inp.rp===rs){const cur=rs.value;rs.innerHTML="";const o0=el("option",null,"— не связан —");o0.value="";rs.appendChild(o0);RPOBJ.forEach(x=>{const op=el("option",null,x.name+(x.closed?" (закрыт)":""));op.value=x.pid;rs.appendChild(op);});if(cur&&!RPOBJ.some(x=>x.pid===cur)){const op=el("option",null,cur+" (нет в рапортах)");op.value=cur;rs.appendChild(op);}rs.value=cur;}}).catch(()=>{});
+      if(!isHead()){Object.values(ED.inp).forEach(disableInp);$("ed-s").hidden=true;$("ed-del").hidden=true;ED.lockBox.textContent="Справочник объектов ведёт начальник ПТО.";ED.lockBox.hidden=false;}},
     calc(){const nm=val("name");const wr=[];
       if(nm&&RAW.objects.some(x=>x.id!==o.id&&x.name.trim().toLowerCase()===nm.toLowerCase()))wr.push("Объект с таким названием уже есть.");
       if(!isNew&&nm&&nm!==o.name&&used)wr.push("Название поменяется во всех КС, поступлениях и плане этого объекта.");
       setWarn(wr.join(" "),wr.length&&wr[0].startsWith("Объект с таким"));
       if(!isNew){const r=PTO.objectRows(RAW,U.todayISO()).find(x=>x.id===o.id);if(r)setCalc([["Выполнено всего:",U.rub0(r.doneAll)],["Остаток:",r.remain==null?"—":U.rub0(r.remain)],["% выполнения:",U.pct(r.pct,1)],["Не оплачено по КС:",U.rub0(r.unpaid)],["Долг заказчика (подписано):",U.rub0(r.debt)],["Получено денег:",U.rub0(r.got)]]);}},
     collect(){const nm=need(val("name"),"название");if(RAW.objects.some(x=>x.id!==o.id&&x.name.trim().toLowerCase()===nm.toLowerCase()))throw new Error("Объект с таким названием уже есть.");
-      return {id:o.id,name:nm,resp:val("resp"),pto:val("pto"),status:val("status"),sum:numOk(val("sum"),"сумма договора"),done0:numOk(val("done0"),"выполнено до 01.01.2026")||0,ret:numOk(val("ret"),"% удержания")||0,payDays:+val("payDays"),due:val("due"),sched:val("sched"),note:val("note")};},
-    async onSave(r){r.base=o.upd||"";await save("O",[r],!isNew&&r.name!==o.name?{rename:{from:o.name,to:r.name}}:null);},
+      return {id:o.id,name:nm,resp:val("resp"),pto:val("pto"),status:val("status"),sum:numOk(val("sum"),"сумма договора"),done0:numOk(val("done0"),"выполнено до 01.01.2026")||0,ret:numOk(val("ret"),"% удержания")||0,payDays:+val("payDays"),due:val("due"),sched:val("sched"),contract:val("contract"),contractDate:val("contractDate"),start:val("start"),rp:val("rp"),note:val("note")};},
+    async onSave(r){r.base=o.upd||"";await save("O",[r],!isNew&&r.name!==o.name?{rename:{from:o.name,to:r.name}}:null);if(r.rp!==(o.rp||""))RP=null;},
     onDelete:isNew?null:async()=>{if(used)throw new Error("по объекту есть КС, план или поступления — удалять нельзя. Закройте объект статусом «Завершён».");await del("O",o.id);}});
 }
 function renderObj(){
@@ -1729,6 +1904,138 @@ function renderObj(){
   if(!list.length)out.appendChild(el("div","empty","Ничего не найдено."));
 }
 $("ob-q").oninput=renderObj;$("ob-st").onchange=renderObj;$("ob-add").onclick=()=>objEditor(null);
+
+// ---------- МОИ ОБЪЕКТЫ (договор, сроки, план/факт, рапорты прорабов — только чтение) ----------
+let RPDAYS=31,RPLOADING=null;
+async function loadRp(days){
+  if(RPLOADING)return RPLOADING;
+  RPLOADING=(async()=>{try{const j=await U.get(db,{a:"rp",days:days||RPDAYS});RPDAYS=days||RPDAYS;RP=Object.assign(j,{at:Date.now(),err:""});}
+    catch(e){RP={objects:[],at:Date.now(),err:e.message||"нет связи"};}finally{RPLOADING=null;}})();
+  return RPLOADING;
+}
+async function loadRpObj(){const j=await U.get(db,{a:"rpobj"});RPOBJ=(j.objects||[]).sort((a,b)=>(a.closed-b.closed)||a.name.localeCompare(b.name,"ru"));return RPOBJ;}
+const nf=(v,d)=>(v===null||v===undefined||isNaN(v))?"—":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:d===undefined?1:d});
+const dDiff=(a,b)=>Math.round((Date.parse(a+"T12:00:00Z")-Date.parse(b+"T12:00:00Z"))/864e5);
+function lastWorkday(t){let d=PTO.addDays(t,-1);if(new Date(d+"T12:00:00Z").getUTCDay()===0)d=PTO.addDays(d,-1);return d;}   // пн–сб, воскресенье — выходной
+function myObjects(){
+  const st=$("my-st").value;
+  return RAW.objects.filter(o=>!st||o.status!=="Завершён").sort((a,b)=>a.name.localeCompare(b.name,"ru"));
+}
+function rpOf(o){return RP&&RP.objects?RP.objects.filter(r=>r.obj===o.name):[];}
+/** Сводка по объекту: договор, сроки план/факт, деньги, объёмы, подсказки. */
+function myModel(o){
+  const today=U.todayISO(),row=PTO.objectRows(RAW,today).find(x=>x.id===o.id)||{},rps=rpOf(o),r=rps[0]||null;
+  const m=today.slice(0,7),ksM=RAW.ks.filter(k=>k.obj===o.name&&k.month===m).reduce((a,k)=>a+(+k.ks2||0),0),plM=(RAW.plan.find(p=>p.obj===o.name&&p.month===m)||{}).sum||0;
+  const startP=o.start||(r&&r.start)||"",endP=o.due||(r&&r.due)||"";
+  const startF=rps.map(x=>x.first).filter(Boolean).sort()[0]||"";
+  const fin=rps.map(x=>x.finish&&x.finish.status==="Подтверждено"?x.finish.confirmed:(x.closed?String(x.closedAt||"").slice(0,10)||x.last||"":"")).filter(Boolean).sort().pop()||"";
+  const rpClosed=rps.length>0&&rps.every(x=>x.closed||(x.finish&&x.finish.status==="Подтверждено"));
+  const days=[].concat(...rps.map(x=>x.days.map(d=>Object.assign({pid:x.pid,cfg:x},d))));
+  const lw=lastWorkday(today),rpLast=rps.map(x=>x.last).filter(Boolean).sort().pop()||"";
+  const H=[];   // подсказки: [текст, уровень bad|warn|info]
+  if(!o.rp)H.push(["Объект не связан с «Рапортом прораба» — рапорты прорабов здесь не видны"+(isHead()?". Привяжите его в карточке объекта.":". Сообщите начальнику ПТО."),"info"]);
+  else if(RP&&!RP.err&&!fin&&o.status!=="Завершён"&&!(r&&r.closed)&&!days.some(d=>d.date===lw))H.push(["Рапорт за "+U.ru(lw)+" не сдан"+(rpLast?" (последний — "+U.ru(rpLast)+")":""),"warn"]);
+  const d7=PTO.addDays(today,-8),ext={};days.filter(d=>d.date>d7).forEach(d=>(d.extra||[]).forEach(x=>{if(x&&x.n)ext[x.n]=1;}));
+  if(Object.keys(ext).length)H.push(["Работы вне паспорта за 7 дней: "+Object.keys(ext).join("; ")+" — проверьте, нужен ли ДС","warn"]);
+  const dt=days.filter(d=>d.date>d7).reduce((a,d)=>a+(d.downtime||[]).reduce((s,x)=>s+(+x.h||0),0),0);
+  if(dt>0)H.push(["Простои за 7 дней: "+nf(dt,0)+" ч — основание для писем заказчику","info"]);
+  if(o.status==="Нет ДС"||o.status==="Нет договора")H.push(["Статус «"+o.status+"» — работы идут без оформленного документа","bad"]);
+  if(+o.sum>0&&row.remain<0)H.push(["Выполнено больше договора на "+U.mln(-row.remain)+" млн — нужен ДС","bad"]);
+  else if(+o.sum>0&&row.remain>0&&row.remain/+o.sum<0.1&&o.status!=="Завершён")H.push(["Остаток договора меньше 10%: "+U.mln(row.remain)+" млн","warn"]);
+  if(rpClosed&&o.status!=="Завершён")H.push(["Объект закрыт в «Рапорте прораба»"+(fin?" ("+U.ru(fin)+")":"")+" — закройте КС и смените статус на «Завершён»","warn"]);
+  if(endP&&!fin&&!rpClosed&&o.status!=="Завершён"){const n=dDiff(endP,today);if(n<0)H.push(["Срок по договору истёк "+U.ru(endP)+" ("+(-n)+" дн. назад)","bad"]);else if(n<=14)H.push(["До окончания по договору "+n+" дн. ("+U.ru(endP)+")","warn"]);}
+  else if(fin&&!rpClosed)H.push(["Работы завершены "+U.ru(fin)+" — закройте КС по объекту","warn"]);
+  return {o,row,rps,r,today,startP,endP,startF,fin,rpClosed,days,ksM,plM,H,rpLast};
+}
+function hintBox(H){const w=el("div","hints");H.forEach(([t,l])=>w.appendChild(el("div","hint-l "+l,t)));return w;}
+function renderMy(){
+  if(!RP||Date.now()-RP.at>10*60e3){if(!RPLOADING)loadRp().then(()=>{if(view==="my")renderMy();});}
+  const list=myObjects(),sel=$("my-o"),cur=MYSEL&&list.some(o=>o.id===MYSEL)?MYSEL:"";
+  sel.innerHTML="";const a=el("option",null,"Все объекты ("+list.length+")");a.value="";sel.appendChild(a);
+  list.forEach(o=>{const op=el("option",null,o.name);op.value=o.id;sel.appendChild(op);});sel.value=cur;MYSEL=cur;
+  const out=$("my-out");out.innerHTML="";
+  const sm=$("my-sum");sm.innerHTML="";
+  if(RP&&RP.err)sm.appendChild(el("span","flagtxt","Рапорты не загрузились: "+RP.err));
+  else if(!RP)sm.textContent="Загружаю рапорты прорабов…";
+  else sm.textContent="Рапорты прорабов за "+RPDAYS+" дн. · обновлено в "+new Date(RP.at).toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"});
+  if(cur){myDetail(RAW.objects.find(o=>o.id===cur),out);return;}
+  if(!list.length){const c=el("section","card");c.appendChild(el("div","empty","За вами пока не закреплены объекты."));out.appendChild(c);return;}
+  const card=el("section","card"),lst=el("div","list");card.appendChild(lst);out.appendChild(card);
+  list.map(myModel).forEach(M=>{
+    const b=el("button","my");b.type="button";b.onclick=()=>{MYSEL=M.o.id;MYDAY="";renderMy();scrollTo(0,0);};
+    const n=el("div","o");n.appendChild(el("b",null,M.o.name));
+    n.appendChild(el("small",null,[M.o.contract?"Договор № "+M.o.contract+(M.o.contractDate?" от "+U.ru(M.o.contractDate):""):"№ договора не указан",M.o.resp,M.r&&M.r.foremen.length?"прораб: "+M.r.foremen.slice(-2).join(", "):""].filter(Boolean).join(" · ")));
+    if(M.H.length)n.appendChild(hintBox(M.H.filter(h=>h[1]!=="info").slice(0,2)));
+    b.appendChild(n);
+    const v=(t,s,cls)=>{const e=el("div","v"+(cls?" "+cls:""),t);if(s)e.appendChild(el("small",null,s));b.appendChild(e);};
+    v(M.endP?U.ru(M.endP):"—",M.startP?"начало "+U.ru(M.startP):"срок по договору");
+    v(M.o.sum?U.pct(M.row.pct):"—",M.o.sum?"договора · остаток "+U.mln(M.row.remain)+" млн":"нет суммы",M.row.remain<0?"bad":"");
+    v(M.rps.length&&M.rps[0].pct!=null?U.pct(M.rps.reduce((s,x)=>s+(x.pct||0),0)/M.rps.length):"—",M.rpLast?"рапорт "+U.ru(M.rpLast):(M.o.rp?"рапортов нет":"не связан"));
+    lst.appendChild(b);});
+  const hd=el("div","my hd");["Объект","Окончание","Деньги","Объёмы"].forEach((t,i)=>hd.appendChild(el("div",i?"v":null,t)));lst.insertBefore(hd,lst.firstChild);
+}
+$("my-o").onchange=()=>{MYSEL=$("my-o").value;MYDAY="";renderMy();};$("my-st").onchange=renderMy;
+$("my-r").onclick=async()=>{RP=null;$("my-sum").textContent="Загружаю рапорты прорабов…";await loadRp();renderMy();};
+function tbl(head,rows,cls){const w=el("div","tablewrap"),t=el("table","t mini"+(cls?" "+cls:""));const tr=el("tr");head.forEach((h,i)=>{const th=el("th",i?"num":null,h);tr.appendChild(th);});t.appendChild(tr);
+  rows.forEach(r=>{const x=el("tr");r.forEach((c,i)=>{const td=el("td",i?"num":null);if(c instanceof Node)td.appendChild(c);else td.textContent=c;x.appendChild(td);});t.appendChild(x);});w.appendChild(t);return w;}
+function myDetail(o,out){
+  const M=myModel(o),sec=t=>{const s=el("section","card");if(t)s.appendChild(el("h2",null,t));out.appendChild(s);return s;};
+  const top=sec();const bk=el("button","btn small","← Все объекты");bk.type="button";bk.onclick=()=>{MYSEL="";renderMy();};top.appendChild(bk);
+  top.appendChild(el("div","myttl",o.name));
+  top.appendChild(el("div","sumline",[o.contract?"Договор № "+o.contract+(o.contractDate?" от "+U.ru(o.contractDate):""):"№ договора не указан",o.status,o.resp?"руководитель: "+o.resp:"",M.r&&M.r.foremen.length?"прораб: "+M.r.foremen.join(", "):"",o.pto?"ПТО: "+o.pto:""].filter(Boolean).join(" · ")));
+  if(M.H.length)top.appendChild(hintBox(M.H));
+  const tiles=el("div","tiles");top.appendChild(tiles);
+  const tile=(l,b,s,cls)=>{const t=el("div","tile");t.appendChild(el("small",null,l));const v=el("b",cls||null,b);t.appendChild(v);if(s)t.appendChild(el("div","s",s));tiles.appendChild(t);};
+  const endN=M.endP?dDiff(M.endP,M.today):null;
+  tile("Начало: по договору / факт",(M.startP?U.ru(M.startP):"—"),"факт (первый рапорт): "+(M.startF?U.ru(M.startF):"—"));
+  tile("Окончание: по договору / факт",(M.endP?U.ru(M.endP):"—"),M.fin?"факт: "+U.ru(M.fin):M.rpClosed?"закрыт в рапортах":(endN==null?"факт: работы идут":endN>=0?"осталось "+endN+" дн.":"просрочено на "+(-endN)+" дн."),!M.fin&&endN!=null&&endN<0?"bad":"");
+  tile("Договор с ДС, млн",o.sum?U.mln(o.sum):"—",o.sum?"выполнено "+U.mln(M.row.doneAll)+" млн · "+U.pct(M.row.pct):"сумма не указана");
+  tile("Остаток договора, млн",o.sum?U.mln(M.row.remain):"—",M.row.unpaid?"не оплачено по КС "+U.mln(M.row.unpaid)+" млн":"",M.row.remain<0?"bad":"");
+  tile("КС / план за "+PTO.monthLabel(M.today.slice(0,7)).toLowerCase()+", млн",U.mln(M.ksM)+" / "+U.mln(M.plM),M.plM?"выполнение "+U.pct(M.ksM/M.plM):"план не задан");
+  if(M.rps.length&&M.rps.some(x=>x.pct!=null))tile("Готовность по объёмам (рапорты)",U.pct(M.rps.reduce((s,x)=>s+(x.pct||0),0)/M.rps.length),"по работам с объёмом по проекту");
+  if(!o.rp){if(isHead()){const b=el("button","btn small","Привязать к «Рапорту прораба»");b.type="button";b.onclick=()=>objEditor(o);top.appendChild(b);}return;}
+  if(!RP){sec().appendChild(el("div","empty","Загружаю рапорты прорабов…"));return;}
+  if(RP.err){sec().appendChild(el("div","empty","Рапорты не загрузились: "+RP.err));return;}
+  if(!M.rps.length){sec().appendChild(el("div","empty","В «Рапорте прораба» нет объекта с кодом «"+o.rp+"». Проверьте привязку в карточке объекта."));return;}
+  const daySec=sec("Рапорты прорабов по дням");
+  // объёмы: по проекту / выполнено по рапортам
+  const W=[].concat(...M.rps.map(x=>x.works));
+  if(W.length){const s=sec("Объёмы: по проекту и выполнено по рапортам");
+    s.appendChild(tbl(["Работа","Ед.","По проекту","Выполнено","%","За 7 дней"],W.map(w=>[w.n,w.u,w.t?nf(w.t):"—",nf(w.done),w.t?U.pct(w.done/w.t):"—",w.d7?nf(w.d7):""])));}
+  const HL=[].concat(...M.rps.map(x=>x.haul)).filter(h=>h.t||h.v||h.w);
+  const MC=[].concat(...M.rps.map(x=>x.mach)).filter(m=>m.h>0).sort((a,b)=>b.h-a.h);
+  if(HL.length||MC.length){const g=el("div","grid2");out.appendChild(g);
+    if(HL.length){const s=el("section","card");s.appendChild(el("h2",null,"Вывоз с начала работ"));const T=HL.reduce((a,h)=>({t:a.t+h.t,v:a.v+h.v,w:a.w+h.w}),{t:0,v:0,w:0});
+      s.appendChild(tbl(["Материал","Рейсов","м³","т"],HL.sort((a,b)=>b.v-a.v).map(h=>[h.m,nf(h.t,0),nf(h.v),h.w?nf(h.w):""]).concat([[Object.assign(el("b",null,"Итого")),nf(T.t,0),nf(T.v),T.w?nf(T.w):""]])));g.appendChild(s);}
+    if(MC.length){const s=el("section","card");s.appendChild(el("h2",null,"Техника с начала работ"));
+      s.appendChild(tbl(["Машина","Моточасы","Дней в работе"],MC.map(m=>[m.n,nf(m.h),String(m.days)]).concat([[Object.assign(el("b",null,"Итого")),nf(MC.reduce((a,m)=>a+m.h,0)),""]])));g.appendChild(s);}
+  }
+  // рапорты по дням (секция стоит сразу под шапкой — это ежедневная работа)
+  const s=daySec;
+  const dates=[...new Set(M.days.map(d=>d.date))].sort();
+  if(!dates.length){s.appendChild(el("div","empty","За последние "+RPDAYS+" дн. рапортов нет."));}
+  else{
+    if(!MYDAY||!dates.includes(MYDAY))MYDAY=dates[dates.length-1];
+    const i=dates.indexOf(MYDAY),nav=el("div","pnav");
+    const pb=el("button","btn","‹"),nb=el("button","btn","›"),ds=el("select");pb.type=nb.type="button";pb.setAttribute("aria-label","Предыдущий день");nb.setAttribute("aria-label","Следующий день");
+    dates.slice().reverse().forEach(d=>{const op=el("option",null,U.ru(d)+" · "+["вс","пн","вт","ср","чт","пт","сб"][new Date(d+"T12:00:00Z").getUTCDay()]);op.value=d;ds.appendChild(op);});ds.value=MYDAY;
+    pb.disabled=i<=0;nb.disabled=i>=dates.length-1;pb.onclick=()=>{MYDAY=dates[i-1];renderMy();};nb.onclick=()=>{MYDAY=dates[i+1];renderMy();};ds.onchange=()=>{MYDAY=ds.value;renderMy();};
+    nav.append(pb,ds,nb);s.appendChild(nav);
+    M.days.filter(d=>d.date===MYDAY).forEach(d=>{
+      const wn={};(d.cfg.works||[]).forEach(w=>{wn[w.c]=w;});
+      const b=el("div","rpd");b.appendChild(el("div","rpd-h",d.shift+" · "+(d.foreman||"прораб не указан")+" · людей: "+(d.people||0)+(d.subs&&d.subs.length?" ("+d.subs.map(x=>x.n+" "+(x.p==null?"?":x.p)).join(", ")+")":"")));
+      if(d.idle)b.appendChild(el("div","rpd-l muted","Работ не было"));
+      const L=(cls,t)=>b.appendChild(el("div","rpd-l "+cls,t));
+      Object.keys(d.works).forEach(c=>{const w=wn[c]||{n:c,u:""};L("w",w.n+": "+nf(d.works[c])+" "+(w.u||""));});
+      (d.extra||[]).forEach(x=>L("x","Вне паспорта: "+x.n+": "+nf(x.v)+" "+(x.u||"")));
+      (d.haul||[]).forEach(h=>L("h","Вывоз: "+(h.m||"—")+" — "+(h.t?nf(h.t,0)+" рейс., ":"")+nf(h.v)+" м³"+(h.w?" / "+nf(h.w)+" т":"")+(h.c?" · "+h.c:"")));
+      (d.mach||[]).forEach(m=>L("m","Техника: "+m.n+(m.q>1?" ×"+m.q:"")+" — "+(m.h==null||m.h===""?"м/ч не указаны":nf(m.h)+" м/ч")));
+      (d.downtime||[]).forEach(x=>L("d",(x.k||"Простой")+": "+(x.what||"")+" — "+nf(x.h)+" ч"+(x.why?", "+x.why:"")+(x.fault?" (вина: "+x.fault+")":"")));
+      if(d.other)L("n","Примечание: "+d.other);
+      s.appendChild(b);});
+  }
+  if(RPDAYS<366){const more=el("button","btn small","Показать рапорты за "+(RPDAYS<90?90:366)+" дн.");more.type="button";more.onclick=async()=>{more.disabled=true;more.textContent="Загружаю…";await loadRp(RPDAYS<90?90:366);renderMy();};s.appendChild(more);}
+}
 
 // ---------- ЕЩЁ ----------
 function renderMore(){
@@ -1933,7 +2240,7 @@ function renderHist(){
 
 function render(){
   if(!RAW)return;
-  if(view==="rep")renderRep();else if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();
+  if(view==="my")renderMy();else if(view==="rep")renderRep();else if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();
   else if(view==="users")renderUsers();else if(view==="hist")renderHist();else renderMore();
   if($("rd").open)repDraw();
 }

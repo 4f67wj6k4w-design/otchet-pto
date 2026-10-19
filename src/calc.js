@@ -281,7 +281,121 @@ function compute(data, opt) {
   return out;
 }
 
-const api = { BASE, compute, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
+// ---------- KPI отдела ПТО и специалистов (листы «KPI ПТО», «KPI специалистов») ----------
+const KPI_DEFAULT = {
+  w: [0.4, 0.15, 0.2, 0.1, 0.15],          // веса KPI 1–5
+  t: [1, 0.7, 0.9, 0, 1],                  // цели
+  thr: 0.7,                                // порог по KPI 1 (достижение)
+  scale: [[0, 0], [0.8, 0.5], [0.9, 0.8], [1, 1], [1.1, 1.2]],   // достижение от → коэффициент
+  fundA: 500000, fot: 2000000, fotPct: 0.2, volPct: 0.001, payPct: 0.001, cap: 1000000,
+  variant: "Б", share: {}
+};
+const KPI_NAMES = ["Выполнение плана закрытия", "Точность планирования", "Сроки КС: подача и подписание", "«Зависшие» КС", "Дисциплина данных"];
+function kpiSettings(data) {
+  const s = JSON.parse(JSON.stringify(KPI_DEFAULT));
+  (data.kpi || []).forEach(r => {
+    if (!r || !r.id) return;
+    let v = r.value; try { v = JSON.parse(r.value); } catch (e) {}
+    if (r.id.indexOf("share:") === 0) s.share[r.id.slice(6)] = +v || 0;
+    else if (r.id in s) s[r.id] = v;
+  });
+  return s;
+}
+const accepted = k => k.agr === "Согласована" || k.sign === "Подписана" || k.pay === "Оплачена";
+function kpi(data, opt) {
+  const today = opt.today, kind = opt.kind || "month";
+  const S = kpiSettings(data);
+  const byName = index(data);
+  const ks = (data.ks || []).map(k => enrichKs(k, byName));
+  const list = periods(kind, data, today);
+  const P = list.find(x => x.key === opt.period) || defaultPeriod(kind, data, today);
+  const a = ym(P.start), b = ym(P.end), n = (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + +b.slice(5) - +a.slice(5) + 1;
+  const inP = k => k.month && k.month >= a && k.month <= b;
+  const pos = k => num(k.ks2) > 0;
+  const sum = (arr, f) => arr.reduce((s, x) => s + num(f ? f(x) : x.ks2), 0);
+  const planOf = (name, x, y) => (data.plan || []).filter(p => p.obj === name && p.month >= x && p.month <= y).reduce((s, p) => s + num(p.sum), 0);
+  const cap = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < a)));
+  const aq = k => has(k.ks2) ? (k.date || (k.month ? eom(k.month) : "")) : "";
+  const hang = k => has(k.ks2) && aq(k) && aq(k) <= addDays(P.end, -30) && k.month && k.month <= b && !accepted(k);
+  const signedOk = k => k.signDate && k.month && k.signDate <= addDays(eom(k.month), 15);
+  const sentOk = k => k.date && k.month && k.date <= eom(k.month);
+  const months = []; for (let m = a; m <= b; m = addM(m, 1)) months.push(m);
+  // по объектам — столбцы Расчёт!CA…CT
+  const rows = (data.objects || []).map(o => {
+    const mine = ks.filter(k => k.obj === o.name), pk = mine.filter(inP);
+    const CA = Math.min(planOf(o.name, a, b), cap(o));
+    const CB = sum(pk.filter(accepted));
+    const CC = CA ? CB / CA : null;
+    const CD = CA > 0 ? (CC >= 0.8 && CC <= 1.2 ? 1 : 0) : null;
+    const CP = months.filter(m => planOf(o.name, m, m) > 0).length;
+    const CR = CP * (/^Дважды/.test(o.sched || "") ? 2 : 1);
+    return {
+      name: o.name, resp: o.resp || "", pto: o.pto || "", CA, CB, CC, CD, CR,
+      CH: pk.filter(pos).length, CI: pk.filter(signedOk).length, CJ: pk.filter(k => k.signDate).length,
+      CK: sum(mine.filter(hang)), CL: sum(pk), CM: pk.filter(k => pos(k) && k.date).length,
+      CT: Math.min(pk.filter(sentOk).length, CR), hangN: mine.filter(k => hang(k) && pos(k)).length
+    };
+  });
+  const coefOf = x => { let c = 0; S.scale.forEach(([from, k]) => { if (x >= from) c = k; }); return c; };
+  const total = (ach) => {                                    // итоговый коэффициент: веса показателей без данных перераспределяются
+    if (!(typeof ach[0] === "number") || ach[0] < S.thr) return 0;
+    let ws = 0, sm = 0;
+    ach.forEach((x, i) => { if (typeof x === "number") { ws += S.w[i]; sm += coefOf(x) * S.w[i]; } });
+    return ws ? sm / ws : 0;
+  };
+  const tg = (v, i) => v === null ? null : (S.t[i] === 0 ? 1 : v / S.t[i]);
+  // отдел — лист «KPI ПТО»
+  const pk = ks.filter(inP);
+  const R = f => rows.reduce((s, r) => s + num(f(r)), 0);
+  const E = {
+    E18: R(r => r.CA), E19: sum(pk), E20: R(r => r.CB), E21: rows.filter(r => r.CA > 0).length, E22: R(r => r.CD),
+    E23: pk.filter(pos).length, E24: pk.filter(k => k.signDate).length, E25: pk.filter(signedOk).length,
+    E26: R(r => r.CR), E27: R(r => r.CT), E28: sum(ks.filter(hang)), E29: ks.filter(k => hang(k) && pos(k)).length,
+    E34: (data.pays || []).filter(p => p.date >= P.start && p.date <= P.end).reduce((s, p) => s + num(p.sum), 0)
+  };
+  const signedP = pk.filter(k => k.sign === "Подписана");
+  E.E30 = E.E23 === 0 ? 1 : Math.max(0, 1 - pk.filter(k => k.ctrl).length / E.E23);
+  E.E31 = months.filter(m => (data.notes || []).some(x => x.month === m && String(x.text || "").trim())).length / n;
+  E.E32 = E.E23 === 0 ? 1 : pk.filter(k => pos(k) && k.date).length / E.E23;
+  E.E33 = signedP.length === 0 ? 1 : signedP.filter(k => k.signDate).length / signedP.length;
+  const v3 = (E.E26 === 0 && E.E24 === 0) ? null : (E.E24 > 0
+    ? ((E.E26 === 0 ? E.E25 / Math.max(1, E.E23) : E.E27 / E.E26) + E.E25 / Math.max(1, E.E23)) / 2 : E.E27 / E.E26);
+  const v = [E.E18 ? E.E20 / E.E18 : null, E.E21 ? E.E22 / E.E21 : null, v3,
+    (E.E23 > 0 || E.E28 > 0) ? Math.min(1, E.E28 / Math.max(1, E.E19)) : null, (E.E30 + E.E31 + E.E32 + E.E33) / 4];
+  const ach = [tg(v[0], 0), tg(v[1], 1), tg(v[2], 2), v[3] === null ? null : Math.max(0, 1 - v[3]), tg(v[4], 4)];
+  const dept = { items: KPI_NAMES.map((name, i) => ({ name, value: v[i], target: S.t[i], ach: ach[i], coef: ach[i] === null ? null : coefOf(ach[i]), w: S.w[i] })),
+    coef: total(ach), thrOk: typeof ach[0] === "number" && ach[0] >= S.thr, src: E };
+  // фонд
+  const capN = num(S.cap) > 0 ? num(S.cap) * n : INF;
+  const fund = [
+    { key: "А", name: "Фиксированный фонд", base: num(S.fundA) * n },
+    { key: "Б", name: "% от ФОТ отдела", base: num(S.fot) * n * num(S.fotPct) },
+    { key: "В", name: "% от закрытого объёма", base: Math.min(E.E20 * num(S.volPct), capN) },
+    { key: "Г", name: "% от поступивших денег", base: Math.min(E.E34 * num(S.payPct), capN) }
+  ].map(f => Object.assign(f, { pay: f.base * dept.coef, max: f.base * Math.max(...S.scale.map(x => x[1])) }));
+  const chosen = fund.find(f => f.key === S.variant) || fund[1];
+  // специалисты — лист «KPI специалистов»
+  const names = [];
+  rows.forEach(r => { if (r.pto && names.indexOf(r.pto) < 0) names.push(r.pto); });
+  const people = names.map(nm => {
+    const my = rows.filter(r => r.pto === nm), T = f => my.reduce((s, r) => s + num(f(r)), 0);
+    const D_ = T(r => r.CA), E_ = T(r => r.CB), nPlan = my.filter(r => r.CA > 0).length;
+    const CH = T(r => r.CH), CI = T(r => r.CI), CJ = T(r => r.CJ), CR = T(r => r.CR), CT = T(r => r.CT), CK = T(r => r.CK), CL = T(r => r.CL), CM = T(r => r.CM);
+    const F = D_ ? E_ / D_ / (S.t[0] || 1) : null;
+    const G = nPlan ? T(r => r.CD) / nPlan / (S.t[1] || 1) : null;
+    const H = (CR === 0 && CJ === 0) ? null : (CJ > 0 ? (CR === 0 ? CI / Math.max(1, CH) : (CT / CR + CI / Math.max(1, CH)) / 2) : CT / CR) / (S.t[2] || 1);
+    const I = (CH === 0 && CK === 0) ? null : Math.max(0, 1 - Math.min(1, CK / Math.max(1, CL)));
+    const J = CH === 0 ? null : CM / CH;
+    const achP = [F, G, H, I, J], coef = total(achP);
+    const share = nm in S.share ? S.share[nm] : 1 / names.length;
+    return { name: nm, objects: my.length, plan: D_, fact: E_, ach: achP, coefs: achP.map(x => x === null ? null : coefOf(x)), coef,
+      share, base: chosen.base * share, pay: chosen.base * share * coef, rows: my.filter(r => r.CA || r.CB || r.CK) };
+  });
+  return { period: P, list, months: n, settings: S, dept, fund, chosen, people, rows: rows.filter(r => r.CA || r.CB || r.CK),
+    shareSum: people.reduce((s, p) => s + p.share, 0) };
+}
+
+const api = { BASE, compute, kpi, kpiSettings, KPI_DEFAULT, KPI_NAMES, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
 root.PTO = api;
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

@@ -10,3 +10,6 @@
 - Расчёты (`src/calc.js`) повторяют формулы старого Excel-отчёта ПТО; сверка: `node tools/check.js data.json ref.json`.
 - Перенос из старого Excel: `python3 tools/import_xlsx.py старый.xlsx папка` → `База_ПТО.xlsx`.
 - Проверка без Google: `node tools/mockserver.js data.json` → `http://localhost:8080/index.html#u=http://localhost:8080/exec&k=pto`.
+
+- Вкладка «Мои объекты»: договор, сроки план/факт, деньги, объёмы и рапорты прорабов по дням. Скрипт ПТО читает таблицу «Рапорты прорабов» (`RP_ID` в Code.tpl.gs) только на чтение; привязка — поле «Код объекта в «Рапорте прораба»» в справочнике объектов. После обновления скрипта один раз запустить `checkRapport` в редакторе (разрешение Google).
+- Проверка с рапортами: `node tools/mockserver.js data.json 8080 rp.json`.
