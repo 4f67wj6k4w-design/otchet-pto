@@ -794,6 +794,7 @@ const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim
 function status(t,cls){const s=$("status");s.hidden=!t;s.className="banner"+(cls?" "+cls:"");s.textContent=t||"";}
 function show(v){view=v;["sum","obj","ks"].forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-d-tab",v);if(M)draw();}
 async function load(quiet){
+  if(window.DEMO_DATA){RAW=window.DEMO_DATA;$("upd").dataset.t="Демонстрация на данных отчёта ПТО";status("");recalc();return;}
   if(!db){status("Откройте страницу по ссылке руководителя (в ней адрес базы).","bad");return;}
   if(!quiet)status("Загрузка…");
   try{const j=await U.get(db,{a:"all"});RAW=j.data;status("");
