@@ -42,6 +42,7 @@ for (const t in schema) {
 const ctx = {
   SpreadsheetApp: { getActiveSpreadsheet: () => ss },
   ContentService: { createTextOutput: s => ({ s, setMimeType() { return this; } }), MimeType: { JSON: "json" } },
+  CacheService: { getScriptCache: () => ({ get: k => (global.__c = global.__c || {})[k] || null, put: (k, v) => { (global.__c = global.__c || {})[k] = v; }, remove: k => { if (global.__c) delete global.__c[k]; } }) },
   LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
   Utilities: {
     formatDate: (d, tz, f) => f === "yyyy-MM" ? d.getFullYear() + "-" + pad(d.getMonth() + 1) : d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()),

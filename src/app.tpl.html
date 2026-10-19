@@ -14,6 +14,9 @@ html,body{margin:0}
 {{CSS}}
 {{PTOCSS}}
 .who{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.login{max-width:420px;margin-inline:auto;margin-top:28px}.login form{display:flex;flex-direction:column;gap:12px}.login h2{text-transform:none;letter-spacing:0;font-size:18px;color:var(--fg)}
+.lo{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;font:12px var(--f-ui);padding:2px 8px;margin-left:8px;cursor:pointer;vertical-align:1px}
+.us .code{font-family:var(--f-num);color:var(--fg)}
 .who label{flex:1 1 220px}
 .objrow{display:grid;grid-template-columns:minmax(0,1.5fr) 120px 150px 120px 120px;gap:4px 12px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;font:inherit;color:inherit;width:100%}
 .objrow:hover{background:var(--sunk)}
@@ -28,7 +31,7 @@ html,body{margin:0}
 <div class="wrap">
   <header class="top">
     <div class="brandrow">
-      <div class="ttl"><div class="obj" id="who-h">Отчёт ПТО</div><h1>Отчёт ПТО</h1></div>
+      <div class="ttl"><div class="obj"><span id="who-h">Отчёт ПТО</span> <button type="button" id="logout" class="lo" hidden>Выйти</button></div><h1>Отчёт ПТО</h1></div>
       <img src="{{LOGO}}" alt="Группа компаний КРАШМАШ" width="120" height="48">
     </div>
     <nav class="tabs" role="tablist">
@@ -43,6 +46,21 @@ html,body{margin:0}
     </nav>
   </header>
   <div id="status" class="banner" hidden></div>
+
+  <!-- ВХОД -->
+  <section class="card login" id="login" hidden>
+    <form id="lg-f">
+      <h2 id="lg-t">Вход</h2>
+      <div id="lg-1"><label class="f">Логин<input id="lg-l" autocomplete="username" autocapitalize="none" spellcheck="false"></label>
+        <label class="f">Пароль<input id="lg-p" type="password" autocomplete="current-password"></label></div>
+      <div id="lg-2" hidden>
+        <div class="lockbar">Первый вход: придумайте свой пароль вместо временного. Не используйте пароль от почты, банка или других сервисов.</div>
+        <label class="f">Новый пароль (не короче 6 символов)<input id="lg-n1" type="password" autocomplete="new-password"></label>
+        <label class="f">Новый пароль ещё раз<input id="lg-n2" type="password" autocomplete="new-password"></label></div>
+      <div class="warnbox bad" id="lg-e" hidden></div>
+      <button type="submit" class="btn primary" id="lg-b">Войти</button>
+    </form>
+  </section>
 
   <!-- ОТЧЁТЫ -->
   <div id="v-rep">
@@ -116,7 +134,7 @@ html,body{margin:0}
   <!-- СОТРУДНИКИ (администратор) -->
   <div id="v-users" hidden>
     <section class="card"><h2><span>Сотрудники и личные ссылки</span><button type="button" class="btn small primary" id="us-add">+ Сотрудник</button></h2>
-      <div class="hint" style="margin-bottom:8px">У каждого сотрудника своя ссылка: по ней видно, кто вносил данные. Специалист видит только закреплённые объекты. Если ссылка попала не к тому человеку — «Новая ссылка», старая перестанет работать.</div>
+      <div class="hint" style="margin-bottom:8px">У каждого сотрудника своя ссылка, логин и пароль. При первом входе система просит сменить временный пароль. Специалист видит только закреплённые объекты. Забыл пароль — «Изменить» → «Сбросить пароль». «Скопировать приглашение» — готовый текст со ссылкой, логином и паролем.</div>
       <div class="list" id="us-out"></div></section>
     <section class="card"><h2>Ссылки руководителей</h2><div id="us-fixed"></div></section>
   </div>
@@ -182,7 +200,12 @@ html,body{margin:0}
 (function(){
 "use strict";
 const {$,el}=U;
-const db=U.db("pto-db");
+// Ссылка администратора: #u=адрес&k=ключ. Ссылка сотрудника: #u=адрес&l=логин — вход по логину и паролю.
+const H0=new URLSearchParams(location.hash.slice(1));
+let db=null;
+if(H0.get("u")&&H0.get("k")){db={u:H0.get("u"),k:H0.get("k")};U.sset("pto-db",JSON.stringify(db));}
+else{try{db=JSON.parse(U.sget("pto-db")||"null");}catch(e){}const hu=H0.get("u");if(hu&&(!db||db.u!==hu))db={u:hu,k:""};}
+const viaLogin=!H0.get("k");
 let RAW=null,ME=null,view=U.sget("pto-tab")||"rep",ksLimit=150,USERS=null,LOG=null;
 const SCH={{SCHEMA}};
 const RS={draft:"Черновик",sent:"На проверке",ret:"На доработке",ok:"Согласован"};
@@ -201,6 +224,7 @@ function status(t,cls,ms){const s=$("status");s.hidden=!t;s.className="banner"+(
 function applyRole(){
   $("who-h").textContent=(ME.role==="admin"?"Администратор":ME.name+" · "+ROLE_RU[ME.role])+(ME.role==="spec"?" · объектов: "+(ME.objects||[]).length:"");
   const tabs=tabsFor();ALLTABS.forEach(x=>{$("tab-"+x).hidden=!tabs.includes(x);});
+  $("logout").hidden=!viaLogin;document.querySelector(".tabs").hidden=false;$("login").hidden=true;
   $("ob-add").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();
   if(!tabs.includes(view))show("rep");
 }
@@ -212,14 +236,16 @@ function show(v){
 
 // ---------- загрузка / запись ----------
 async function load(quiet){
-  if(!db){status("Откройте страницу по ссылке ПТО (в ней адрес базы).","bad");return;}
+  if(!db){status("Откройте страницу по своей ссылке (её выдаёт администратор).","bad");return;}
+  if(!db.k){showLogin();return;}
   const CK="pto-cache-"+db.k.slice(0,8);
   if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;ME=c.me;applyRole();render();}}catch(e){}}
   if(!quiet)status("Загрузка базы…");
   try{const j=await U.get(db,{a:"all"});
     if(j.role==="dir"){status("Это ссылка руководителя — она открывает сводку.","bad");location.replace("director.html"+location.hash);return;}
     status("");ME=j.me;RAW=j.data;RAW.reports=RAW.reports||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
-  catch(e){status("Не удалось загрузить базу: "+(e.message||"нет связи")+(RAW?" — показана сохранённая копия":""),"bad");}
+  catch(e){if(/ключ/.test(e.message||"")&&viaLogin){db.k="";U.sset("pto-db",JSON.stringify(db));showLogin("Сеанс завершён (пароль сброшен или доступ отключён). Войдите снова.");return;}
+    status("Не удалось загрузить базу: "+(e.message||"нет связи")+(RAW?" — показана сохранённая копия":""),"bad");}
 }
 const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects"};
 function cacheSave(){U.sset("pto-cache-"+db.k.slice(0,8),JSON.stringify({me:ME,data:RAW}));}
@@ -553,6 +579,31 @@ $("nt-save").onclick=async()=>{const m=$("nt-m").value;if(!m)return;const ex=RAW
   try{await save("N",[{id:m,month:m,text:$("nt-t").value.trim(),base:ex?ex.upd||"":""}]);status("Комментарий сохранён","okb",2500);}catch(e){status("Не сохранилось: "+e.message,"bad");}};
 $("ls-save").onclick=async()=>{const split=s=>s.split("\n").map(x=>x.trim()).filter(Boolean);const lists={resp:split($("ls-r").value),pto:split($("ls-p").value)};
   try{await U.post(db,{a:"lists",lists});RAW.lists=lists;cacheSave();status("Списки сохранены","okb",2500);}catch(e){status("Не сохранилось: "+e.message,"bad");}};
+// ---------- ВХОД ----------
+let LG2=false;
+function showLogin(msg){
+  RAW=null;ME=null;ALLTABS.forEach(x=>{$("v-"+x).hidden=true;$("tab-"+x).hidden=true;});document.querySelector(".tabs").hidden=true;$("logout").hidden=true;
+  $("who-h").textContent="Вход";$("login").hidden=false;LG2=false;$("lg-1").hidden=false;$("lg-2").hidden=true;$("lg-t").textContent="Вход";$("lg-b").textContent="Войти";
+  const le=$("lg-e");le.hidden=!msg;le.textContent=msg||"";status("");
+  if(H0.get("l")&&!$("lg-l").value)$("lg-l").value=H0.get("l");
+  setTimeout(()=>($("lg-l").value?$("lg-p"):$("lg-l")).focus(),50);
+}
+$("lg-f").addEventListener("submit",async ev=>{ev.preventDefault();
+  const le=$("lg-e"),bt=$("lg-b");le.hidden=true;const login=$("lg-l").value.trim(),password=$("lg-p").value;
+  if(!login||!password){le.textContent="Введите логин и пароль";le.hidden=false;return;}
+  const body={a:LG2?"passwd":"login",login,password};
+  if(LG2){const n1=$("lg-n1").value,n2=$("lg-n2").value;if(n1.length<6){le.textContent="Пароль — не короче 6 символов";le.hidden=false;return;}if(n1!==n2){le.textContent="Пароли не совпадают";le.hidden=false;return;}body.newPassword=n1;}
+  bt.disabled=true;
+  try{const r=await fetch(db.u,{method:"POST",redirect:"follow",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});const j=await r.json();
+    if(!j.ok)throw new Error(j.error||"ошибка");
+    if(j.mustChange){LG2=true;$("lg-1").hidden=true;$("lg-2").hidden=false;$("lg-t").textContent="Здравствуйте, "+j.name+"! Смените пароль";$("lg-b").textContent="Сохранить пароль и войти";$("lg-n1").focus();return;}
+    db.k=j.key;U.sset("pto-db",JSON.stringify(db));$("lg-p").value="";$("lg-n1").value="";$("lg-n2").value="";
+    try{history.replaceState(null,"",location.pathname+"#u="+encodeURIComponent(db.u)+"&l="+encodeURIComponent(login));}catch(e){}
+    $("login").hidden=true;document.querySelector(".tabs").hidden=false;$("logout").hidden=!viaLogin;load();}
+  catch(e){le.textContent=e.message;le.hidden=false;}finally{bt.disabled=false;}
+});
+$("logout").onclick=()=>{if(!confirm("Выйти? Для входа понадобятся логин и пароль."))return;try{localStorage.removeItem("pto-cache-"+db.k.slice(0,8));}catch(e){}db.k="";U.sset("pto-db",JSON.stringify(db));showLogin();};
+
 // ---------- ОТЧЁТЫ ----------
 const TYPE_RU={plan:"План на",fact:"Факт за"};
 const ml=m=>PTO.monthLabel(m).toLowerCase();
@@ -655,7 +706,8 @@ $("rd-x").onclick=()=>$("rd").close();
 $("rd").addEventListener("close",()=>{REP=null;});
 
 // ---------- СОТРУДНИКИ (администратор) ----------
-function pageLink(key,page){return location.origin+location.pathname.replace(/[^/]*$/,"")+(page||"index.html")+"#u="+encodeURIComponent(db.u)+"&k="+encodeURIComponent(key);}
+function pageLink(login){return location.origin+location.pathname.replace(/[^/]*$/,"")+"index.html#u="+encodeURIComponent(db.u)+"&l="+encodeURIComponent(login);}
+function invite(u){return "Отчёт ПТО — ГК КРАШМАШ\nВаша ссылка: "+pageLink(u.login)+"\nЛогин: "+u.login+(u.mustChange==="да"?"\nВременный пароль: "+u.password+"\nПри первом входе система попросит придумать свой пароль.":"\nПароль: ваш (если забыли — обратитесь к администратору)");}
 async function copyText(t,msg){try{await navigator.clipboard.writeText(t);status(msg||"Скопировано","okb",2500);}catch(e){prompt("Скопируйте ссылку:",t);}}
 async function loadUsers(){try{const j=await U.get(db,{a:"users"});USERS=j.users;renderUsers();}catch(e){status("Не удалось загрузить сотрудников: "+e.message,"bad");}}
 function renderUsers(){
@@ -665,23 +717,25 @@ function renderUsers(){
   const o=$("us-out");o.innerHTML="";
   if(!USERS.length)o.appendChild(el("div","empty","Сотрудников пока нет. Нажмите «+ Сотрудник»."));
   USERS.slice().sort((a,b)=>(a.role>b.role?1:-1)||a.name.localeCompare(b.name)).forEach(u=>{const r=el("div","us");
-    const a=el("div");a.appendChild(el("b",null,u.name+(u.active==="нет"?" (отключён)":"")));a.appendChild(el("small",null,u.role));r.appendChild(a);
+    const a=el("div");a.appendChild(el("b",null,u.name+(u.active==="нет"?" (отключён)":"")));a.appendChild(el("small",null,u.role));
+    const cr=el("small",null,"логин: ");cr.appendChild(el("b","code",u.login||"—"));cr.appendChild(document.createTextNode(" · пароль: "));cr.appendChild(el("b","code",u.password||"—"));
+    cr.appendChild(document.createTextNode(u.mustChange==="да"?" (временный — сменит при входе)":(u.lastLogin?" · вход "+new Date(u.lastLogin).toLocaleDateString("ru-RU"):"")));a.appendChild(cr);r.appendChild(a);
     r.appendChild(el("div","hint",u.role==="Специалист ПТО"?(u.objects||"объекты не закреплены"):"все объекты"));
-    const ac=el("div","acts");const b1=el("button","btn small primary","Скопировать ссылку");b1.type="button";b1.onclick=()=>copyText(pageLink(u.key),"Ссылка для «"+u.name+"» скопирована — отправьте её сотруднику");
+    const ac=el("div","acts");const b1=el("button","btn small primary","Скопировать приглашение");b1.type="button";b1.onclick=()=>copyText(invite(u),"Приглашение для «"+u.name+"» скопировано: ссылка, логин и пароль — отправьте сотруднику");
     const b2=el("button","btn small","Изменить");b2.type="button";b2.onclick=()=>userEditor(u);ac.appendChild(b1);ac.appendChild(b2);r.appendChild(ac);o.appendChild(r);});
 }
 function userEditor(u){
   const isNew=!u;u=u||{name:"",role:"Специалист ПТО",objects:"",active:"да"};
   const RK={"Специалист ПТО":"spec","Начальник ПТО":"head","Администратор":"admin"};
-  openEd({title:isNew?"Новый сотрудник":u.name,row:{name:u.name,role:u.role,active:u.active||"да"},isNew,
-    layout:[[{f:"name",label:"ФИО",req:1,ph:"Иванов А.С."}],[{f:"role",label:"Роль",type:"select",opts:["Специалист ПТО","Начальник ПТО","Администратор"],blank:false},{f:"active",label:"Доступ",type:"seg",opts:["да","нет"]}]],
+  openEd({title:isNew?"Новый сотрудник":u.name,row:{name:u.name,login:u.login||"",role:u.role,active:u.active||"да"},isNew,
+    layout:[[{f:"name",label:"ФИО",req:1,ph:"Иванов А.С."},{f:"login",label:"Логин (латиницей; пусто — по фамилии)",ph:"ivanov.as"}],[{f:"role",label:"Роль",type:"select",opts:["Специалист ПТО","Начальник ПТО","Администратор"],blank:false},{f:"active",label:"Доступ",type:"seg",opts:["да","нет"]}]],
     init(){const sel=(u.objects||"").split(";").map(x=>x.trim()).filter(Boolean);const w=el("div","f");w.appendChild(el("span",null,"Закреплённые объекты (для специалиста)"));
       const box=el("div","chk");RAW.objects.slice().sort((a,b)=>(a.status==="Завершён")-(b.status==="Завершён")||a.name.localeCompare(b.name)).forEach(o=>{const l=el("label");const c=el("input");c.type="checkbox";c.value=o.name;c.checked=sel.includes(o.name);l.appendChild(c);l.appendChild(document.createTextNode(o.name+(o.status==="Завершён"?" (завершён)":"")));box.appendChild(l);});
       w.appendChild(box);ED.box=box;$("ed-b").insertBefore(w,ED.calcBox);
-      if(!isNew){const nk=el("label","f");nk.style.flexDirection="row";nk.style.alignItems="center";nk.style.gap="8px";const c=el("input");c.type="checkbox";c.style.width="auto";c.style.minHeight="0";ED.newKey=c;nk.appendChild(c);nk.appendChild(document.createTextNode("Выдать новую ссылку (старая перестанет работать)"));$("ed-b").insertBefore(nk,ED.calcBox);}},
-    collect(){return {id:u.id,name:need(val("name"),"ФИО"),role:RK[val("role")],active:val("active")!=="нет",objects:[...ED.box.querySelectorAll("input:checked")].map(c=>c.value)};},
-    async onSave(r){const j=await U.post(db,{a:"user",user:r,newKey:!!(ED.newKey&&ED.newKey.checked)});const nu=j.user;const i=USERS.findIndex(x=>x.id===nu.id);if(i>=0)USERS[i]=nu;else USERS.push(nu);
-      if(isNew||(ED.newKey&&ED.newKey.checked))setTimeout(()=>copyText(pageLink(nu.key),"Сохранено. Ссылка для «"+nu.name+"» скопирована — отправьте её сотруднику"),100);}
+      if(!isNew){const nk=el("label","f");nk.style.flexDirection="row";nk.style.alignItems="center";nk.style.gap="8px";const c=el("input");c.type="checkbox";c.style.width="auto";c.style.minHeight="0";ED.newKey=c;nk.appendChild(c);nk.appendChild(document.createTextNode("Сбросить пароль — выдать новый временный (сотрудник выйдет со всех устройств)"));$("ed-b").insertBefore(nk,ED.calcBox);}},
+    collect(){return {id:u.id,name:need(val("name"),"ФИО"),login:val("login"),role:RK[val("role")],active:val("active")!=="нет",objects:[...ED.box.querySelectorAll("input:checked")].map(c=>c.value)};},
+    async onSave(r){const j=await U.post(db,{a:"user",user:r,resetPass:!!(ED.newKey&&ED.newKey.checked)});const nu=j.user;const i=USERS.findIndex(x=>x.id===nu.id);if(i>=0)USERS[i]=nu;else USERS.push(nu);
+      if(isNew||(ED.newKey&&ED.newKey.checked))setTimeout(()=>copyText(invite(nu),"Сохранено. Приглашение для «"+nu.name+"» скопировано: ссылка, логин и временный пароль"),100);}
   });
 }
 $("us-add").onclick=()=>userEditor(null);

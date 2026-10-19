@@ -22,7 +22,7 @@ const TYPE = { plan: 'План', fact: 'Факт' };
 const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note'];
 
 // Листы и столбцы базы (порядок столбцов в таблице можно менять — ищутся по заголовку).
-const SCHEMA = {"O": ["Объекты", [["id", "ID", "s"], ["name", "Объект", "s"], ["resp", "Ответственный", "s"], ["pto", "Специалист ПТО", "s"], ["status", "Статус", "s"], ["sum", "Сумма договора с ДС, руб", "n"], ["done0", "Выполнено до 01.01.2026, руб", "n"], ["ret", "% удержания", "p"], ["payDays", "Срок оплаты, дней", "n"], ["due", "Срок по договору", "d"], ["sched", "График подачи КС", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "K": ["Журнал КС", [["id", "ID", "s"], ["date", "Дата КС", "d"], ["month", "Отчётный месяц", "m"], ["obj", "Объект", "s"], ["num", "№ КС / описание", "s"], ["period", "Период работ", "s"], ["ks2", "Выполнение КС-2, руб", "n"], ["ks3", "К оплате КС-3, руб", "n"], ["agr", "Согласование", "s"], ["sign", "Подписание", "s"], ["pay", "Оплата", "s"], ["payDate", "Дата оплаты", "d"], ["signDate", "Дата подписания", "d"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "P": ["Поступления", [["id", "ID", "s"], ["date", "Дата поступления", "d"], ["obj", "Объект", "s"], ["sum", "Сумма, руб", "n"], ["kind", "Вид поступления", "s"], ["basis", "№ КС / основание", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "L": ["План", [["id", "ID", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["sum", "План, руб", "n"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "G": ["Гарантии", [["id", "ID", "s"], ["obj", "Объект", "s"], ["due", "Срок возврата", "d"], ["sum", "Сумма ГУ, руб", "n"], ["status", "Статус оплаты", "s"], ["party", "Контрагент", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "N": ["Главное за месяц", [["id", "ID", "s"], ["month", "Месяц", "m"], ["text", "Комментарий начальника ПТО", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "S": ["Списки", [["resp", "Ответственные (руководители объектов)", "s"], ["pto", "Специалисты ПТО", "s"]]], "U": ["Сотрудники", [["id", "ID", "s"], ["name", "ФИО", "s"], ["role", "Роль", "s"], ["objects", "Объекты (через ;)", "s"], ["key", "Ключ ссылки", "s"], ["active", "Активен", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "R": ["Отчёты", [["id", "ID", "s"], ["type", "Вид", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["status", "Статус", "s"], ["sentAt", "Отправлен", "s"], ["sentBy", "Кто отправил", "s"], ["decidedAt", "Решение", "s"], ["decidedBy", "Кто решил", "s"], ["comments", "Комментарии (JSON)", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]]};
+const SCHEMA = {"O": ["Объекты", [["id", "ID", "s"], ["name", "Объект", "s"], ["resp", "Ответственный", "s"], ["pto", "Специалист ПТО", "s"], ["status", "Статус", "s"], ["sum", "Сумма договора с ДС, руб", "n"], ["done0", "Выполнено до 01.01.2026, руб", "n"], ["ret", "% удержания", "p"], ["payDays", "Срок оплаты, дней", "n"], ["due", "Срок по договору", "d"], ["sched", "График подачи КС", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "K": ["Журнал КС", [["id", "ID", "s"], ["date", "Дата КС", "d"], ["month", "Отчётный месяц", "m"], ["obj", "Объект", "s"], ["num", "№ КС / описание", "s"], ["period", "Период работ", "s"], ["ks2", "Выполнение КС-2, руб", "n"], ["ks3", "К оплате КС-3, руб", "n"], ["agr", "Согласование", "s"], ["sign", "Подписание", "s"], ["pay", "Оплата", "s"], ["payDate", "Дата оплаты", "d"], ["signDate", "Дата подписания", "d"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "P": ["Поступления", [["id", "ID", "s"], ["date", "Дата поступления", "d"], ["obj", "Объект", "s"], ["sum", "Сумма, руб", "n"], ["kind", "Вид поступления", "s"], ["basis", "№ КС / основание", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "L": ["План", [["id", "ID", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["sum", "План, руб", "n"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "G": ["Гарантии", [["id", "ID", "s"], ["obj", "Объект", "s"], ["due", "Срок возврата", "d"], ["sum", "Сумма ГУ, руб", "n"], ["status", "Статус оплаты", "s"], ["party", "Контрагент", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "N": ["Главное за месяц", [["id", "ID", "s"], ["month", "Месяц", "m"], ["text", "Комментарий начальника ПТО", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "S": ["Списки", [["resp", "Ответственные (руководители объектов)", "s"], ["pto", "Специалисты ПТО", "s"]]], "U": ["Сотрудники", [["id", "ID", "s"], ["name", "ФИО", "s"], ["role", "Роль", "s"], ["objects", "Объекты (через ;)", "s"], ["login", "Логин", "s"], ["password", "Пароль", "s"], ["mustChange", "Сменить пароль при входе", "s"], ["lastLogin", "Последний вход", "s"], ["key", "Ключ ссылки", "s"], ["active", "Активен", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "R": ["Отчёты", [["id", "ID", "s"], ["type", "Вид", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["status", "Статус", "s"], ["sentAt", "Отправлен", "s"], ["sentBy", "Кто отправил", "s"], ["decidedAt", "Решение", "s"], ["decidedBy", "Кто решил", "s"], ["comments", "Комментарии (JSON)", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]]};
 const LOG_SHEET = 'Журнал изменений';
 
 function out_(obj) {
@@ -230,7 +230,7 @@ function who_(k) {
   if (!k) return null;
   if (k === ADMIN_KEY) return { role: 'admin', name: 'Администратор', objects: null };
   if (k === DIRECTOR_KEY) return { role: 'dir', name: 'Руководитель', objects: null };
-  const u = readSheet_('U').filter(function (x) { return x.key && x.key === k && x.active !== 'нет'; })[0];
+  const u = readSheet_('U').filter(function (x) { return x.key && x.key === k && x.active !== 'нет' && x.mustChange !== 'да'; })[0];
   if (!u) return null;
   const role = u.role === ROLE_NAMES.head ? 'head' : (u.role === ROLE_NAMES.admin ? 'admin' : 'spec');
   return { role: role, name: u.name, id: u.id, objects: role === 'spec' ? splitObjs_(u.objects) : null };
@@ -320,16 +320,56 @@ function reportAction_(me, b) {
   return r;
 }
 
-function saveUser_(me, u, newKey) {
+const TR_ = {а:'a',б:'b',в:'v',г:'g',д:'d',е:'e',ё:'e',ж:'zh',з:'z',и:'i',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'h',ц:'ts',ч:'ch',ш:'sh',щ:'sch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'};
+function translit_(s) { return String(s || '').toLowerCase().split('').map(function (c) { return c in TR_ ? TR_[c] : c; }).join(''); }
+/** Логин по ФИО: «Яковлева Н.Г.» → yakovleva.ng */
+function loginFor_(name) {
+  const p = String(name || '').trim().split(/\s+/), last = translit_(p[0] || '').replace(/[^a-z0-9]/g, '');
+  const ini = translit_(p.slice(1).join('')).replace(/[^a-z]/g, '').slice(0, 2);
+  return last + (ini ? '.' + ini : '');
+}
+function tempPassword_() {
+  const a = 'abcdefghjkmnpqrstuvwxyz23456789'; let s = '';
+  for (let i = 0; i < 8; i++) s += a.charAt(Math.floor(Math.random() * a.length));
+  return s;
+}
+function newKey_() { return Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '').slice(0, 8); }
+
+function saveUser_(me, u, resetPass) {
   if (me.role !== 'admin') throw new Error('только администратор');
   if (!u || !String(u.name || '').trim()) throw new Error('укажите ФИО');
   const all = readSheet_('U');
   const ex = u.id ? all.filter(function (x) { return x.id === u.id; })[0] : null;
-  const row = { id: u.id || ('u' + Date.now().toString(36)), name: String(u.name).trim(), role: ROLE_NAMES[u.role] || ROLE_NAMES.spec,
-    objects: (u.objects || []).join('; '), active: u.active === false ? 'нет' : 'да' };
-  row.key = (!ex || newKey || !ex.key) ? Utilities.getUuid().replace(/-/g, '').slice(0, 24) : ex.key;
+  const login = String(u.login || '').trim().toLowerCase() || loginFor_(u.name);
+  if (!/^[a-z0-9._-]{3,40}$/.test(login)) throw new Error('логин — латинские буквы, цифры, точка (от 3 символов)');
+  if (all.some(function (x) { return x.id !== (ex && ex.id) && String(x.login || '').toLowerCase() === login; })) throw new Error('логин «' + login + '» уже занят');
+  const row = { id: ex ? ex.id : ('u' + Date.now().toString(36)), name: String(u.name).trim(), role: ROLE_NAMES[u.role] || ROLE_NAMES.spec,
+    objects: (u.objects || []).join('; '), active: u.active === false ? 'нет' : 'да', login: login };
+  if (!ex || resetPass || !ex.password) { row.password = tempPassword_(); row.mustChange = 'да'; row.key = newKey_(); }
+  else if (!ex.key) row.key = newKey_();
   upsert_('U', [row], me.name, true, me.role);
-  return row;
+  return readSheet_('U').filter(function (x) { return x.id === row.id; })[0];
+}
+
+/** Вход по логину и паролю. Ключ сеанса выдаётся, только когда временный пароль уже сменён. */
+function login_(b, change) {
+  const login = String(b.login || '').trim().toLowerCase();
+  const cache = CacheService.getScriptCache(), ck = 'fail:' + login, fails = +(cache.get(ck) || 0);
+  if (fails >= 8) throw new Error('слишком много неудачных попыток — подождите 15 минут');
+  const u = readSheet_('U').filter(function (x) { return String(x.login || '').toLowerCase() === login && x.active !== 'нет'; })[0];
+  if (!u || String(u.password || '') !== String(b.password || '')) { cache.put(ck, String(fails + 1), 900); throw new Error('неверный логин или пароль'); }
+  cache.remove(ck);
+  const patch = { id: u.id, lastLogin: new Date().toISOString() };
+  if (change) {
+    const np = String(b.newPassword || '');
+    if (np.length < 6) throw new Error('новый пароль — не короче 6 символов');
+    if (np === u.password) throw new Error('новый пароль должен отличаться от временного');
+    patch.password = np; patch.mustChange = 'нет';
+  } else if (u.mustChange === 'да') {
+    return { mustChange: true, name: u.name };
+  }
+  upsert_('U', [patch], u.name, true, 'login');
+  return { key: u.key, name: u.name };
 }
 
 /** Данные для роли: специалист — свои объекты; ГД — только согласованное; начальник и администратор — всё. */
@@ -365,6 +405,12 @@ function doGet(e) {
 function doPost(e) {
   let b;
   try { b = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'json' }); }
+  if (b.a === 'login' || b.a === 'passwd') {
+    const lk = LockService.getScriptLock();
+    try { lk.waitLock(25000); return out_(Object.assign({ ok: true }, login_(b, b.a === 'passwd'))); }
+    catch (err) { return out_({ ok: false, error: String(err && err.message || err) }); }
+    finally { lk.releaseLock(); }
+  }
   const me = who_(b.k);
   if (!me) return out_({ ok: false, error: 'key' });
   if (me.role === 'dir') return out_({ ok: false, error: 'только просмотр' });
@@ -389,7 +435,7 @@ function doPost(e) {
       if (me.role !== 'head' && me.role !== 'admin') throw new Error('недостаточно прав');
       saveLists_({ resp: (b.lists && b.lists.resp) || [], pto: (b.lists && b.lists.pto) || [] });
     } else if (b.a === 'user') {
-      res.user = saveUser_(me, b.user, !!b.newKey);
+      res.user = saveUser_(me, b.user, !!b.resetPass);
     } else if (b.a === 'wipe') {
       // Очистка рабочих данных (КС, план, деньги, гарантии, «Главное», отчёты) — только администратор
       if (me.role !== 'admin' || b.confirm !== 'ОЧИСТИТЬ') throw new Error('только администратор');
