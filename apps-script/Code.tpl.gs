@@ -19,7 +19,7 @@ const ROLE_NAMES = { spec: 'Специалист ПТО', head: 'Начальн�
 const ST = { draft: 'Черновик', sent: 'На проверке', ret: 'На доработке', ok: 'Согласован' };
 const TYPE = { plan: 'План', fact: 'Факт' };
 // Поля КС, которые можно менять и после согласования отчёта (движение КС: подписание, оплата)
-const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note'];
+const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note', 'remarks', 'dsNeed', 'dsDate', 'letterDate'];
 
 // Листы и столбцы базы (порядок столбцов в таблице можно менять — ищутся по заголовку).
 const SCHEMA = {{SCHEMA}};
@@ -105,7 +105,7 @@ function readAll_() {
   readSheet_('S').forEach(function (r) { if (r.resp) lists.resp.push(r.resp); if (r.pto) lists.pto.push(r.pto); });
   return {
     objects: readSheet_('O'), ks: readSheet_('K'), pays: readSheet_('P'), plan: readSheet_('L'),
-    gar: readSheet_('G'), notes: readSheet_('N'), lists: lists
+    gar: readSheet_('G'), notes: readSheet_('N'), kpi: readSheet_('Q'), lists: lists
   };
 }
 
@@ -277,6 +277,15 @@ function filterRows_(me, t, rows, reps) {
     return { ok: ok, denied: denied };
   }
   // деньги, гарантии, объекты, «Главное за месяц», списки — начальник ПТО и администратор
+  // настройки KPI: веса и фонд — администратор; доли премии сотрудников — начальник ПТО и администратор
+  if (t === 'Q') {
+    rows.forEach(function (r) {
+      const id = String(r.id || '');
+      if (me.role === 'admin' || (me.role === 'head' && id.indexOf('share:') === 0)) ok.push(r);
+      else denied.push({ id: id, why: 'настройки KPI меняет администратор' });
+    });
+    return { ok: ok, denied: denied };
+  }
   if (me.role === 'head' || me.role === 'admin') return { ok: rows, denied: [] };
   rows.forEach(function (r) { denied.push({ id: r.id, why: 'недостаточно прав' }); });
   return { ok: [], denied: denied };
@@ -376,15 +385,18 @@ function login_(b, change) {
 function dataFor_(me) {
   const d = readAll_(), reps = reports_();
   d.reports = Object.keys(reps).map(function (k) { return reps[k]; });
+  const hu = readSheet_('U').filter(function (x) { return x.role === ROLE_NAMES.head && x.active !== 'нет'; })[0];
+  d.headName = hu ? hu.name : '';
   if (me.role === 'spec') {
     const mine = function (r) { return sees_(me, r.obj); };
     d.objects = d.objects.filter(function (o) { return sees_(me, o.name); });
     d.ks = d.ks.filter(mine); d.plan = d.plan.filter(mine); d.reports = d.reports.filter(mine);
     d.pays = []; d.gar = [];
+    d.kpi = d.kpi.filter(function (r) { return String(r.id).indexOf('w:') === 0; });   // веса — да, деньги и доли — нет
   } else if (me.role === 'dir') {
     d.ks = d.ks.filter(function (k) { return stOf_(reps, 'fact', k.obj, k.month) === ST.ok; });
     d.plan = d.plan.filter(function (p) { return stOf_(reps, 'plan', p.obj, p.month) === ST.ok; });
-    d.reports = [];
+    d.reports = []; d.kpi = [];
     d.ks.forEach(function (k) { delete k.by; }); d.plan.forEach(function (p) { delete p.by; });
   }
   return d;
@@ -489,6 +501,33 @@ function rpData_(me, days) {
   return { objects: objects, today: today, from: from };
 }
 
+/** Месяцы, в которые по рапортам прорабов на объекте были работы (для KPI «работы закрыты КС»). { "Объект ПТО": ["2026-09", …] } */
+function rpActivity_(me) {
+  const map = {};
+  readSheet_('O').forEach(function (o) { if (o.rp && (!me || sees_(me, o.name))) splitObjs_(String(o.rp).replace(/,/g, ';')).forEach(function (p) { map[p] = o.name; }); });
+  const out = {};
+  if (!Object.keys(map).length) return out;
+  const sr = SpreadsheetApp.openById(RP_ID).getSheetByName('Рапорты'), nr = sr ? sr.getLastRow() : 0;
+  if (nr >= 2) sr.getRange(2, 1, nr - 1, 12).getValues().forEach(function (v) {
+    const nm = map[String(v[1] || '')]; if (!nm) return;
+    let r; try { r = JSON.parse(v[11]); } catch (e) { return; }
+    if (!r || !r.date || r.idle) return;
+    const busy = Object.keys(r.works || {}).length || (r.haul || []).length || (r.extra || []).length || (r.mach || []).some(function (m) { return +m.h > 0; });
+    if (!busy) return;
+    const m = String(r.date).slice(0, 7); (out[nm] = out[nm] || []); if (out[nm].indexOf(m) < 0) out[nm].push(m);
+  });
+  return out;
+}
+/** KPI для сводки генерального: отдел и начальник ПТО (без специалистов). Считается здесь же — calc.js встроен в скрипт при сборке. */
+function kpiForDirector_(p) {
+  const d = readAll_(); d.reports = readSheet_('R');
+  let act = null; try { act = rpActivity_(null); } catch (e) {}
+  const today = Utilities.formatDate(new Date(), tz_(), 'yyyy-MM-dd');
+  const r = PTO.kpi(d, { today: today, kind: p.kind || 'month', period: p.period || '', act: act });
+  return { period: r.period, list: r.list, months: r.months, done: r.done, hasAct: r.hasAct, dept: r.dept, head: r.head,
+    money: r.money ? { fund: r.money.fund, dept: r.money.dept } : null };
+}
+
 function doGet(e) {
   const p = (e && e.parameter) || {};
   const me = who_(p.k);
@@ -500,6 +539,10 @@ function doGet(e) {
     try { return out_(Object.assign({ ok: true }, rpData_(me, Math.min(366, +p.days || 31)))); }
     catch (err) { return out_({ ok: false, error: 'Нет доступа к базе «Рапорт прораба»: ' + String(err && err.message || err) }); }
   }
+  if (p.a === 'rpact' && me.role !== 'dir') {
+    try { return out_({ ok: true, act: rpActivity_(me) }); } catch (err) { return out_({ ok: true, act: null, warn: String(err && err.message || err) }); }
+  }
+  if (p.a === 'kpi' && me.role === 'dir') return out_(Object.assign({ ok: true }, kpiForDirector_(p)));
   if (p.a === 'rpobj' && (me.role === 'admin' || me.role === 'head')) {
     try { return out_({ ok: true, objects: rpObjects_() }); } catch (err) { return out_({ ok: false, error: String(err && err.message || err) }); }
   }
@@ -555,3 +598,6 @@ function doPost(e) {
     lock.releaseLock();
   }
 }
+
+// ---------- расчёты (src/calc.js, вставляются при сборке) ----------
+{{CALC}}

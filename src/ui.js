@@ -125,5 +125,39 @@ U.hbars = function (host, cfg) {
   host.appendChild(list);
   legend(host, cfg.series);
 };
+
+// ---------- KPI: карточка показателей (страница ПТО и сводка руководителя) ----------
+U.kpiCls = c => c === null || c === undefined ? "" : (c < 0.8 ? "bad" : c < 1 ? "warnc" : "ok");
+U.kpiCard = function (title, block, opt) {
+  opt = opt || {};
+  const el = U.el, sec = el("section", "card kpi");
+  const h = el("div", "kpi-h"); const tl = el("div"); tl.appendChild(el("h2", null, title)); if (opt.sub) tl.appendChild(el("div", "sumline", opt.sub)); h.appendChild(tl);
+  const big = el("div", "kpi-big " + U.kpiCls(block.coef)); big.appendChild(el("b", null, block.coef === null ? "—" : U.pct(block.coef))); big.appendChild(el("small", null, "итоговый коэффициент")); h.appendChild(big);
+  sec.appendChild(h);
+  if (opt.money) sec.appendChild(el("div", "kpi-money", opt.money));
+  const list = el("div", "kpi-list"); sec.appendChild(list);
+  block.items.forEach(it => {
+    const row = el("button", "kpi-r" + (it.coef === null ? " na" : "")); row.type = "button";
+    const n = el("div", "kpi-n"); n.appendChild(el("b", null, it.n)); n.appendChild(el("small", null, "вес " + Math.round(it.w * 100) + "%" + (it.den ? " · " + U.kpiFact(it) : "")));
+    row.appendChild(n);
+    const bar = el("div", "kpi-bar"); const fill = el("i", U.kpiCls(it.coef)); fill.style.width = Math.min(100, (it.coef || 0) / 1.2 * 100) + "%"; bar.appendChild(fill); const mk = el("u"); mk.style.left = (100 / 1.2) + "%"; bar.appendChild(mk); row.appendChild(bar);
+    row.appendChild(el("div", "kpi-v " + U.kpiCls(it.coef), it.coef === null ? "нет данных" : U.pct(it.coef)));
+    const det = el("div", "kpi-d"); det.hidden = true;
+    det.appendChild(el("div", "kpi-how", it.how + (it.t === 0 ? "" : "") ));
+    if (it.issues && it.issues.length) { const ul = el("ul"); it.issues.forEach(x => ul.appendChild(el("li", null, x))); det.appendChild(ul); if (it.more) det.appendChild(el("div", "kpi-how", "…и ещё " + it.more)); }
+    else if (it.coef !== null) det.appendChild(el("div", "kpi-how ok", "Замечаний нет."));
+    row.onclick = () => { det.hidden = !det.hidden; row.classList.toggle("open", !det.hidden); };
+    list.appendChild(row); list.appendChild(det);
+  });
+  if (opt.note) sec.appendChild(el("div", "kpi-how", opt.note));
+  return sec;
+};
+U.kpiFact = it => {
+  if (it.k === "plan") return "принято " + U.mln(it.num) + " из " + U.mln(it.den) + " млн";
+  if (it.k === "hang") return "зависло " + U.mln(it.num) + " млн";
+  if (it.k === "disc") return "проверок: " + it.den;
+  if (it.k === "reopen") return "открыто заново " + it.num + " из " + it.den;
+  return it.num + " из " + it.den;
+};
 root.U = U;
 })(window);

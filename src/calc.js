@@ -281,121 +281,209 @@ function compute(data, opt) {
   return out;
 }
 
-// ---------- KPI отдела ПТО и специалистов (листы «KPI ПТО», «KPI специалистов») ----------
-const KPI_DEFAULT = {
-  w: [0.4, 0.15, 0.2, 0.1, 0.15],          // веса KPI 1–5
-  t: [1, 0.7, 0.9, 0, 1],                  // цели
-  thr: 0.7,                                // порог по KPI 1 (достижение)
-  scale: [[0, 0], [0.8, 0.5], [0.9, 0.8], [1, 1], [1.1, 1.2]],   // достижение от → коэффициент
-  fundA: 500000, fot: 2000000, fotPct: 0.2, volPct: 0.001, payPct: 0.001, cap: 1000000,
-  variant: "Б", share: {}
+// ---------- KPI: специалист ПТО, начальник ПТО, отдел ----------
+// Плавная шкала: коэффициент показателя = достижение цели (0…120%), без порогов и обнулений.
+// Показатель без данных за период не учитывается — его вес делится между остальными.
+const KPI_SETS = {
+  spec: [
+    { k: "ksTime", n: "КС поданы в срок по графику", w: 0.30, t: 1, how: "КС за месяц с датой не позже последнего числа отчётного месяца / сколько КС положено по графику (1 или 2 в месяц) по объектам с планом или с работами по рапортам" },
+    { k: "close", n: "Работы по рапортам закрыты КС", w: 0.25, t: 1, how: "Доля месяцев, когда по рапортам прорабов на объекте были работы и за этот месяц подана КС" },
+    { k: "ds", n: "Допработы: ДС подан в срок", w: 0.20, t: 1, how: "КС с отметкой «Нужен ДС», по которым ДС подан заказчику не позже 30 дней от даты КС" },
+    { k: "remarks", n: "КС без замечаний и возвратов", w: 0.15, t: 1, how: "Доля КС за период без отметки «Замечания» / «Возврат на исправление»" },
+    { k: "disc", n: "Дисциплина данных и отчёт вовремя", w: 0.10, t: 1, how: "Среднее: у КС есть дата; у подписанных есть дата подписания; отчёт «Факт» за месяц отправлен до 5-го числа следующего месяца" }
+  ],
+  head: [
+    { k: "plan", n: "Выполнение плана закрытия отделом", w: 0.30, t: 1, how: "Принятый факт (КС согласована / подписана / оплачена) / план периода по всем объектам" },
+    { k: "review", n: "Скорость проверки отчётов", w: 0.15, t: 1, how: "Доля отчётов, по которым решение принято не позже 2 рабочих дней после отправки" },
+    { k: "planOnTime", n: "План на месяц согласован до 1-го числа", w: 0.10, t: 1, how: "Доля объектов с планом на месяц, у которых план согласован до начала месяца" },
+    { k: "overdue", n: "Работа с просроченной оплатой", w: 0.15, t: 1, how: "Доля КС, не оплаченных в срок по договору, по которым есть дата письма или претензии заказчику" },
+    { k: "ds", n: "Допработы: ДС подан в срок (отдел)", w: 0.15, t: 1, how: "Как у специалистов, по всем объектам отдела" },
+    { k: "reopen", n: "Качество согласования", w: 0.10, t: 0, how: "Доля согласованных отчётов, которые пришлось открыть заново (цель — 0)" },
+    { k: "note", n: "«Главное за месяц» к 5-му числу", w: 0.05, t: 1, how: "Комментарий для генерального за месяц заполнен до 5-го числа следующего месяца" }
+  ],
+  dept: [
+    { k: "plan", n: "Выполнение плана закрытия", w: 0.40, t: 1, how: "Принятый факт / план периода (план не больше остатка договора)" },
+    { k: "ksTime", n: "КС поданы в срок по графику", w: 0.20, t: 1, how: "По всем объектам отдела" },
+    { k: "close", n: "Работы по рапортам закрыты КС", w: 0.15, t: 1, how: "По всем объектам отдела" },
+    { k: "hang", n: "Без «зависших» КС", w: 0.15, t: 0, how: "Доля КС-2, которые больше 30 дней не согласованы заказчиком (цель — 0)" },
+    { k: "disc", n: "Дисциплина данных", w: 0.10, t: 1, how: "По всем объектам отдела" }
+  ]
 };
-const KPI_NAMES = ["Выполнение плана закрытия", "Точность планирования", "Сроки КС: подача и подписание", "«Зависшие» КС", "Дисциплина данных"];
+const accepted = k => k.agr === "Согласована" || k.sign === "Подписана" || k.pay === "Оплачена";
+const yes = v => /^да$/i.test(String(v || "").trim());
+const badRemark = v => /замеч|возврат/i.test(String(v || ""));
+const msk = iso => iso ? new Date(Date.parse(iso) + 3 * 3600e3).toISOString().slice(0, 10) : "";
+function workDays(a, b) { let n = 0; for (let d = addDays(a, 1); d <= b; d = addDays(d, 1)) { const w = new Date(D(d)).getUTCDay(); if (w !== 0 && w !== 6) n++; } return n; }   // рабочие дни после a до b включительно, пн–пт
 function kpiSettings(data) {
-  const s = JSON.parse(JSON.stringify(KPI_DEFAULT));
+  const s = { w: {}, fund: 0, share: {} };
   (data.kpi || []).forEach(r => {
-    if (!r || !r.id) return;
-    let v = r.value; try { v = JSON.parse(r.value); } catch (e) {}
+    if (!r || !r.id) return; let v = r.value; try { v = JSON.parse(r.value); } catch (e) {}
     if (r.id.indexOf("share:") === 0) s.share[r.id.slice(6)] = +v || 0;
-    else if (r.id in s) s[r.id] = v;
+    else if (r.id.indexOf("w:") === 0) s.w[r.id.slice(2)] = +v;
+    else if (r.id === "fund") s.fund = +v || 0;
   });
   return s;
 }
-const accepted = k => k.agr === "Согласована" || k.sign === "Подписана" || k.pay === "Оплачена";
+/** opt: { today, kind, period, act: { "Объект": ["2026-09", …] } — месяцы с работами по рапортам (не обязательно) } */
 function kpi(data, opt) {
-  const today = opt.today, kind = opt.kind || "month";
-  const S = kpiSettings(data);
+  const today = opt.today, kind = opt.kind || "month", S = kpiSettings(data), act = opt.act || null;
   const byName = index(data);
   const ks = (data.ks || []).map(k => enrichKs(k, byName));
   const list = periods(kind, data, today);
   const P = list.find(x => x.key === opt.period) || defaultPeriod(kind, data, today);
-  const a = ym(P.start), b = ym(P.end), n = (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + +b.slice(5) - +a.slice(5) + 1;
-  const inP = k => k.month && k.month >= a && k.month <= b;
-  const pos = k => num(k.ks2) > 0;
-  const sum = (arr, f) => arr.reduce((s, x) => s + num(f ? f(x) : x.ks2), 0);
-  const planOf = (name, x, y) => (data.plan || []).filter(p => p.obj === name && p.month >= x && p.month <= y).reduce((s, p) => s + num(p.sum), 0);
-  const cap = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < a)));
-  const aq = k => has(k.ks2) ? (k.date || (k.month ? eom(k.month) : "")) : "";
-  const hang = k => has(k.ks2) && aq(k) && aq(k) <= addDays(P.end, -30) && k.month && k.month <= b && !accepted(k);
-  const signedOk = k => k.signDate && k.month && k.signDate <= addDays(eom(k.month), 15);
-  const sentOk = k => k.date && k.month && k.date <= eom(k.month);
+  const a = ym(P.start), b = ym(P.end);
   const months = []; for (let m = a; m <= b; m = addM(m, 1)) months.push(m);
-  // по объектам — столбцы Расчёт!CA…CT
-  const rows = (data.objects || []).map(o => {
-    const mine = ks.filter(k => k.obj === o.name), pk = mine.filter(inP);
-    const CA = Math.min(planOf(o.name, a, b), cap(o));
-    const CB = sum(pk.filter(accepted));
-    const CC = CA ? CB / CA : null;
-    const CD = CA > 0 ? (CC >= 0.8 && CC <= 1.2 ? 1 : 0) : null;
-    const CP = months.filter(m => planOf(o.name, m, m) > 0).length;
-    const CR = CP * (/^Дважды/.test(o.sched || "") ? 2 : 1);
-    return {
-      name: o.name, resp: o.resp || "", pto: o.pto || "", CA, CB, CC, CD, CR,
-      CH: pk.filter(pos).length, CI: pk.filter(signedOk).length, CJ: pk.filter(k => k.signDate).length,
-      CK: sum(mine.filter(hang)), CL: sum(pk), CM: pk.filter(k => pos(k) && k.date).length,
-      CT: Math.min(pk.filter(sentOk).length, CR), hangN: mine.filter(k => hang(k) && pos(k)).length
-    };
-  });
-  const coefOf = x => { let c = 0; S.scale.forEach(([from, k]) => { if (x >= from) c = k; }); return c; };
-  const total = (ach) => {                                    // итоговый коэффициент: веса показателей без данных перераспределяются
-    if (!(typeof ach[0] === "number") || ach[0] < S.thr) return 0;
-    let ws = 0, sm = 0;
-    ach.forEach((x, i) => { if (typeof x === "number") { ws += S.w[i]; sm += coefOf(x) * S.w[i]; } });
-    return ws ? sm / ws : 0;
-  };
-  const tg = (v, i) => v === null ? null : (S.t[i] === 0 ? 1 : v / S.t[i]);
-  // отдел — лист «KPI ПТО»
-  const pk = ks.filter(inP);
-  const R = f => rows.reduce((s, r) => s + num(f(r)), 0);
-  const E = {
-    E18: R(r => r.CA), E19: sum(pk), E20: R(r => r.CB), E21: rows.filter(r => r.CA > 0).length, E22: R(r => r.CD),
-    E23: pk.filter(pos).length, E24: pk.filter(k => k.signDate).length, E25: pk.filter(signedOk).length,
-    E26: R(r => r.CR), E27: R(r => r.CT), E28: sum(ks.filter(hang)), E29: ks.filter(k => hang(k) && pos(k)).length,
-    E34: (data.pays || []).filter(p => p.date >= P.start && p.date <= P.end).reduce((s, p) => s + num(p.sum), 0)
-  };
-  const signedP = pk.filter(k => k.sign === "Подписана");
-  E.E30 = E.E23 === 0 ? 1 : Math.max(0, 1 - pk.filter(k => k.ctrl).length / E.E23);
-  E.E31 = months.filter(m => (data.notes || []).some(x => x.month === m && String(x.text || "").trim())).length / n;
-  E.E32 = E.E23 === 0 ? 1 : pk.filter(k => pos(k) && k.date).length / E.E23;
-  E.E33 = signedP.length === 0 ? 1 : signedP.filter(k => k.signDate).length / signedP.length;
-  const v3 = (E.E26 === 0 && E.E24 === 0) ? null : (E.E24 > 0
-    ? ((E.E26 === 0 ? E.E25 / Math.max(1, E.E23) : E.E27 / E.E26) + E.E25 / Math.max(1, E.E23)) / 2 : E.E27 / E.E26);
-  const v = [E.E18 ? E.E20 / E.E18 : null, E.E21 ? E.E22 / E.E21 : null, v3,
-    (E.E23 > 0 || E.E28 > 0) ? Math.min(1, E.E28 / Math.max(1, E.E19)) : null, (E.E30 + E.E31 + E.E32 + E.E33) / 4];
-  const ach = [tg(v[0], 0), tg(v[1], 1), tg(v[2], 2), v[3] === null ? null : Math.max(0, 1 - v[3]), tg(v[4], 4)];
-  const dept = { items: KPI_NAMES.map((name, i) => ({ name, value: v[i], target: S.t[i], ach: ach[i], coef: ach[i] === null ? null : coefOf(ach[i]), w: S.w[i] })),
-    coef: total(ach), thrOk: typeof ach[0] === "number" && ach[0] >= S.thr, src: E };
-  // фонд
-  const capN = num(S.cap) > 0 ? num(S.cap) * n : INF;
-  const fund = [
-    { key: "А", name: "Фиксированный фонд", base: num(S.fundA) * n },
-    { key: "Б", name: "% от ФОТ отдела", base: num(S.fot) * n * num(S.fotPct) },
-    { key: "В", name: "% от закрытого объёма", base: Math.min(E.E20 * num(S.volPct), capN) },
-    { key: "Г", name: "% от поступивших денег", base: Math.min(E.E34 * num(S.payPct), capN) }
-  ].map(f => Object.assign(f, { pay: f.base * dept.coef, max: f.base * Math.max(...S.scale.map(x => x[1])) }));
-  const chosen = fund.find(f => f.key === S.variant) || fund[1];
-  // специалисты — лист «KPI специалистов»
-  const names = [];
-  rows.forEach(r => { if (r.pto && names.indexOf(r.pto) < 0) names.push(r.pto); });
-  const people = names.map(nm => {
-    const my = rows.filter(r => r.pto === nm), T = f => my.reduce((s, r) => s + num(f(r)), 0);
-    const D_ = T(r => r.CA), E_ = T(r => r.CB), nPlan = my.filter(r => r.CA > 0).length;
-    const CH = T(r => r.CH), CI = T(r => r.CI), CJ = T(r => r.CJ), CR = T(r => r.CR), CT = T(r => r.CT), CK = T(r => r.CK), CL = T(r => r.CL), CM = T(r => r.CM);
-    const F = D_ ? E_ / D_ / (S.t[0] || 1) : null;
-    const G = nPlan ? T(r => r.CD) / nPlan / (S.t[1] || 1) : null;
-    const H = (CR === 0 && CJ === 0) ? null : (CJ > 0 ? (CR === 0 ? CI / Math.max(1, CH) : (CT / CR + CI / Math.max(1, CH)) / 2) : CT / CR) / (S.t[2] || 1);
-    const I = (CH === 0 && CK === 0) ? null : Math.max(0, 1 - Math.min(1, CK / Math.max(1, CL)));
-    const J = CH === 0 ? null : CM / CH;
-    const achP = [F, G, H, I, J], coef = total(achP);
-    const share = nm in S.share ? S.share[nm] : 1 / names.length;
-    return { name: nm, objects: my.length, plan: D_, fact: E_, ach: achP, coefs: achP.map(x => x === null ? null : coefOf(x)), coef,
-      share, base: chosen.base * share, pay: chosen.base * share * coef, rows: my.filter(r => r.CA || r.CB || r.CK) };
-  });
-  return { period: P, list, months: n, settings: S, dept, fund, chosen, people, rows: rows.filter(r => r.CA || r.CB || r.CK),
-    shareSum: people.reduce((s, p) => s + p.share, 0) };
+  const done = months.filter(m => eom(m) < today);                 // законченные месяцы периода
+  const inP = k => k.month && k.month >= a && k.month <= b && num(k.ks2) > 0;
+  const sum = (arr, f) => arr.reduce((s, x) => s + num(f ? f(x) : x.ks2), 0);
+  const planRaw = (o, x, y) => (data.plan || []).filter(p => p.obj === o && p.month >= x && p.month <= y).reduce((s, p) => s + num(p.sum), 0);
+  const cap = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < a)));
+  const reps = data.reports || [];
+  const rep = (type, obj, m) => reps.find(r => r.type === type && r.obj === obj && r.month === m);
+  const cmts = r => { try { return JSON.parse(r.comments || "[]"); } catch (e) { return []; } };
+  const R = (num_, den, issues) => ({ num: num_, den, value: den ? num_ / den : null, issues: issues || [] });
+  const objs = data.objects || [];
+
+  // ---- показатели по набору объектов ----
+  function ksTime(os) {           // КС в срок по графику
+    let n = 0, d = 0; const iss = [];
+    os.forEach(o => done.forEach(m => {
+      const worked = planRaw(o.name, m, m) > 0 || (act && (act[o.name] || []).indexOf(m) >= 0);
+      if (!worked) return;
+      const need = /^Дважды/.test(o.sched || "") ? 2 : 1;
+      const mine = ks.filter(k => k.obj === o.name && k.month === m && num(k.ks2) > 0);
+      const ok = Math.min(need, mine.filter(k => k.date && k.date <= eom(m)).length);
+      d += need; n += ok;
+      if (ok < need) iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": " + (mine.length ? "КС подана позже срока или без даты" : "КС нет"));
+    }));
+    return R(n, d, iss);
+  }
+  function close(os) {            // работы по рапортам закрыты КС
+    if (!act) return R(0, 0);
+    let n = 0, d = 0; const iss = [];
+    os.forEach(o => (act[o.name] || []).filter(m => done.indexOf(m) >= 0).forEach(m => {
+      d++; if (ks.some(k => k.obj === o.name && k.month === m && num(k.ks2) > 0)) n++; else iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": по рапортам были работы, КС нет");
+    }));
+    return R(n, d, iss);
+  }
+  function ds(os) {               // ДС в срок
+    const names = os.map(o => o.name); let n = 0, d = 0; const iss = [];
+    ks.filter(k => names.indexOf(k.obj) >= 0 && inP(k) && yes(k.dsNeed)).forEach(k => {
+      const due = addDays(k.date || eom(k.month), 30);
+      if (k.dsDate && k.dsDate <= due) { n++; d++; }
+      else if (k.dsDate || due < today) { d++; iss.push(k.obj + " · " + (k.num || "КС") + ": ДС " + (k.dsDate ? "подан " + ru(k.dsDate) + ", срок был " + ru(due) : "не подан, срок " + ru(due))); }
+    });
+    return R(n, d, iss);
+  }
+  function remarks(os) {
+    const names = os.map(o => o.name), pk = ks.filter(k => names.indexOf(k.obj) >= 0 && inP(k)), bad = pk.filter(k => badRemark(k.remarks));
+    return R(pk.length - bad.length, pk.length, bad.map(k => k.obj + " · " + (k.num || "КС") + ": " + k.remarks));
+  }
+  function disc(os) {
+    const names = os.map(o => o.name), pk = ks.filter(k => names.indexOf(k.obj) >= 0 && inP(k)), iss = [], parts = [];
+    if (pk.length) { const w = pk.filter(k => !k.date); parts.push(1 - w.length / pk.length); w.slice(0, 8).forEach(k => iss.push(k.obj + " · " + (k.num || "КС") + ": нет даты КС")); }
+    const sg = pk.filter(k => k.sign === "Подписана");
+    if (sg.length) { const w = sg.filter(k => !k.signDate); parts.push(1 - w.length / sg.length); w.slice(0, 8).forEach(k => iss.push(k.obj + " · " + (k.num || "КС") + ": нет даты подписания")); }
+    let rn = 0, rd = 0;
+    os.forEach(o => done.forEach(m => {
+      if (!ks.some(k => k.obj === o.name && k.month === m && num(k.ks2) > 0)) return;
+      const r = rep("fact", o.name, m); if (r && !r.sentAt && !r.decidedAt) return;      // перенесённые данные — не оцениваем
+      rd++; const dl = addM(m, 1) + "-05";
+      if (r && r.sentAt && msk(r.sentAt) <= dl) rn++; else iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": отчёт «Факт» " + (r && r.sentAt ? "отправлен " + ru(msk(r.sentAt)) : "не отправлен") + " (срок " + ru(dl) + ")");
+    }));
+    if (rd) parts.push(rn / rd);
+    return { num: null, den: parts.length, value: parts.length ? parts.reduce((s, x) => s + x, 0) / parts.length : null, issues: iss };
+  }
+  // план и «зависшие» — только по законченным месяцам периода (текущий месяц ещё идёт)
+  const da = done[0], db = done[done.length - 1], inDone = k => k.month && da && k.month >= da && k.month <= db && num(k.ks2) > 0;
+  const capD = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < da)));
+  function plan(os) {             // выполнение плана закрытия
+    if (!done.length) return R(0, 0);
+    let pl = 0, fa = 0; const iss = [];
+    os.forEach(o => {
+      const p = Math.min(planRaw(o.name, da, db), capD(o)), f = sum(ks.filter(k => k.obj === o.name && inDone(k) && accepted(k)));
+      pl += p; fa += f;
+      if (p > 0 && f / p < 0.8) iss.push(o.name + ": план " + (p / 1e6).toFixed(1).replace(".", ",") + " млн, принято " + (f / 1e6).toFixed(1).replace(".", ",") + " млн (" + Math.round(f / p * 100) + "%)");
+    });
+    return { num: fa, den: pl, value: pl ? fa / pl : null, issues: iss };
+  }
+  function hang(os) {
+    if (!done.length) return R(0, 0);
+    const names = os.map(o => o.name), wd = k => k.date || eom(k.month), end = eom(db);
+    const h = ks.filter(k => names.indexOf(k.obj) >= 0 && num(k.ks2) > 0 && k.month && k.month <= db && wd(k) <= addDays(end, -30) && !accepted(k));
+    const base = sum(ks.filter(k => names.indexOf(k.obj) >= 0 && inDone(k)));
+    if (!h.length && !base) return R(0, 0);
+    return { num: sum(h), den: base, value: Math.min(1, sum(h) / Math.max(1, base)), issues: h.map(k => k.obj + " · " + (k.num || "КС") + ": не согласована с " + ru(wd(k))) };
+  }
+  // ---- начальник ----
+  function review() {
+    let n = 0, d = 0; const iss = [];
+    reps.forEach(r => {
+      if (!r.sentAt || !r.decidedAt) return; const s = msk(r.sentAt), dd = msk(r.decidedAt);
+      if (ym(dd) < a || ym(dd) > b || dd < s) return;
+      d++; const w = workDays(s, dd); if (w <= 2) n++; else iss.push((r.type === "plan" ? "План" : "Факт") + " · " + r.obj + " · " + monthLabel(r.month).toLowerCase() + ": решение через " + w + " раб. дн.");
+    });
+    return R(n, d, iss);
+  }
+  function planOnTime() {
+    let n = 0, d = 0; const iss = [];
+    months.forEach(m => objs.forEach(o => {
+      if (planRaw(o.name, m, m) <= 0) return;
+      const r = rep("plan", o.name, m); if (r && r.status === "Согласован" && !r.sentAt && !r.decidedAt) return;   // перенесённые
+      if (m1(m) > today) return;                                                      // месяц ещё не начался
+      d++; const ap = r ? cmts(r).filter(c => c.act === "approve").map(c => msk(c.at)).sort()[0] : "";
+      if (ap && ap < m1(m)) n++; else iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": план " + (ap ? "согласован " + ru(ap) : "не согласован"));
+    }));
+    return R(n, d, iss);
+  }
+  function overdue() {
+    const end = P.end < today ? P.end : today;
+    const od = ks.filter(k => num(k.ks2) > 0 && k.pay !== "Оплачена" && k.expect && k.expect >= P.start && k.expect < end);   // стали просроченными в этом периоде
+    const ok = od.filter(k => k.letterDate);
+    return R(ok.length, od.length, od.filter(k => !k.letterDate).map(k => k.obj + " · " + (k.num || "КС") + ": оплата ожидалась " + ru(k.expect) + ", письма нет"));
+  }
+  function reopen() {
+    let ap = 0, ro = 0; const iss = [];
+    reps.forEach(r => cmts(r).forEach(c => {
+      const dd = msk(c.at); if (ym(dd) < a || ym(dd) > b) return;
+      if (c.act === "approve") ap++;
+      if (c.act === "reopen") { ro++; iss.push((r.type === "plan" ? "План" : "Факт") + " · " + r.obj + " · " + monthLabel(r.month).toLowerCase() + ": открыт заново " + ru(dd)); }
+    }));
+    return ap || ro ? { num: ro, den: ap, value: Math.min(1, ro / Math.max(1, ap)), issues: iss } : R(0, 0);
+  }
+  function note() {
+    let n = 0, d = 0; const iss = [];
+    done.forEach(m => {
+      d++; const x = (data.notes || []).find(z => z.month === m && String(z.text || "").trim()), dl = addM(m, 1) + "-05";
+      if (x && (!x.upd || msk(x.upd) <= dl)) n++; else iss.push(monthLabel(m) + ": " + (x ? "заполнен " + ru(msk(x.upd)) : "не заполнен"));
+    });
+    return R(n, d, iss);
+  }
+  // ---- сборка ----
+  const FN = { ksTime, close, ds, remarks, disc, plan, hang, review, planOnTime, overdue, reopen, note };
+  function build(set, os) {
+    const items = KPI_SETS[set].map(def => {
+      const r = FN[def.k](os), wk = set + "." + def.k, w = (wk in S.w && isFinite(S.w[wk])) ? S.w[wk] : def.w;
+      const ach = r.value === null ? null : (def.t === 0 ? Math.max(0, 1 - r.value) : r.value / def.t);
+      return Object.assign({}, def, r, { w, ach, coef: ach === null ? null : Math.max(0, Math.min(1.2, ach)), issues: r.issues.slice(0, 30), more: Math.max(0, r.issues.length - 30) });
+    });
+    const ws = items.filter(i => i.coef !== null).reduce((s, i) => s + i.w, 0);
+    return { items, coef: ws ? items.filter(i => i.coef !== null).reduce((s, i) => s + i.coef * i.w, 0) / ws : null };
+  }
+  const names = []; objs.forEach(o => { if (o.pto && names.indexOf(o.pto) < 0) names.push(o.pto); });
+  const people = names.map(nm => { const os = objs.filter(o => o.pto === nm); return Object.assign({ name: nm, objects: os.length }, build("spec", os)); });
+  const dept = build("dept", objs), head = build("head", objs);
+  const n = months.length, fund = S.fund * n;
+  const money = fund > 0 ? {
+    fund, dept: dept.coef === null ? null : fund * dept.coef,
+    people: people.map(p => { const sh = p.name in S.share ? S.share[p.name] : 0; return { name: p.name, share: sh, pay: p.coef === null ? 0 : fund * sh * p.coef }; }),
+    headShare: S.share["@head"] || 0
+  } : null;
+  if (money) { money.head = head.coef === null ? 0 : fund * money.headShare * head.coef; money.shareSum = money.people.reduce((s, x) => s + x.share, 0) + money.headShare; }
+  return { period: P, list, months: n, done: done.length, hasAct: !!act, dept, head, people, money, settings: S };
 }
 
-const api = { BASE, compute, kpi, kpiSettings, KPI_DEFAULT, KPI_NAMES, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
+const api = { BASE, compute, kpi, kpiSettings, KPI_SETS, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
 root.PTO = api;
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

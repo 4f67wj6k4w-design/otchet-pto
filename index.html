@@ -309,6 +309,38 @@ input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.5
 #v-my .pnav{margin:6px 0 4px;max-width:420px}
 #v-my .mini td.num,#v-my .mini th.num{text-align:right;font-family:var(--f-num);white-space:nowrap}
 @media (max-width:560px){#v-my .tiles{grid-template-columns:1fr 1fr}#v-my .tile b{font-size:17px}#v-my .tile small{min-height:0}}
+/* KPI */
+.kpi-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.kpi-h h2{margin-bottom:2px}
+.kpi-big{text-align:right;min-width:120px}.kpi-big b{display:block;font-family:var(--f-num);font-size:34px;line-height:1.1}
+.kpi-big small{color:var(--muted);font-size:12px}
+.kpi-big.ok b{color:var(--ok)}.kpi-big.warnc b{color:var(--warn)}.kpi-big.bad b{color:var(--bad)}
+.kpi-money{margin:6px 0 2px;font-size:14px;background:var(--sunk);border-radius:8px;padding:8px 10px}
+.kpi-list{display:flex;flex-direction:column;margin-top:8px}
+.kpi-r{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(80px,1fr) 96px;gap:4px 12px;align-items:center;padding:9px 6px;border:0;border-top:1px solid var(--line);background:none;text-align:left;font:inherit;color:inherit;cursor:pointer;width:100%}
+.kpi-r:hover{background:var(--sunk)}.kpi-r.open{background:var(--sunk)}
+.kpi-n b{font-weight:600;font-size:14px}.kpi-n small{display:block;color:var(--muted);font-size:12px}
+.kpi-bar{position:relative;height:10px;background:var(--sunk);border-radius:5px;overflow:hidden}
+.kpi-r:hover .kpi-bar,.kpi-r.open .kpi-bar{background:var(--surface)}
+.kpi-bar i{display:block;height:100%;background:var(--muted)}.kpi-bar i.ok{background:var(--ok)}.kpi-bar i.warnc{background:var(--warn)}.kpi-bar i.bad{background:var(--bad)}
+.kpi-bar u{position:absolute;top:0;bottom:0;width:2px;background:var(--fg);opacity:.35}
+.kpi-v{font-family:var(--f-num);text-align:right;font-size:15px;font-weight:600}.kpi-v.ok{color:var(--ok)}.kpi-v.warnc{color:var(--warn)}.kpi-v.bad{color:var(--bad)}
+.kpi-r.na .kpi-v{font:12px var(--f-ui);color:var(--muted);font-weight:400}
+.kpi-d{padding:4px 8px 10px 14px;font-size:13px;border-left:3px solid var(--line);margin:0 0 6px 6px}
+.kpi-d ul{margin:6px 0 0;padding-left:18px}.kpi-d li{margin:2px 0}
+.kpi-how{color:var(--muted);font-size:12px;margin-top:4px}.kpi-how.ok{color:var(--ok)}
+.kpi-t{width:100%;border-collapse:collapse;font-size:14px}.kpi-t th,.kpi-t td{padding:7px 6px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.kpi-t th{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:600;white-space:normal}
+.kpi-t td:first-child,.kpi-t th:first-child{text-align:left;white-space:normal}
+.kpi-t td.ok{color:var(--ok)}.kpi-t td.warnc{color:var(--warn)}.kpi-t td.bad{color:var(--bad)}.kpi-t tr.sel td{background:var(--sunk)}
+.kpi-t tbody tr{cursor:pointer}.kpi-t tbody tr:hover td{background:var(--sunk)}
+.kpi-t input{width:70px;min-height:30px;padding:2px 6px;text-align:right}
+.kpi-set{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:4px 12px;align-items:center;font-size:14px}
+.kpi-set input{min-height:32px;padding:2px 8px;text-align:right}
+@media (max-width:560px){.kpi-r{grid-template-columns:1fr 70px}.kpi-bar{grid-column:1/-1;order:3}.kpi-big b{font-size:26px}}
+.kpi-st{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 6px}
+nav.tabs{overflow-x:auto;scrollbar-width:none}nav.tabs::-webkit-scrollbar{display:none}nav.tabs button{flex:1 0 auto;white-space:nowrap;padding-inline:10px}
+.kpi-n b{font-family:var(--f-ui)}
 
 .who{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
 .login{max-width:420px;margin-inline:auto;margin-top:28px}.login form{display:flex;flex-direction:column;gap:12px}.login h2{text-transform:none;letter-spacing:0;font-size:18px;color:var(--fg)}
@@ -334,6 +366,7 @@ input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.5
     <nav class="tabs" role="tablist">
       <button role="tab" id="tab-my" aria-selected="true" data-v="my">Мои объекты</button>
       <button role="tab" id="tab-rep" aria-selected="false" data-v="rep">Отчёты</button>
+      <button role="tab" id="tab-kpi" aria-selected="false" data-v="kpi">KPI</button>
       <button role="tab" id="tab-ks" aria-selected="false" data-v="ks">Журнал КС</button>
       <button role="tab" id="tab-money" aria-selected="false" data-v="money">Деньги</button>
       <button role="tab" id="tab-plan" aria-selected="false" data-v="plan">План</button>
@@ -388,6 +421,16 @@ input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.5
   </div>
 
   <!-- ЖУРНАЛ КС -->
+  <!-- KPI -->
+  <div id="v-kpi" hidden>
+    <section class="card">
+      <div class="per"><div class="seg" id="kp-kind" role="group"><button type="button" data-k="month">Месяц</button><button type="button" data-k="quarter">Квартал</button><button type="button" data-k="year">Год</button></div>
+        <div class="pnav"><button type="button" class="btn" id="kp-prev" aria-label="Предыдущий период">‹</button><select id="kp-sel" aria-label="Период"></select><button type="button" class="btn" id="kp-next" aria-label="Следующий период">›</button></div></div>
+      <div class="sumline" id="kp-info" hidden></div>
+    </section>
+    <div id="kp-out"></div>
+  </div>
+
   <div id="v-ks" hidden>
     <section class="card">
       <div class="toolbar">
@@ -788,121 +831,209 @@ function compute(data, opt) {
   return out;
 }
 
-// ---------- KPI отдела ПТО и специалистов (листы «KPI ПТО», «KPI специалистов») ----------
-const KPI_DEFAULT = {
-  w: [0.4, 0.15, 0.2, 0.1, 0.15],          // веса KPI 1–5
-  t: [1, 0.7, 0.9, 0, 1],                  // цели
-  thr: 0.7,                                // порог по KPI 1 (достижение)
-  scale: [[0, 0], [0.8, 0.5], [0.9, 0.8], [1, 1], [1.1, 1.2]],   // достижение от → коэффициент
-  fundA: 500000, fot: 2000000, fotPct: 0.2, volPct: 0.001, payPct: 0.001, cap: 1000000,
-  variant: "Б", share: {}
+// ---------- KPI: специалист ПТО, начальник ПТО, отдел ----------
+// Плавная шкала: коэффициент показателя = достижение цели (0…120%), без порогов и обнулений.
+// Показатель без данных за период не учитывается — его вес делится между остальными.
+const KPI_SETS = {
+  spec: [
+    { k: "ksTime", n: "КС поданы в срок по графику", w: 0.30, t: 1, how: "КС за месяц с датой не позже последнего числа отчётного месяца / сколько КС положено по графику (1 или 2 в месяц) по объектам с планом или с работами по рапортам" },
+    { k: "close", n: "Работы по рапортам закрыты КС", w: 0.25, t: 1, how: "Доля месяцев, когда по рапортам прорабов на объекте были работы и за этот месяц подана КС" },
+    { k: "ds", n: "Допработы: ДС подан в срок", w: 0.20, t: 1, how: "КС с отметкой «Нужен ДС», по которым ДС подан заказчику не позже 30 дней от даты КС" },
+    { k: "remarks", n: "КС без замечаний и возвратов", w: 0.15, t: 1, how: "Доля КС за период без отметки «Замечания» / «Возврат на исправление»" },
+    { k: "disc", n: "Дисциплина данных и отчёт вовремя", w: 0.10, t: 1, how: "Среднее: у КС есть дата; у подписанных есть дата подписания; отчёт «Факт» за месяц отправлен до 5-го числа следующего месяца" }
+  ],
+  head: [
+    { k: "plan", n: "Выполнение плана закрытия отделом", w: 0.30, t: 1, how: "Принятый факт (КС согласована / подписана / оплачена) / план периода по всем объектам" },
+    { k: "review", n: "Скорость проверки отчётов", w: 0.15, t: 1, how: "Доля отчётов, по которым решение принято не позже 2 рабочих дней после отправки" },
+    { k: "planOnTime", n: "План на месяц согласован до 1-го числа", w: 0.10, t: 1, how: "Доля объектов с планом на месяц, у которых план согласован до начала месяца" },
+    { k: "overdue", n: "Работа с просроченной оплатой", w: 0.15, t: 1, how: "Доля КС, не оплаченных в срок по договору, по которым есть дата письма или претензии заказчику" },
+    { k: "ds", n: "Допработы: ДС подан в срок (отдел)", w: 0.15, t: 1, how: "Как у специалистов, по всем объектам отдела" },
+    { k: "reopen", n: "Качество согласования", w: 0.10, t: 0, how: "Доля согласованных отчётов, которые пришлось открыть заново (цель — 0)" },
+    { k: "note", n: "«Главное за месяц» к 5-му числу", w: 0.05, t: 1, how: "Комментарий для генерального за месяц заполнен до 5-го числа следующего месяца" }
+  ],
+  dept: [
+    { k: "plan", n: "Выполнение плана закрытия", w: 0.40, t: 1, how: "Принятый факт / план периода (план не больше остатка договора)" },
+    { k: "ksTime", n: "КС поданы в срок по графику", w: 0.20, t: 1, how: "По всем объектам отдела" },
+    { k: "close", n: "Работы по рапортам закрыты КС", w: 0.15, t: 1, how: "По всем объектам отдела" },
+    { k: "hang", n: "Без «зависших» КС", w: 0.15, t: 0, how: "Доля КС-2, которые больше 30 дней не согласованы заказчиком (цель — 0)" },
+    { k: "disc", n: "Дисциплина данных", w: 0.10, t: 1, how: "По всем объектам отдела" }
+  ]
 };
-const KPI_NAMES = ["Выполнение плана закрытия", "Точность планирования", "Сроки КС: подача и подписание", "«Зависшие» КС", "Дисциплина данных"];
+const accepted = k => k.agr === "Согласована" || k.sign === "Подписана" || k.pay === "Оплачена";
+const yes = v => /^да$/i.test(String(v || "").trim());
+const badRemark = v => /замеч|возврат/i.test(String(v || ""));
+const msk = iso => iso ? new Date(Date.parse(iso) + 3 * 3600e3).toISOString().slice(0, 10) : "";
+function workDays(a, b) { let n = 0; for (let d = addDays(a, 1); d <= b; d = addDays(d, 1)) { const w = new Date(D(d)).getUTCDay(); if (w !== 0 && w !== 6) n++; } return n; }   // рабочие дни после a до b включительно, пн–пт
 function kpiSettings(data) {
-  const s = JSON.parse(JSON.stringify(KPI_DEFAULT));
+  const s = { w: {}, fund: 0, share: {} };
   (data.kpi || []).forEach(r => {
-    if (!r || !r.id) return;
-    let v = r.value; try { v = JSON.parse(r.value); } catch (e) {}
+    if (!r || !r.id) return; let v = r.value; try { v = JSON.parse(r.value); } catch (e) {}
     if (r.id.indexOf("share:") === 0) s.share[r.id.slice(6)] = +v || 0;
-    else if (r.id in s) s[r.id] = v;
+    else if (r.id.indexOf("w:") === 0) s.w[r.id.slice(2)] = +v;
+    else if (r.id === "fund") s.fund = +v || 0;
   });
   return s;
 }
-const accepted = k => k.agr === "Согласована" || k.sign === "Подписана" || k.pay === "Оплачена";
+/** opt: { today, kind, period, act: { "Объект": ["2026-09", …] } — месяцы с работами по рапортам (не обязательно) } */
 function kpi(data, opt) {
-  const today = opt.today, kind = opt.kind || "month";
-  const S = kpiSettings(data);
+  const today = opt.today, kind = opt.kind || "month", S = kpiSettings(data), act = opt.act || null;
   const byName = index(data);
   const ks = (data.ks || []).map(k => enrichKs(k, byName));
   const list = periods(kind, data, today);
   const P = list.find(x => x.key === opt.period) || defaultPeriod(kind, data, today);
-  const a = ym(P.start), b = ym(P.end), n = (+b.slice(0, 4) - +a.slice(0, 4)) * 12 + +b.slice(5) - +a.slice(5) + 1;
-  const inP = k => k.month && k.month >= a && k.month <= b;
-  const pos = k => num(k.ks2) > 0;
-  const sum = (arr, f) => arr.reduce((s, x) => s + num(f ? f(x) : x.ks2), 0);
-  const planOf = (name, x, y) => (data.plan || []).filter(p => p.obj === name && p.month >= x && p.month <= y).reduce((s, p) => s + num(p.sum), 0);
-  const cap = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < a)));
-  const aq = k => has(k.ks2) ? (k.date || (k.month ? eom(k.month) : "")) : "";
-  const hang = k => has(k.ks2) && aq(k) && aq(k) <= addDays(P.end, -30) && k.month && k.month <= b && !accepted(k);
-  const signedOk = k => k.signDate && k.month && k.signDate <= addDays(eom(k.month), 15);
-  const sentOk = k => k.date && k.month && k.date <= eom(k.month);
+  const a = ym(P.start), b = ym(P.end);
   const months = []; for (let m = a; m <= b; m = addM(m, 1)) months.push(m);
-  // по объектам — столбцы Расчёт!CA…CT
-  const rows = (data.objects || []).map(o => {
-    const mine = ks.filter(k => k.obj === o.name), pk = mine.filter(inP);
-    const CA = Math.min(planOf(o.name, a, b), cap(o));
-    const CB = sum(pk.filter(accepted));
-    const CC = CA ? CB / CA : null;
-    const CD = CA > 0 ? (CC >= 0.8 && CC <= 1.2 ? 1 : 0) : null;
-    const CP = months.filter(m => planOf(o.name, m, m) > 0).length;
-    const CR = CP * (/^Дважды/.test(o.sched || "") ? 2 : 1);
-    return {
-      name: o.name, resp: o.resp || "", pto: o.pto || "", CA, CB, CC, CD, CR,
-      CH: pk.filter(pos).length, CI: pk.filter(signedOk).length, CJ: pk.filter(k => k.signDate).length,
-      CK: sum(mine.filter(hang)), CL: sum(pk), CM: pk.filter(k => pos(k) && k.date).length,
-      CT: Math.min(pk.filter(sentOk).length, CR), hangN: mine.filter(k => hang(k) && pos(k)).length
-    };
-  });
-  const coefOf = x => { let c = 0; S.scale.forEach(([from, k]) => { if (x >= from) c = k; }); return c; };
-  const total = (ach) => {                                    // итоговый коэффициент: веса показателей без данных перераспределяются
-    if (!(typeof ach[0] === "number") || ach[0] < S.thr) return 0;
-    let ws = 0, sm = 0;
-    ach.forEach((x, i) => { if (typeof x === "number") { ws += S.w[i]; sm += coefOf(x) * S.w[i]; } });
-    return ws ? sm / ws : 0;
-  };
-  const tg = (v, i) => v === null ? null : (S.t[i] === 0 ? 1 : v / S.t[i]);
-  // отдел — лист «KPI ПТО»
-  const pk = ks.filter(inP);
-  const R = f => rows.reduce((s, r) => s + num(f(r)), 0);
-  const E = {
-    E18: R(r => r.CA), E19: sum(pk), E20: R(r => r.CB), E21: rows.filter(r => r.CA > 0).length, E22: R(r => r.CD),
-    E23: pk.filter(pos).length, E24: pk.filter(k => k.signDate).length, E25: pk.filter(signedOk).length,
-    E26: R(r => r.CR), E27: R(r => r.CT), E28: sum(ks.filter(hang)), E29: ks.filter(k => hang(k) && pos(k)).length,
-    E34: (data.pays || []).filter(p => p.date >= P.start && p.date <= P.end).reduce((s, p) => s + num(p.sum), 0)
-  };
-  const signedP = pk.filter(k => k.sign === "Подписана");
-  E.E30 = E.E23 === 0 ? 1 : Math.max(0, 1 - pk.filter(k => k.ctrl).length / E.E23);
-  E.E31 = months.filter(m => (data.notes || []).some(x => x.month === m && String(x.text || "").trim())).length / n;
-  E.E32 = E.E23 === 0 ? 1 : pk.filter(k => pos(k) && k.date).length / E.E23;
-  E.E33 = signedP.length === 0 ? 1 : signedP.filter(k => k.signDate).length / signedP.length;
-  const v3 = (E.E26 === 0 && E.E24 === 0) ? null : (E.E24 > 0
-    ? ((E.E26 === 0 ? E.E25 / Math.max(1, E.E23) : E.E27 / E.E26) + E.E25 / Math.max(1, E.E23)) / 2 : E.E27 / E.E26);
-  const v = [E.E18 ? E.E20 / E.E18 : null, E.E21 ? E.E22 / E.E21 : null, v3,
-    (E.E23 > 0 || E.E28 > 0) ? Math.min(1, E.E28 / Math.max(1, E.E19)) : null, (E.E30 + E.E31 + E.E32 + E.E33) / 4];
-  const ach = [tg(v[0], 0), tg(v[1], 1), tg(v[2], 2), v[3] === null ? null : Math.max(0, 1 - v[3]), tg(v[4], 4)];
-  const dept = { items: KPI_NAMES.map((name, i) => ({ name, value: v[i], target: S.t[i], ach: ach[i], coef: ach[i] === null ? null : coefOf(ach[i]), w: S.w[i] })),
-    coef: total(ach), thrOk: typeof ach[0] === "number" && ach[0] >= S.thr, src: E };
-  // фонд
-  const capN = num(S.cap) > 0 ? num(S.cap) * n : INF;
-  const fund = [
-    { key: "А", name: "Фиксированный фонд", base: num(S.fundA) * n },
-    { key: "Б", name: "% от ФОТ отдела", base: num(S.fot) * n * num(S.fotPct) },
-    { key: "В", name: "% от закрытого объёма", base: Math.min(E.E20 * num(S.volPct), capN) },
-    { key: "Г", name: "% от поступивших денег", base: Math.min(E.E34 * num(S.payPct), capN) }
-  ].map(f => Object.assign(f, { pay: f.base * dept.coef, max: f.base * Math.max(...S.scale.map(x => x[1])) }));
-  const chosen = fund.find(f => f.key === S.variant) || fund[1];
-  // специалисты — лист «KPI специалистов»
-  const names = [];
-  rows.forEach(r => { if (r.pto && names.indexOf(r.pto) < 0) names.push(r.pto); });
-  const people = names.map(nm => {
-    const my = rows.filter(r => r.pto === nm), T = f => my.reduce((s, r) => s + num(f(r)), 0);
-    const D_ = T(r => r.CA), E_ = T(r => r.CB), nPlan = my.filter(r => r.CA > 0).length;
-    const CH = T(r => r.CH), CI = T(r => r.CI), CJ = T(r => r.CJ), CR = T(r => r.CR), CT = T(r => r.CT), CK = T(r => r.CK), CL = T(r => r.CL), CM = T(r => r.CM);
-    const F = D_ ? E_ / D_ / (S.t[0] || 1) : null;
-    const G = nPlan ? T(r => r.CD) / nPlan / (S.t[1] || 1) : null;
-    const H = (CR === 0 && CJ === 0) ? null : (CJ > 0 ? (CR === 0 ? CI / Math.max(1, CH) : (CT / CR + CI / Math.max(1, CH)) / 2) : CT / CR) / (S.t[2] || 1);
-    const I = (CH === 0 && CK === 0) ? null : Math.max(0, 1 - Math.min(1, CK / Math.max(1, CL)));
-    const J = CH === 0 ? null : CM / CH;
-    const achP = [F, G, H, I, J], coef = total(achP);
-    const share = nm in S.share ? S.share[nm] : 1 / names.length;
-    return { name: nm, objects: my.length, plan: D_, fact: E_, ach: achP, coefs: achP.map(x => x === null ? null : coefOf(x)), coef,
-      share, base: chosen.base * share, pay: chosen.base * share * coef, rows: my.filter(r => r.CA || r.CB || r.CK) };
-  });
-  return { period: P, list, months: n, settings: S, dept, fund, chosen, people, rows: rows.filter(r => r.CA || r.CB || r.CK),
-    shareSum: people.reduce((s, p) => s + p.share, 0) };
+  const done = months.filter(m => eom(m) < today);                 // законченные месяцы периода
+  const inP = k => k.month && k.month >= a && k.month <= b && num(k.ks2) > 0;
+  const sum = (arr, f) => arr.reduce((s, x) => s + num(f ? f(x) : x.ks2), 0);
+  const planRaw = (o, x, y) => (data.plan || []).filter(p => p.obj === o && p.month >= x && p.month <= y).reduce((s, p) => s + num(p.sum), 0);
+  const cap = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < a)));
+  const reps = data.reports || [];
+  const rep = (type, obj, m) => reps.find(r => r.type === type && r.obj === obj && r.month === m);
+  const cmts = r => { try { return JSON.parse(r.comments || "[]"); } catch (e) { return []; } };
+  const R = (num_, den, issues) => ({ num: num_, den, value: den ? num_ / den : null, issues: issues || [] });
+  const objs = data.objects || [];
+
+  // ---- показатели по набору объектов ----
+  function ksTime(os) {           // КС в срок по графику
+    let n = 0, d = 0; const iss = [];
+    os.forEach(o => done.forEach(m => {
+      const worked = planRaw(o.name, m, m) > 0 || (act && (act[o.name] || []).indexOf(m) >= 0);
+      if (!worked) return;
+      const need = /^Дважды/.test(o.sched || "") ? 2 : 1;
+      const mine = ks.filter(k => k.obj === o.name && k.month === m && num(k.ks2) > 0);
+      const ok = Math.min(need, mine.filter(k => k.date && k.date <= eom(m)).length);
+      d += need; n += ok;
+      if (ok < need) iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": " + (mine.length ? "КС подана позже срока или без даты" : "КС нет"));
+    }));
+    return R(n, d, iss);
+  }
+  function close(os) {            // работы по рапортам закрыты КС
+    if (!act) return R(0, 0);
+    let n = 0, d = 0; const iss = [];
+    os.forEach(o => (act[o.name] || []).filter(m => done.indexOf(m) >= 0).forEach(m => {
+      d++; if (ks.some(k => k.obj === o.name && k.month === m && num(k.ks2) > 0)) n++; else iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": по рапортам были работы, КС нет");
+    }));
+    return R(n, d, iss);
+  }
+  function ds(os) {               // ДС в срок
+    const names = os.map(o => o.name); let n = 0, d = 0; const iss = [];
+    ks.filter(k => names.indexOf(k.obj) >= 0 && inP(k) && yes(k.dsNeed)).forEach(k => {
+      const due = addDays(k.date || eom(k.month), 30);
+      if (k.dsDate && k.dsDate <= due) { n++; d++; }
+      else if (k.dsDate || due < today) { d++; iss.push(k.obj + " · " + (k.num || "КС") + ": ДС " + (k.dsDate ? "подан " + ru(k.dsDate) + ", срок был " + ru(due) : "не подан, срок " + ru(due))); }
+    });
+    return R(n, d, iss);
+  }
+  function remarks(os) {
+    const names = os.map(o => o.name), pk = ks.filter(k => names.indexOf(k.obj) >= 0 && inP(k)), bad = pk.filter(k => badRemark(k.remarks));
+    return R(pk.length - bad.length, pk.length, bad.map(k => k.obj + " · " + (k.num || "КС") + ": " + k.remarks));
+  }
+  function disc(os) {
+    const names = os.map(o => o.name), pk = ks.filter(k => names.indexOf(k.obj) >= 0 && inP(k)), iss = [], parts = [];
+    if (pk.length) { const w = pk.filter(k => !k.date); parts.push(1 - w.length / pk.length); w.slice(0, 8).forEach(k => iss.push(k.obj + " · " + (k.num || "КС") + ": нет даты КС")); }
+    const sg = pk.filter(k => k.sign === "Подписана");
+    if (sg.length) { const w = sg.filter(k => !k.signDate); parts.push(1 - w.length / sg.length); w.slice(0, 8).forEach(k => iss.push(k.obj + " · " + (k.num || "КС") + ": нет даты подписания")); }
+    let rn = 0, rd = 0;
+    os.forEach(o => done.forEach(m => {
+      if (!ks.some(k => k.obj === o.name && k.month === m && num(k.ks2) > 0)) return;
+      const r = rep("fact", o.name, m); if (r && !r.sentAt && !r.decidedAt) return;      // перенесённые данные — не оцениваем
+      rd++; const dl = addM(m, 1) + "-05";
+      if (r && r.sentAt && msk(r.sentAt) <= dl) rn++; else iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": отчёт «Факт» " + (r && r.sentAt ? "отправлен " + ru(msk(r.sentAt)) : "не отправлен") + " (срок " + ru(dl) + ")");
+    }));
+    if (rd) parts.push(rn / rd);
+    return { num: null, den: parts.length, value: parts.length ? parts.reduce((s, x) => s + x, 0) / parts.length : null, issues: iss };
+  }
+  // план и «зависшие» — только по законченным месяцам периода (текущий месяц ещё идёт)
+  const da = done[0], db = done[done.length - 1], inDone = k => k.month && da && k.month >= da && k.month <= db && num(k.ks2) > 0;
+  const capD = o => !num(o.sum) ? INF : Math.max(0, +o.sum - num(o.done0) - sum(ks.filter(k => k.obj === o.name && k.month && k.month >= BASE && k.month < da)));
+  function plan(os) {             // выполнение плана закрытия
+    if (!done.length) return R(0, 0);
+    let pl = 0, fa = 0; const iss = [];
+    os.forEach(o => {
+      const p = Math.min(planRaw(o.name, da, db), capD(o)), f = sum(ks.filter(k => k.obj === o.name && inDone(k) && accepted(k)));
+      pl += p; fa += f;
+      if (p > 0 && f / p < 0.8) iss.push(o.name + ": план " + (p / 1e6).toFixed(1).replace(".", ",") + " млн, принято " + (f / 1e6).toFixed(1).replace(".", ",") + " млн (" + Math.round(f / p * 100) + "%)");
+    });
+    return { num: fa, den: pl, value: pl ? fa / pl : null, issues: iss };
+  }
+  function hang(os) {
+    if (!done.length) return R(0, 0);
+    const names = os.map(o => o.name), wd = k => k.date || eom(k.month), end = eom(db);
+    const h = ks.filter(k => names.indexOf(k.obj) >= 0 && num(k.ks2) > 0 && k.month && k.month <= db && wd(k) <= addDays(end, -30) && !accepted(k));
+    const base = sum(ks.filter(k => names.indexOf(k.obj) >= 0 && inDone(k)));
+    if (!h.length && !base) return R(0, 0);
+    return { num: sum(h), den: base, value: Math.min(1, sum(h) / Math.max(1, base)), issues: h.map(k => k.obj + " · " + (k.num || "КС") + ": не согласована с " + ru(wd(k))) };
+  }
+  // ---- начальник ----
+  function review() {
+    let n = 0, d = 0; const iss = [];
+    reps.forEach(r => {
+      if (!r.sentAt || !r.decidedAt) return; const s = msk(r.sentAt), dd = msk(r.decidedAt);
+      if (ym(dd) < a || ym(dd) > b || dd < s) return;
+      d++; const w = workDays(s, dd); if (w <= 2) n++; else iss.push((r.type === "plan" ? "План" : "Факт") + " · " + r.obj + " · " + monthLabel(r.month).toLowerCase() + ": решение через " + w + " раб. дн.");
+    });
+    return R(n, d, iss);
+  }
+  function planOnTime() {
+    let n = 0, d = 0; const iss = [];
+    months.forEach(m => objs.forEach(o => {
+      if (planRaw(o.name, m, m) <= 0) return;
+      const r = rep("plan", o.name, m); if (r && r.status === "Согласован" && !r.sentAt && !r.decidedAt) return;   // перенесённые
+      if (m1(m) > today) return;                                                      // месяц ещё не начался
+      d++; const ap = r ? cmts(r).filter(c => c.act === "approve").map(c => msk(c.at)).sort()[0] : "";
+      if (ap && ap < m1(m)) n++; else iss.push(o.name + ", " + monthLabel(m).toLowerCase() + ": план " + (ap ? "согласован " + ru(ap) : "не согласован"));
+    }));
+    return R(n, d, iss);
+  }
+  function overdue() {
+    const end = P.end < today ? P.end : today;
+    const od = ks.filter(k => num(k.ks2) > 0 && k.pay !== "Оплачена" && k.expect && k.expect >= P.start && k.expect < end);   // стали просроченными в этом периоде
+    const ok = od.filter(k => k.letterDate);
+    return R(ok.length, od.length, od.filter(k => !k.letterDate).map(k => k.obj + " · " + (k.num || "КС") + ": оплата ожидалась " + ru(k.expect) + ", письма нет"));
+  }
+  function reopen() {
+    let ap = 0, ro = 0; const iss = [];
+    reps.forEach(r => cmts(r).forEach(c => {
+      const dd = msk(c.at); if (ym(dd) < a || ym(dd) > b) return;
+      if (c.act === "approve") ap++;
+      if (c.act === "reopen") { ro++; iss.push((r.type === "plan" ? "План" : "Факт") + " · " + r.obj + " · " + monthLabel(r.month).toLowerCase() + ": открыт заново " + ru(dd)); }
+    }));
+    return ap || ro ? { num: ro, den: ap, value: Math.min(1, ro / Math.max(1, ap)), issues: iss } : R(0, 0);
+  }
+  function note() {
+    let n = 0, d = 0; const iss = [];
+    done.forEach(m => {
+      d++; const x = (data.notes || []).find(z => z.month === m && String(z.text || "").trim()), dl = addM(m, 1) + "-05";
+      if (x && (!x.upd || msk(x.upd) <= dl)) n++; else iss.push(monthLabel(m) + ": " + (x ? "заполнен " + ru(msk(x.upd)) : "не заполнен"));
+    });
+    return R(n, d, iss);
+  }
+  // ---- сборка ----
+  const FN = { ksTime, close, ds, remarks, disc, plan, hang, review, planOnTime, overdue, reopen, note };
+  function build(set, os) {
+    const items = KPI_SETS[set].map(def => {
+      const r = FN[def.k](os), wk = set + "." + def.k, w = (wk in S.w && isFinite(S.w[wk])) ? S.w[wk] : def.w;
+      const ach = r.value === null ? null : (def.t === 0 ? Math.max(0, 1 - r.value) : r.value / def.t);
+      return Object.assign({}, def, r, { w, ach, coef: ach === null ? null : Math.max(0, Math.min(1.2, ach)), issues: r.issues.slice(0, 30), more: Math.max(0, r.issues.length - 30) });
+    });
+    const ws = items.filter(i => i.coef !== null).reduce((s, i) => s + i.w, 0);
+    return { items, coef: ws ? items.filter(i => i.coef !== null).reduce((s, i) => s + i.coef * i.w, 0) / ws : null };
+  }
+  const names = []; objs.forEach(o => { if (o.pto && names.indexOf(o.pto) < 0) names.push(o.pto); });
+  const people = names.map(nm => { const os = objs.filter(o => o.pto === nm); return Object.assign({ name: nm, objects: os.length }, build("spec", os)); });
+  const dept = build("dept", objs), head = build("head", objs);
+  const n = months.length, fund = S.fund * n;
+  const money = fund > 0 ? {
+    fund, dept: dept.coef === null ? null : fund * dept.coef,
+    people: people.map(p => { const sh = p.name in S.share ? S.share[p.name] : 0; return { name: p.name, share: sh, pay: p.coef === null ? 0 : fund * sh * p.coef }; }),
+    headShare: S.share["@head"] || 0
+  } : null;
+  if (money) { money.head = head.coef === null ? 0 : fund * money.headShare * head.coef; money.shareSum = money.people.reduce((s, x) => s + x.share, 0) + money.headShare; }
+  return { period: P, list, months: n, done: done.length, hasAct: !!act, dept, head, people, money, settings: S };
 }
 
-const api = { BASE, compute, kpi, kpiSettings, KPI_DEFAULT, KPI_NAMES, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
+const api = { BASE, compute, kpi, kpiSettings, KPI_SETS, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
 root.PTO = api;
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
@@ -1033,6 +1164,40 @@ U.hbars = function (host, cfg) {
   });
   host.appendChild(list);
   legend(host, cfg.series);
+};
+
+// ---------- KPI: карточка показателей (страница ПТО и сводка руководителя) ----------
+U.kpiCls = c => c === null || c === undefined ? "" : (c < 0.8 ? "bad" : c < 1 ? "warnc" : "ok");
+U.kpiCard = function (title, block, opt) {
+  opt = opt || {};
+  const el = U.el, sec = el("section", "card kpi");
+  const h = el("div", "kpi-h"); const tl = el("div"); tl.appendChild(el("h2", null, title)); if (opt.sub) tl.appendChild(el("div", "sumline", opt.sub)); h.appendChild(tl);
+  const big = el("div", "kpi-big " + U.kpiCls(block.coef)); big.appendChild(el("b", null, block.coef === null ? "—" : U.pct(block.coef))); big.appendChild(el("small", null, "итоговый коэффициент")); h.appendChild(big);
+  sec.appendChild(h);
+  if (opt.money) sec.appendChild(el("div", "kpi-money", opt.money));
+  const list = el("div", "kpi-list"); sec.appendChild(list);
+  block.items.forEach(it => {
+    const row = el("button", "kpi-r" + (it.coef === null ? " na" : "")); row.type = "button";
+    const n = el("div", "kpi-n"); n.appendChild(el("b", null, it.n)); n.appendChild(el("small", null, "вес " + Math.round(it.w * 100) + "%" + (it.den ? " · " + U.kpiFact(it) : "")));
+    row.appendChild(n);
+    const bar = el("div", "kpi-bar"); const fill = el("i", U.kpiCls(it.coef)); fill.style.width = Math.min(100, (it.coef || 0) / 1.2 * 100) + "%"; bar.appendChild(fill); const mk = el("u"); mk.style.left = (100 / 1.2) + "%"; bar.appendChild(mk); row.appendChild(bar);
+    row.appendChild(el("div", "kpi-v " + U.kpiCls(it.coef), it.coef === null ? "нет данных" : U.pct(it.coef)));
+    const det = el("div", "kpi-d"); det.hidden = true;
+    det.appendChild(el("div", "kpi-how", it.how + (it.t === 0 ? "" : "") ));
+    if (it.issues && it.issues.length) { const ul = el("ul"); it.issues.forEach(x => ul.appendChild(el("li", null, x))); det.appendChild(ul); if (it.more) det.appendChild(el("div", "kpi-how", "…и ещё " + it.more)); }
+    else if (it.coef !== null) det.appendChild(el("div", "kpi-how ok", "Замечаний нет."));
+    row.onclick = () => { det.hidden = !det.hidden; row.classList.toggle("open", !det.hidden); };
+    list.appendChild(row); list.appendChild(det);
+  });
+  if (opt.note) sec.appendChild(el("div", "kpi-how", opt.note));
+  return sec;
+};
+U.kpiFact = it => {
+  if (it.k === "plan") return "принято " + U.mln(it.num) + " из " + U.mln(it.den) + " млн";
+  if (it.k === "hang") return "зависло " + U.mln(it.num) + " млн";
+  if (it.k === "disc") return "проверок: " + it.den;
+  if (it.k === "reopen") return "открыто заново " + it.num + " из " + it.den;
+  return it.num + " из " + it.den;
 };
 root.U = U;
 })(window);
@@ -1210,6 +1375,26 @@ const SCH={
    [
     "signDate",
     "Дата подписания",
+    "d"
+   ],
+   [
+    "remarks",
+    "Замечания заказчика",
+    "s"
+   ],
+   [
+    "dsNeed",
+    "Нужен ДС",
+    "s"
+   ],
+   [
+    "dsDate",
+    "ДС подан заказчику",
+    "d"
+   ],
+   [
+    "letterDate",
+    "Письмо / претензия заказчику",
     "d"
    ],
    [
@@ -1538,16 +1723,41 @@ const SCH={
     "s"
    ]
   ]
+ ],
+ "Q": [
+  "Настройки KPI",
+  [
+   [
+    "id",
+    "Параметр",
+    "s"
+   ],
+   [
+    "value",
+    "Значение",
+    "s"
+   ],
+   [
+    "upd",
+    "Изменено",
+    "s"
+   ],
+   [
+    "by",
+    "Кто изменил",
+    "s"
+   ]
+  ]
  ]
 };
 const RS={draft:"Черновик",sent:"На проверке",ret:"На доработке",ok:"Согласован"};
 const RSC={"Черновик":"draft","На проверке":"sent","На доработке":"ret","Согласован":"ok"};
 const ROLE_RU={spec:"Специалист ПТО",head:"Начальник ПТО",admin:"Администратор",dir:"Руководитель"};
-const STATUS_FIELDS=["agr","sign","pay","payDate","signDate","note"];
-const ALLTABS=["my","rep","ks","money","plan","obj","users","hist","more"];
+const STATUS_FIELDS=["agr","sign","pay","payDate","signDate","note","remarks","dsNeed","dsDate","letterDate"];
+const ALLTABS=["my","rep","kpi","ks","money","plan","obj","users","hist","more"];
 const isHead=()=>!!ME&&(ME.role==="head"||ME.role==="admin");
 const isAdmin=()=>!!ME&&ME.role==="admin";
-function tabsFor(){if(!ME)return ["my"];if(ME.role==="admin")return ALLTABS;if(ME.role==="head")return ["my","rep","ks","money","plan","obj","more"];return ["my","rep","ks","plan","obj","more"];}
+function tabsFor(){if(!ME)return ["my"];if(ME.role==="admin")return ALLTABS;if(ME.role==="head")return ["my","rep","kpi","ks","money","plan","obj","more"];return ["my","rep","kpi","ks","plan","obj","more"];}
 const STATUSES=["В работе","Нет ДС","Нет договора","Приостановлен","Завершён"];
 const PAYKIND=["Оплата КС","Аванс","Возврат ГУ","Прочее"];
 const SCHED=["Ежемесячно (25–30 число)","Дважды в месяц (15 и 30 число)"];
@@ -1572,15 +1782,15 @@ async function load(quiet){
   if(!db){status("Откройте страницу по своей ссылке (её выдаёт администратор).","bad");return;}
   if(!db.k){showLogin();return;}
   const CK="pto-cache-"+db.k.slice(0,8);
-  if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;ME=c.me;applyRole();render();}}catch(e){}}
+  if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;RAW.kpi=RAW.kpi||[];RAW.reports=RAW.reports||[];ME=c.me;applyRole();render();}}catch(e){}}
   if(!quiet)status("Загрузка базы…");
   try{const j=await U.get(db,{a:"all"});
     if(j.role==="dir"){status("Это ссылка руководителя — она открывает сводку.","bad");location.replace("director.html"+location.hash);return;}
-    status("");ME=j.me;RAW=j.data;RAW.reports=RAW.reports||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
+    status("");ME=j.me;RAW=j.data;RAW.reports=RAW.reports||[];RAW.kpi=RAW.kpi||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
   catch(e){if(/ключ/.test(e.message||"")&&viaLogin){db.k="";U.sset("pto-db",JSON.stringify(db));showLogin("Сеанс завершён (пароль сброшен или доступ отключён). Войдите снова.");return;}
     status("Не удалось загрузить базу: "+(e.message||"нет связи")+(RAW?" — показана сохранённая копия":""),"bad");}
 }
-const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects"};
+const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects",Q:"kpi"};
 function cacheSave(){U.sset("pto-cache-"+db.k.slice(0,8),JSON.stringify({me:ME,data:RAW}));}
 async function save(t,rows,extra){
   const j=await U.post(db,Object.assign({a:"save",t,rows},extra||{}));
@@ -1605,7 +1815,7 @@ function lockInfo(type,obj,month){
   if(!obj||!month)return {full:true,status:true,st:RS.draft};
   const st=repOf(type,obj,month).status||RS.draft;
   if(ME.role==="admin")return {full:true,status:true,st};
-  if(st===RS.ok)return {full:false,status:type==="fact",st,why:type==="fact"?"Отчёт за этот месяц согласован — сумма и реквизиты КС закрыты. Можно отмечать согласование, подписание и оплату.":"План согласован — изменения закрыты."};
+  if(st===RS.ok)return {full:false,status:type==="fact",st,why:type==="fact"?"Отчёт за этот месяц согласован — сумма и реквизиты КС закрыты. Можно отмечать согласование, подписание, оплату, замечания, ДС и письма заказчику.":"План согласован — изменения закрыты."};
   if(ME.role==="spec"&&st===RS.sent)return {full:false,status:false,st,why:"Отчёт на проверке у начальника ПТО — изменения закрыты до её решения."};
   return {full:true,status:true,st};
 }
@@ -1706,6 +1916,8 @@ function ksEditor(k,preset){
       [{f:"agr",label:"Согласование",type:"seg",opts:["Согласована","Не согласована"]}],
       [{f:"sign",label:"Подписание",type:"seg",opts:["Подписана","Не подписана"]},{f:"signDate",label:"Дата подписания",type:"date"}],
       [{f:"pay",label:"Оплата",type:"seg",opts:["Оплачена","Частично","Не оплачена"]},{f:"payDate",label:"Дата оплаты",type:"date"}],
+      [{f:"remarks",label:"Замечания заказчика (если были)",type:"select",opts:["Замечания","Возврат на исправление"]},{f:"letterDate",label:"Письмо / претензия по оплате",type:"date"}],
+      [{f:"dsNeed",label:"Допработы: нужен ДС?",type:"select",opts:["Да"]},{f:"dsDate",label:"ДС подан заказчику",type:"date"}],
       [{f:"note",label:"Примечание",type:"textarea"}]
     ],
     init(){
@@ -1727,6 +1939,7 @@ function ksEditor(k,preset){
       const wr=[];
       if(dup)wr.push("Такая КС по этому объекту уже есть в журнале ("+(dup.date?U.ru(dup.date):PTO.monthLabel(dup.month))+"). Если это та же КС — закройте окно и откройте её, чтобы поменять статус; новая строка даст двойной счёт.");
       if(r.pay==="Оплачена"&&!r.payDate)wr.push("Укажите дату оплаты.");
+      if(r.dsNeed==="Да"&&!r.dsDate)wr.push("Нужен ДС: подайте его заказчику в течение 30 дней и укажите дату.");
       if(r.date&&r.month&&r.month!==r.date.slice(0,7))wr.push("Отчётный месяц ("+PTO.monthLabel(r.month)+") не совпадает с месяцем даты КС — проверьте, что это так и нужно.");
       setWarn(wr.join(" "),!!dup);
     },
@@ -1737,7 +1950,7 @@ function ksEditor(k,preset){
     async onSave(r){r.base=k.upd||"";await save("K",[r]);},
     onDelete:isNew?null:async()=>{await del("K",k.id);}
   });
-  function collectKs(){return {id:k.id,date:val("date"),month:val("month"),obj:val("obj"),num:val("num"),period:val("period"),ks2:val("ks2"),ks3:val("ks3"),agr:val("agr"),sign:val("sign"),pay:val("pay"),payDate:val("payDate"),signDate:val("signDate"),note:val("note")};}
+  function collectKs(){return {id:k.id,date:val("date"),month:val("month"),obj:val("obj"),num:val("num"),period:val("period"),ks2:val("ks2"),ks3:val("ks3"),agr:val("agr"),sign:val("sign"),pay:val("pay"),payDate:val("payDate"),signDate:val("signDate"),remarks:val("remarks"),dsNeed:val("dsNeed"),dsDate:val("dsDate"),letterDate:val("letterDate"),note:val("note")};}
 }
 function renderKs(){
   const fo=$("ks-obj"),fv=fo.value;objSelect(fo,fv,"Все объекты");
@@ -2037,6 +2250,89 @@ function myDetail(o,out){
   if(RPDAYS<366){const more=el("button","btn small","Показать рапорты за "+(RPDAYS<90?90:366)+" дн.");more.type="button";more.onclick=async()=>{more.disabled=true;more.textContent="Загружаю…";await loadRp(RPDAYS<90?90:366);renderMy();};s.appendChild(more);}
 }
 
+// ---------- KPI ----------
+let ACT=null,ACTAT=0,ACTLOADING=null,KK=U.sget("pto-kpi-kind")||"month",KP=null,KSEL="";
+async function loadAct(){if(ACTLOADING)return ACTLOADING;ACTLOADING=(async()=>{try{const j=await U.get(db,{a:"rpact"});ACT=j.act||null;}catch(e){ACT=null;}ACTAT=Date.now();ACTLOADING=null;})();return ACTLOADING;}
+function kpiPeriodUI(){
+  const today=U.todayISO(),list=PTO.periods(KK,RAW,today);
+  if(!KP||!list.some(p=>p.key===KP)){const prev=PTO.addM(today.slice(0,7),-1);   // по умолчанию — прошлый законченный период
+    const ref=KK==="month"?prev+"-01":KK==="quarter"?PTO.addM(today.slice(0,7),-3)+"-01":(+today.slice(0,4)-0)+"-01-01";let p=list[0];list.forEach(x=>{if(x.start<=ref)p=x;});KP=p.key;}
+  document.querySelectorAll("#kp-kind button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===KK)));
+  const sel=$("kp-sel");sel.innerHTML="";list.slice().reverse().forEach(p=>{const o=el("option",null,p.label);o.value=p.key;sel.appendChild(o);});sel.value=KP;
+  return list;
+}
+function renderKpi(){
+  if(!ACTAT||Date.now()-ACTAT>10*60e3){if(!ACTLOADING)loadAct().then(()=>{if(view==="kpi")renderKpi();});}
+  const list=kpiPeriodUI(),today=U.todayISO();
+  const K=PTO.kpi(RAW,{today,kind:KK,period:KP,act:ACT});
+  const out=$("kp-out");out.innerHTML="";
+  const info=[K.done<K.months?"Период ещё не закончился: план, «зависшие» и сроки подачи КС считаются только по законченным месяцам ("+K.done+" из "+K.months+").":"",
+    !ACTAT?"Загружаю рапорты прорабов…":(!K.hasAct?"Рапорты прорабов недоступны — показатель «Работы по рапортам закрыты КС» не считается.":"")].filter(Boolean).join(" ");
+  $("kp-info").textContent=info;$("kp-info").hidden=!info;
+  const sub="Нажмите на показатель — увидите, как он считается, и что именно его снизило.";
+  if(ME.role==="spec"){
+    const me=K.people.find(p=>p.name===ME.name);
+    if(!me){const c=el("section","card");c.appendChild(el("div","empty","За вами в справочнике объектов не закреплены объекты — KPI не считается."));out.appendChild(c);return;}
+    out.appendChild(U.kpiCard("Мой KPI · "+K.period.label,me,{sub:"Объектов: "+me.objects+". "+sub}));
+    return;
+  }
+  // начальник и администратор
+  const g=el("div","grid2");out.appendChild(g);
+  g.appendChild(U.kpiCard("KPI отдела ПТО",K.dept,{sub:"Это видит генеральный. "+sub,money:K.money?"Фонд премии за период: "+U.rub0(K.money.fund)+" руб · к выплате отделу: "+U.rub0(K.money.dept)+" руб":""}));
+  g.appendChild(U.kpiCard("KPI начальника ПТО",K.head,{sub:"Это видит генеральный.",money:K.money&&K.money.headShare?"Доля "+U.pct(K.money.headShare)+" · к выплате: "+U.rub0(K.money.head)+" руб":""}));
+  // специалисты
+  const sec=el("section","card");out.appendChild(sec);
+  sec.appendChild(el("h2",null,"KPI специалистов · "+K.period.label));
+  sec.appendChild(el("div","sumline","Видят начальник ПТО и администратор; каждый специалист видит только свой. Нажмите на строку — подробности."));
+  const tw=el("div","tablewrap"),t=el("table","kpi-t");tw.appendChild(t);sec.appendChild(tw);
+  const hd=el("tr");["Специалист","Объектов"].concat(PTO.KPI_SETS.spec.map(x=>x.n)).concat(["Итог"]).concat(K.money?["Доля премии","К выплате, руб"]:[]).forEach(x=>hd.appendChild(el("th",null,x)));
+  const th=el("thead");th.appendChild(hd);t.appendChild(th);const tb=el("tbody");t.appendChild(tb);
+  const shareCh={};
+  K.people.forEach(p=>{
+    const tr=el("tr",p.name===KSEL?"sel":null);tr.appendChild(el("td",null,p.name===RAW.headName?p.name+" (объекты без специалиста)":p.name));tr.appendChild(el("td",null,String(p.objects)));
+    p.items.forEach(i=>tr.appendChild(el("td",U.kpiCls(i.coef),i.coef===null?"—":U.pct(i.coef))));
+    tr.appendChild(Object.assign(el("td",U.kpiCls(p.coef)),{innerHTML:"<b>"+(p.coef===null?"—":U.pct(p.coef))+"</b>"}));
+    if(K.money&&p.name===RAW.headName){tr.appendChild(el("td",null,"см. ниже"));tr.appendChild(el("td",null,""));}
+    else if(K.money){const m=K.money.people.find(x=>x.name===p.name)||{share:0,pay:0};const td=el("td");
+      if(isHead()){const inp=el("input");inp.inputMode="decimal";inp.value=String(+(m.share*100).toFixed(2)).replace(".",",");inp.onclick=e=>e.stopPropagation();inp.oninput=()=>{shareCh["share:"+p.name]=inp.value;$("kp-ss").hidden=false;};td.appendChild(inp);td.appendChild(document.createTextNode(" %"));}
+      else td.textContent=U.pct(m.share);tr.appendChild(td);tr.appendChild(el("td",null,U.rub0(m.pay)));}
+    tr.onclick=()=>{KSEL=KSEL===p.name?"":p.name;renderKpi();};
+    tb.appendChild(tr);});
+  if(K.money){const tr=el("tr");tr.appendChild(el("td",null,"Начальник ПТО (доля)"));for(let i=0;i<PTO.KPI_SETS.spec.length+2;i++)tr.appendChild(el("td",null,i===PTO.KPI_SETS.spec.length?(K.head.coef===null?"—":U.pct(K.head.coef)):""));
+    const td=el("td");if(isHead()){const inp=el("input");inp.inputMode="decimal";inp.value=String(+(K.money.headShare*100).toFixed(2)).replace(".",",");inp.oninput=()=>{shareCh["share:@head"]=inp.value;$("kp-ss").hidden=false;};td.appendChild(inp);td.appendChild(document.createTextNode(" %"));}else td.textContent=U.pct(K.money.headShare);
+    tr.appendChild(td);tr.appendChild(el("td",null,U.rub0(K.money.head)));tb.appendChild(tr);
+    const sl=el("div","sumline","Сумма долей: "+U.pct(K.money.shareSum)+(Math.abs(K.money.shareSum-1)>0.001?" — должно быть 100%":""));sec.appendChild(sl);
+    const sb=el("button","btn primary","Сохранить доли");sb.type="button";sb.id="kp-ss";sb.hidden=true;sec.appendChild(sb);
+    sb.onclick=async()=>{const rows=Object.keys(shareCh).map(id=>{const v=U.parseNum(shareCh[id]);return {id,value:String(v===null||isNaN(v)?0:v/100)};});
+      sb.disabled=true;sb.textContent="Сохраняю…";try{await save("Q",rows);status("Доли сохранены","okb",2500);renderKpi();}catch(e){status("Не сохранилось: "+e.message,"bad");sb.disabled=false;sb.textContent="Сохранить доли";}};
+  }
+  if(KSEL){const p=K.people.find(x=>x.name===KSEL);if(p)out.appendChild(U.kpiCard("KPI · "+p.name+" · "+K.period.label,p,{sub:"Объектов: "+p.objects+". "+sub}));}
+  if(isAdmin())out.appendChild(kpiSettingsCard(K));
+}
+function kpiSettingsCard(K){
+  const S=K.settings,sec=el("section","card");sec.appendChild(el("h2",null,"Настройки KPI (только администратор)"));
+  sec.appendChild(el("div","sumline","Веса показателей в процентах — в каждом наборе в сумме 100%. Фонд премии отдела в месяц: если 0 — суммы премии не показываются никому."));
+  const inputs={};const g=el("div","grid2");sec.appendChild(g);
+  [["spec","Специалист ПТО"],["head","Начальник ПТО"],["dept","Отдел (видит генеральный)"]].forEach(([set,title])=>{
+    const box=el("div");box.appendChild(el("h3","kpi-st",title));const grid=el("div","kpi-set");box.appendChild(grid);
+    PTO.KPI_SETS[set].forEach(d=>{const wk=set+"."+d.k;const inp=el("input");inp.inputMode="decimal";inp.value=String(Math.round(((wk in S.w)?S.w[wk]:d.w)*1000)/10).replace(".",",");inputs["w:"+wk]=inp;grid.appendChild(el("span",null,d.n));grid.appendChild(inp);});
+    g.appendChild(box);});
+  const fb=el("div","kpi-set");fb.style.marginTop="12px";const fi=el("input");fi.inputMode="decimal";fi.value=S.fund?U.rub0(S.fund):"0";inputs.fund=fi;fb.appendChild(el("span",null,"Фонд премии отдела в месяц, руб"));fb.appendChild(fi);sec.appendChild(fb);
+  const sb=el("button","btn primary","Сохранить настройки");sb.type="button";sb.style.marginTop="10px";sec.appendChild(sb);
+  sb.onclick=async()=>{
+    const rows=[];const sums={};
+    for(const id in inputs){const v=U.parseNum(inputs[id].value);if(v===null||isNaN(v)||v<0){status("Неверное число: "+id,"bad",4000);return;}
+      if(id==="fund")rows.push({id,value:String(v)});else{rows.push({id,value:String(v/100)});const set=id.slice(2).split(".")[0];sums[set]=(sums[set]||0)+v;}}
+    const bad=Object.keys(sums).filter(s=>Math.abs(sums[s]-100)>0.5);
+    if(bad.length&&!confirm("Сумма весов не 100% ("+bad.map(s=>s+": "+sums[s]+"%").join(", ")+"). Итог всё равно считается как средневзвешенное. Сохранить?"))return;
+    sb.disabled=true;sb.textContent="Сохраняю…";try{await save("Q",rows);status("Настройки KPI сохранены","okb",2500);renderKpi();}catch(e){status("Не сохранилось: "+e.message,"bad");sb.disabled=false;sb.textContent="Сохранить настройки";}};
+  return sec;
+}
+document.querySelectorAll("#kp-kind button").forEach(b=>b.onclick=()=>{KK=b.dataset.k;U.sset("pto-kpi-kind",KK);KP=null;renderKpi();});
+$("kp-sel").onchange=()=>{KP=$("kp-sel").value;renderKpi();};
+$("kp-prev").onclick=()=>{const l=PTO.periods(KK,RAW,U.todayISO());const i=l.findIndex(p=>p.key===KP);if(i>0){KP=l[i-1].key;renderKpi();}};
+$("kp-next").onclick=()=>{const l=PTO.periods(KK,RAW,U.todayISO());const i=l.findIndex(p=>p.key===KP);if(i<l.length-1){KP=l[i+1].key;renderKpi();}};
+
 // ---------- ЕЩЁ ----------
 function renderMore(){
   const mv=$("nt-m").value;const lastM=PTO.periods("month",RAW,U.todayISO()).length?(RAW.ks.map(k=>k.month).filter(Boolean).sort().pop()||U.todayISO().slice(0,7)):U.todayISO().slice(0,7);
@@ -2240,7 +2536,7 @@ function renderHist(){
 
 function render(){
   if(!RAW)return;
-  if(view==="my")renderMy();else if(view==="rep")renderRep();else if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();
+  if(view==="my")renderMy();else if(view==="kpi")renderKpi();else if(view==="rep")renderRep();else if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();
   else if(view==="users")renderUsers();else if(view==="hist")renderHist();else renderMore();
   if($("rd").open)repDraw();
 }

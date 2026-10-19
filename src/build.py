@@ -8,7 +8,7 @@ for tpl, out in [('app.tpl.html', 'index.html'), ('director.tpl.html', 'director
     t = rd(tpl).replace('{{CSS}}', css).replace('{{PTOCSS}}', pcss).replace('{{LOGO}}', logo).replace('{{CALC}}', calc).replace('{{UI}}', ui).replace('{{SCHEMA}}', open(os.path.join(d, 'schema.json'), encoding='utf-8').read())
     open(os.path.join(r, out), 'w', encoding='utf-8').write(t)
 schema = json.dumps(json.load(open(os.path.join(d, 'schema.json'), encoding='utf-8')), ensure_ascii=False)
-gs = open(os.path.join(r, 'apps-script', 'Code.tpl.gs'), encoding='utf-8').read().replace('{{SCHEMA}}', schema)
+gs = open(os.path.join(r, 'apps-script', 'Code.tpl.gs'), encoding='utf-8').read().replace('{{SCHEMA}}', schema).replace('{{CALC}}', calc)
 keys = ('ВСТАВЬТЕ_КЛЮЧ_АДМИНИСТРАТОРА', 'ВСТАВЬТЕ_КЛЮЧ_РУКОВОДИТЕЛЯ'); outdir = os.path.join(r, 'apps-script')
 if '--keys' in sys.argv:
     i = sys.argv.index('--keys'); keys = (sys.argv[i + 1], sys.argv[i + 2]); outdir = sys.argv[sys.argv.index('--out') + 1]

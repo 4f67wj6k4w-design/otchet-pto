@@ -26,6 +26,7 @@ html,body{margin:0}
       <button role="tab" id="tab-sum" aria-selected="true" data-v="sum">Сводка</button>
       <button role="tab" id="tab-obj" aria-selected="false" data-v="obj">Объекты</button>
       <button role="tab" id="tab-ks" aria-selected="false" data-v="ks">КС и оплаты</button>
+      <button role="tab" id="tab-kpi" aria-selected="false" data-v="kpi">KPI отдела</button>
     </nav>
   </header>
   <div id="status" class="banner" hidden></div>
@@ -66,6 +67,8 @@ html,body{margin:0}
     <button type="button" class="btn small" id="copy" style="margin-top:12px">Скопировать текст сводки</button>
   </div>
 
+  <div id="v-kpi" hidden><div id="kpi-out"></div></div>
+
   <div id="v-obj" hidden>
     <section class="card"><h2><span id="obj-ttl">План / факт по объектам</span><span id="obj-cnt"></span></h2>
       <div class="tablewrap"><table class="t" id="obj-t"></table></div>
@@ -101,7 +104,7 @@ const db=U.db("pto-director");
 let RAW=null,M=null,kind=U.sget("pto-d-kind")||"month",period=null,view=U.sget("pto-d-tab")||"sum",ksF="";
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 function status(t,cls){const s=$("status");s.hidden=!t;s.className="banner"+(cls?" "+cls:"");s.textContent=t||"";}
-function show(v){view=v;["sum","obj","ks"].forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-d-tab",v);if(M)draw();}
+function show(v){view=v;["sum","obj","ks","kpi"].forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-d-tab",v);if(M)draw();}
 async function load(quiet){
   if(window.DEMO_DATA){RAW=window.DEMO_DATA;$("upd").dataset.t="Демонстрация на данных отчёта ПТО";status("");recalc();return;}
   if(!db){status("Откройте страницу по ссылке руководителя (в ней адрес базы).","bad");return;}
@@ -127,7 +130,26 @@ function tile(host,label,val,unit,sub,cls,title){
 const M_=v=>U.mln(v);const R_=v=>U.rub0(v)+" руб";
 function pctTile(host,label,v,sub){const t=tile(host,label,U.pct(v,1),"",sub);t.querySelector("b").className=U.pctClass(v);}
 function draw(){
-  if(view==="sum")drawSum();else if(view==="obj")drawObj();else drawKs();
+  if(view==="sum")drawSum();else if(view==="obj")drawObj();else if(view==="kpi")drawKpi();else drawKs();
+}
+// KPI отдела и начальника ПТО: считает база (по всем данным), страница только показывает
+const KPIC={};
+async function drawKpi(){
+  const out=$("kpi-out"),k2=kind==="week"?"month":kind,p2=kind==="week"?PTO.addDays(M.period.start,3).slice(0,7):period,key=k2+"|"+p2;
+  let K=KPIC[key];
+  if(!K){
+    if(window.DEMO_DATA)K=PTO.kpi(RAW,{today:U.todayISO(),kind:k2,period:p2});
+    else{out.innerHTML="";const c=el("section","card");c.appendChild(el("div","empty","Считаю KPI…"));out.appendChild(c);
+      try{K=await U.get(db,{a:"kpi",kind:k2,period:p2});}catch(e){out.innerHTML="";const c2=el("section","card");c2.appendChild(el("div","empty","KPI не загрузился: "+e.message));out.appendChild(c2);return;}}
+    KPIC[key]=K;
+  }
+  if(view!=="kpi")return;
+  out.innerHTML="";
+  if(K.done<K.months){const n=el("div","banner","Период ещё идёт: план и сроки КС считаются по законченным месяцам ("+K.done+" из "+K.months+").");out.appendChild(n);}
+  const g=el("div","grid2");out.appendChild(g);
+  g.appendChild(U.kpiCard("KPI отдела ПТО · "+K.period.label,K.dept,{sub:"Нажмите на показатель — как считается и что снизило.",money:K.money?"Премия отделу за период: "+U.rub0(K.money.dept)+" руб из фонда "+U.rub0(K.money.fund)+" руб":""}));
+  g.appendChild(U.kpiCard("KPI начальника ПТО · "+K.period.label,K.head,{sub:"Управление отделом: проверка отчётов, план вовремя, работа с просрочкой, ДС."}));
+  out.appendChild(el("div","hint","Коэффициент показателя = достижение цели (до 120%). Показатели без данных за период не учитываются. KPI специалистов распределяет начальник ПТО."));
 }
 function drawSum(){
   const m=M,mo=m.money;
@@ -235,8 +257,8 @@ $("p-prev").onclick=()=>step(-1);$("p-next").onclick=()=>step(1);
 document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
 let rt;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(M&&view==="sum")drawSum();},200);});
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(M)draw();});
-setInterval(()=>{if(!document.hidden)load(true);},600000);
-show(["sum","obj","ks"].includes(view)?view:"sum");load();
+setInterval(()=>{if(!document.hidden){for(const k in KPIC)delete KPIC[k];load(true);}},600000);
+show(["sum","obj","ks","kpi"].includes(view)?view:"sum");load();
 })();
 </script>
 </body>

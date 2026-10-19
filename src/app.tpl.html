@@ -37,6 +37,7 @@ html,body{margin:0}
     <nav class="tabs" role="tablist">
       <button role="tab" id="tab-my" aria-selected="true" data-v="my">Мои объекты</button>
       <button role="tab" id="tab-rep" aria-selected="false" data-v="rep">Отчёты</button>
+      <button role="tab" id="tab-kpi" aria-selected="false" data-v="kpi">KPI</button>
       <button role="tab" id="tab-ks" aria-selected="false" data-v="ks">Журнал КС</button>
       <button role="tab" id="tab-money" aria-selected="false" data-v="money">Деньги</button>
       <button role="tab" id="tab-plan" aria-selected="false" data-v="plan">План</button>
@@ -91,6 +92,16 @@ html,body{margin:0}
   </div>
 
   <!-- ЖУРНАЛ КС -->
+  <!-- KPI -->
+  <div id="v-kpi" hidden>
+    <section class="card">
+      <div class="per"><div class="seg" id="kp-kind" role="group"><button type="button" data-k="month">Месяц</button><button type="button" data-k="quarter">Квартал</button><button type="button" data-k="year">Год</button></div>
+        <div class="pnav"><button type="button" class="btn" id="kp-prev" aria-label="Предыдущий период">‹</button><select id="kp-sel" aria-label="Период"></select><button type="button" class="btn" id="kp-next" aria-label="Следующий период">›</button></div></div>
+      <div class="sumline" id="kp-info" hidden></div>
+    </section>
+    <div id="kp-out"></div>
+  </div>
+
   <div id="v-ks" hidden>
     <section class="card">
       <div class="toolbar">
@@ -225,11 +236,11 @@ const SCH={{SCHEMA}};
 const RS={draft:"Черновик",sent:"На проверке",ret:"На доработке",ok:"Согласован"};
 const RSC={"Черновик":"draft","На проверке":"sent","На доработке":"ret","Согласован":"ok"};
 const ROLE_RU={spec:"Специалист ПТО",head:"Начальник ПТО",admin:"Администратор",dir:"Руководитель"};
-const STATUS_FIELDS=["agr","sign","pay","payDate","signDate","note"];
-const ALLTABS=["my","rep","ks","money","plan","obj","users","hist","more"];
+const STATUS_FIELDS=["agr","sign","pay","payDate","signDate","note","remarks","dsNeed","dsDate","letterDate"];
+const ALLTABS=["my","rep","kpi","ks","money","plan","obj","users","hist","more"];
 const isHead=()=>!!ME&&(ME.role==="head"||ME.role==="admin");
 const isAdmin=()=>!!ME&&ME.role==="admin";
-function tabsFor(){if(!ME)return ["my"];if(ME.role==="admin")return ALLTABS;if(ME.role==="head")return ["my","rep","ks","money","plan","obj","more"];return ["my","rep","ks","plan","obj","more"];}
+function tabsFor(){if(!ME)return ["my"];if(ME.role==="admin")return ALLTABS;if(ME.role==="head")return ["my","rep","kpi","ks","money","plan","obj","more"];return ["my","rep","kpi","ks","plan","obj","more"];}
 const STATUSES=["В работе","Нет ДС","Нет договора","Приостановлен","Завершён"];
 const PAYKIND=["Оплата КС","Аванс","Возврат ГУ","Прочее"];
 const SCHED=["Ежемесячно (25–30 число)","Дважды в месяц (15 и 30 число)"];
@@ -254,15 +265,15 @@ async function load(quiet){
   if(!db){status("Откройте страницу по своей ссылке (её выдаёт администратор).","bad");return;}
   if(!db.k){showLogin();return;}
   const CK="pto-cache-"+db.k.slice(0,8);
-  if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;ME=c.me;applyRole();render();}}catch(e){}}
+  if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;RAW.kpi=RAW.kpi||[];RAW.reports=RAW.reports||[];ME=c.me;applyRole();render();}}catch(e){}}
   if(!quiet)status("Загрузка базы…");
   try{const j=await U.get(db,{a:"all"});
     if(j.role==="dir"){status("Это ссылка руководителя — она открывает сводку.","bad");location.replace("director.html"+location.hash);return;}
-    status("");ME=j.me;RAW=j.data;RAW.reports=RAW.reports||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
+    status("");ME=j.me;RAW=j.data;RAW.reports=RAW.reports||[];RAW.kpi=RAW.kpi||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
   catch(e){if(/ключ/.test(e.message||"")&&viaLogin){db.k="";U.sset("pto-db",JSON.stringify(db));showLogin("Сеанс завершён (пароль сброшен или доступ отключён). Войдите снова.");return;}
     status("Не удалось загрузить базу: "+(e.message||"нет связи")+(RAW?" — показана сохранённая копия":""),"bad");}
 }
-const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects"};
+const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects",Q:"kpi"};
 function cacheSave(){U.sset("pto-cache-"+db.k.slice(0,8),JSON.stringify({me:ME,data:RAW}));}
 async function save(t,rows,extra){
   const j=await U.post(db,Object.assign({a:"save",t,rows},extra||{}));
@@ -287,7 +298,7 @@ function lockInfo(type,obj,month){
   if(!obj||!month)return {full:true,status:true,st:RS.draft};
   const st=repOf(type,obj,month).status||RS.draft;
   if(ME.role==="admin")return {full:true,status:true,st};
-  if(st===RS.ok)return {full:false,status:type==="fact",st,why:type==="fact"?"Отчёт за этот месяц согласован — сумма и реквизиты КС закрыты. Можно отмечать согласование, подписание и оплату.":"План согласован — изменения закрыты."};
+  if(st===RS.ok)return {full:false,status:type==="fact",st,why:type==="fact"?"Отчёт за этот месяц согласован — сумма и реквизиты КС закрыты. Можно отмечать согласование, подписание, оплату, замечания, ДС и письма заказчику.":"План согласован — изменения закрыты."};
   if(ME.role==="spec"&&st===RS.sent)return {full:false,status:false,st,why:"Отчёт на проверке у начальника ПТО — изменения закрыты до её решения."};
   return {full:true,status:true,st};
 }
@@ -388,6 +399,8 @@ function ksEditor(k,preset){
       [{f:"agr",label:"Согласование",type:"seg",opts:["Согласована","Не согласована"]}],
       [{f:"sign",label:"Подписание",type:"seg",opts:["Подписана","Не подписана"]},{f:"signDate",label:"Дата подписания",type:"date"}],
       [{f:"pay",label:"Оплата",type:"seg",opts:["Оплачена","Частично","Не оплачена"]},{f:"payDate",label:"Дата оплаты",type:"date"}],
+      [{f:"remarks",label:"Замечания заказчика (если были)",type:"select",opts:["Замечания","Возврат на исправление"]},{f:"letterDate",label:"Письмо / претензия по оплате",type:"date"}],
+      [{f:"dsNeed",label:"Допработы: нужен ДС?",type:"select",opts:["Да"]},{f:"dsDate",label:"ДС подан заказчику",type:"date"}],
       [{f:"note",label:"Примечание",type:"textarea"}]
     ],
     init(){
@@ -409,6 +422,7 @@ function ksEditor(k,preset){
       const wr=[];
       if(dup)wr.push("Такая КС по этому объекту уже есть в журнале ("+(dup.date?U.ru(dup.date):PTO.monthLabel(dup.month))+"). Если это та же КС — закройте окно и откройте её, чтобы поменять статус; новая строка даст двойной счёт.");
       if(r.pay==="Оплачена"&&!r.payDate)wr.push("Укажите дату оплаты.");
+      if(r.dsNeed==="Да"&&!r.dsDate)wr.push("Нужен ДС: подайте его заказчику в течение 30 дней и укажите дату.");
       if(r.date&&r.month&&r.month!==r.date.slice(0,7))wr.push("Отчётный месяц ("+PTO.monthLabel(r.month)+") не совпадает с месяцем даты КС — проверьте, что это так и нужно.");
       setWarn(wr.join(" "),!!dup);
     },
@@ -419,7 +433,7 @@ function ksEditor(k,preset){
     async onSave(r){r.base=k.upd||"";await save("K",[r]);},
     onDelete:isNew?null:async()=>{await del("K",k.id);}
   });
-  function collectKs(){return {id:k.id,date:val("date"),month:val("month"),obj:val("obj"),num:val("num"),period:val("period"),ks2:val("ks2"),ks3:val("ks3"),agr:val("agr"),sign:val("sign"),pay:val("pay"),payDate:val("payDate"),signDate:val("signDate"),note:val("note")};}
+  function collectKs(){return {id:k.id,date:val("date"),month:val("month"),obj:val("obj"),num:val("num"),period:val("period"),ks2:val("ks2"),ks3:val("ks3"),agr:val("agr"),sign:val("sign"),pay:val("pay"),payDate:val("payDate"),signDate:val("signDate"),remarks:val("remarks"),dsNeed:val("dsNeed"),dsDate:val("dsDate"),letterDate:val("letterDate"),note:val("note")};}
 }
 function renderKs(){
   const fo=$("ks-obj"),fv=fo.value;objSelect(fo,fv,"Все объекты");
@@ -719,6 +733,89 @@ function myDetail(o,out){
   if(RPDAYS<366){const more=el("button","btn small","Показать рапорты за "+(RPDAYS<90?90:366)+" дн.");more.type="button";more.onclick=async()=>{more.disabled=true;more.textContent="Загружаю…";await loadRp(RPDAYS<90?90:366);renderMy();};s.appendChild(more);}
 }
 
+// ---------- KPI ----------
+let ACT=null,ACTAT=0,ACTLOADING=null,KK=U.sget("pto-kpi-kind")||"month",KP=null,KSEL="";
+async function loadAct(){if(ACTLOADING)return ACTLOADING;ACTLOADING=(async()=>{try{const j=await U.get(db,{a:"rpact"});ACT=j.act||null;}catch(e){ACT=null;}ACTAT=Date.now();ACTLOADING=null;})();return ACTLOADING;}
+function kpiPeriodUI(){
+  const today=U.todayISO(),list=PTO.periods(KK,RAW,today);
+  if(!KP||!list.some(p=>p.key===KP)){const prev=PTO.addM(today.slice(0,7),-1);   // по умолчанию — прошлый законченный период
+    const ref=KK==="month"?prev+"-01":KK==="quarter"?PTO.addM(today.slice(0,7),-3)+"-01":(+today.slice(0,4)-0)+"-01-01";let p=list[0];list.forEach(x=>{if(x.start<=ref)p=x;});KP=p.key;}
+  document.querySelectorAll("#kp-kind button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===KK)));
+  const sel=$("kp-sel");sel.innerHTML="";list.slice().reverse().forEach(p=>{const o=el("option",null,p.label);o.value=p.key;sel.appendChild(o);});sel.value=KP;
+  return list;
+}
+function renderKpi(){
+  if(!ACTAT||Date.now()-ACTAT>10*60e3){if(!ACTLOADING)loadAct().then(()=>{if(view==="kpi")renderKpi();});}
+  const list=kpiPeriodUI(),today=U.todayISO();
+  const K=PTO.kpi(RAW,{today,kind:KK,period:KP,act:ACT});
+  const out=$("kp-out");out.innerHTML="";
+  const info=[K.done<K.months?"Период ещё не закончился: план, «зависшие» и сроки подачи КС считаются только по законченным месяцам ("+K.done+" из "+K.months+").":"",
+    !ACTAT?"Загружаю рапорты прорабов…":(!K.hasAct?"Рапорты прорабов недоступны — показатель «Работы по рапортам закрыты КС» не считается.":"")].filter(Boolean).join(" ");
+  $("kp-info").textContent=info;$("kp-info").hidden=!info;
+  const sub="Нажмите на показатель — увидите, как он считается, и что именно его снизило.";
+  if(ME.role==="spec"){
+    const me=K.people.find(p=>p.name===ME.name);
+    if(!me){const c=el("section","card");c.appendChild(el("div","empty","За вами в справочнике объектов не закреплены объекты — KPI не считается."));out.appendChild(c);return;}
+    out.appendChild(U.kpiCard("Мой KPI · "+K.period.label,me,{sub:"Объектов: "+me.objects+". "+sub}));
+    return;
+  }
+  // начальник и администратор
+  const g=el("div","grid2");out.appendChild(g);
+  g.appendChild(U.kpiCard("KPI отдела ПТО",K.dept,{sub:"Это видит генеральный. "+sub,money:K.money?"Фонд премии за период: "+U.rub0(K.money.fund)+" руб · к выплате отделу: "+U.rub0(K.money.dept)+" руб":""}));
+  g.appendChild(U.kpiCard("KPI начальника ПТО",K.head,{sub:"Это видит генеральный.",money:K.money&&K.money.headShare?"Доля "+U.pct(K.money.headShare)+" · к выплате: "+U.rub0(K.money.head)+" руб":""}));
+  // специалисты
+  const sec=el("section","card");out.appendChild(sec);
+  sec.appendChild(el("h2",null,"KPI специалистов · "+K.period.label));
+  sec.appendChild(el("div","sumline","Видят начальник ПТО и администратор; каждый специалист видит только свой. Нажмите на строку — подробности."));
+  const tw=el("div","tablewrap"),t=el("table","kpi-t");tw.appendChild(t);sec.appendChild(tw);
+  const hd=el("tr");["Специалист","Объектов"].concat(PTO.KPI_SETS.spec.map(x=>x.n)).concat(["Итог"]).concat(K.money?["Доля премии","К выплате, руб"]:[]).forEach(x=>hd.appendChild(el("th",null,x)));
+  const th=el("thead");th.appendChild(hd);t.appendChild(th);const tb=el("tbody");t.appendChild(tb);
+  const shareCh={};
+  K.people.forEach(p=>{
+    const tr=el("tr",p.name===KSEL?"sel":null);tr.appendChild(el("td",null,p.name===RAW.headName?p.name+" (объекты без специалиста)":p.name));tr.appendChild(el("td",null,String(p.objects)));
+    p.items.forEach(i=>tr.appendChild(el("td",U.kpiCls(i.coef),i.coef===null?"—":U.pct(i.coef))));
+    tr.appendChild(Object.assign(el("td",U.kpiCls(p.coef)),{innerHTML:"<b>"+(p.coef===null?"—":U.pct(p.coef))+"</b>"}));
+    if(K.money&&p.name===RAW.headName){tr.appendChild(el("td",null,"см. ниже"));tr.appendChild(el("td",null,""));}
+    else if(K.money){const m=K.money.people.find(x=>x.name===p.name)||{share:0,pay:0};const td=el("td");
+      if(isHead()){const inp=el("input");inp.inputMode="decimal";inp.value=String(+(m.share*100).toFixed(2)).replace(".",",");inp.onclick=e=>e.stopPropagation();inp.oninput=()=>{shareCh["share:"+p.name]=inp.value;$("kp-ss").hidden=false;};td.appendChild(inp);td.appendChild(document.createTextNode(" %"));}
+      else td.textContent=U.pct(m.share);tr.appendChild(td);tr.appendChild(el("td",null,U.rub0(m.pay)));}
+    tr.onclick=()=>{KSEL=KSEL===p.name?"":p.name;renderKpi();};
+    tb.appendChild(tr);});
+  if(K.money){const tr=el("tr");tr.appendChild(el("td",null,"Начальник ПТО (доля)"));for(let i=0;i<PTO.KPI_SETS.spec.length+2;i++)tr.appendChild(el("td",null,i===PTO.KPI_SETS.spec.length?(K.head.coef===null?"—":U.pct(K.head.coef)):""));
+    const td=el("td");if(isHead()){const inp=el("input");inp.inputMode="decimal";inp.value=String(+(K.money.headShare*100).toFixed(2)).replace(".",",");inp.oninput=()=>{shareCh["share:@head"]=inp.value;$("kp-ss").hidden=false;};td.appendChild(inp);td.appendChild(document.createTextNode(" %"));}else td.textContent=U.pct(K.money.headShare);
+    tr.appendChild(td);tr.appendChild(el("td",null,U.rub0(K.money.head)));tb.appendChild(tr);
+    const sl=el("div","sumline","Сумма долей: "+U.pct(K.money.shareSum)+(Math.abs(K.money.shareSum-1)>0.001?" — должно быть 100%":""));sec.appendChild(sl);
+    const sb=el("button","btn primary","Сохранить доли");sb.type="button";sb.id="kp-ss";sb.hidden=true;sec.appendChild(sb);
+    sb.onclick=async()=>{const rows=Object.keys(shareCh).map(id=>{const v=U.parseNum(shareCh[id]);return {id,value:String(v===null||isNaN(v)?0:v/100)};});
+      sb.disabled=true;sb.textContent="Сохраняю…";try{await save("Q",rows);status("Доли сохранены","okb",2500);renderKpi();}catch(e){status("Не сохранилось: "+e.message,"bad");sb.disabled=false;sb.textContent="Сохранить доли";}};
+  }
+  if(KSEL){const p=K.people.find(x=>x.name===KSEL);if(p)out.appendChild(U.kpiCard("KPI · "+p.name+" · "+K.period.label,p,{sub:"Объектов: "+p.objects+". "+sub}));}
+  if(isAdmin())out.appendChild(kpiSettingsCard(K));
+}
+function kpiSettingsCard(K){
+  const S=K.settings,sec=el("section","card");sec.appendChild(el("h2",null,"Настройки KPI (только администратор)"));
+  sec.appendChild(el("div","sumline","Веса показателей в процентах — в каждом наборе в сумме 100%. Фонд премии отдела в месяц: если 0 — суммы премии не показываются никому."));
+  const inputs={};const g=el("div","grid2");sec.appendChild(g);
+  [["spec","Специалист ПТО"],["head","Начальник ПТО"],["dept","Отдел (видит генеральный)"]].forEach(([set,title])=>{
+    const box=el("div");box.appendChild(el("h3","kpi-st",title));const grid=el("div","kpi-set");box.appendChild(grid);
+    PTO.KPI_SETS[set].forEach(d=>{const wk=set+"."+d.k;const inp=el("input");inp.inputMode="decimal";inp.value=String(Math.round(((wk in S.w)?S.w[wk]:d.w)*1000)/10).replace(".",",");inputs["w:"+wk]=inp;grid.appendChild(el("span",null,d.n));grid.appendChild(inp);});
+    g.appendChild(box);});
+  const fb=el("div","kpi-set");fb.style.marginTop="12px";const fi=el("input");fi.inputMode="decimal";fi.value=S.fund?U.rub0(S.fund):"0";inputs.fund=fi;fb.appendChild(el("span",null,"Фонд премии отдела в месяц, руб"));fb.appendChild(fi);sec.appendChild(fb);
+  const sb=el("button","btn primary","Сохранить настройки");sb.type="button";sb.style.marginTop="10px";sec.appendChild(sb);
+  sb.onclick=async()=>{
+    const rows=[];const sums={};
+    for(const id in inputs){const v=U.parseNum(inputs[id].value);if(v===null||isNaN(v)||v<0){status("Неверное число: "+id,"bad",4000);return;}
+      if(id==="fund")rows.push({id,value:String(v)});else{rows.push({id,value:String(v/100)});const set=id.slice(2).split(".")[0];sums[set]=(sums[set]||0)+v;}}
+    const bad=Object.keys(sums).filter(s=>Math.abs(sums[s]-100)>0.5);
+    if(bad.length&&!confirm("Сумма весов не 100% ("+bad.map(s=>s+": "+sums[s]+"%").join(", ")+"). Итог всё равно считается как средневзвешенное. Сохранить?"))return;
+    sb.disabled=true;sb.textContent="Сохраняю…";try{await save("Q",rows);status("Настройки KPI сохранены","okb",2500);renderKpi();}catch(e){status("Не сохранилось: "+e.message,"bad");sb.disabled=false;sb.textContent="Сохранить настройки";}};
+  return sec;
+}
+document.querySelectorAll("#kp-kind button").forEach(b=>b.onclick=()=>{KK=b.dataset.k;U.sset("pto-kpi-kind",KK);KP=null;renderKpi();});
+$("kp-sel").onchange=()=>{KP=$("kp-sel").value;renderKpi();};
+$("kp-prev").onclick=()=>{const l=PTO.periods(KK,RAW,U.todayISO());const i=l.findIndex(p=>p.key===KP);if(i>0){KP=l[i-1].key;renderKpi();}};
+$("kp-next").onclick=()=>{const l=PTO.periods(KK,RAW,U.todayISO());const i=l.findIndex(p=>p.key===KP);if(i<l.length-1){KP=l[i+1].key;renderKpi();}};
+
 // ---------- ЕЩЁ ----------
 function renderMore(){
   const mv=$("nt-m").value;const lastM=PTO.periods("month",RAW,U.todayISO()).length?(RAW.ks.map(k=>k.month).filter(Boolean).sort().pop()||U.todayISO().slice(0,7)):U.todayISO().slice(0,7);
@@ -922,7 +1019,7 @@ function renderHist(){
 
 function render(){
   if(!RAW)return;
-  if(view==="my")renderMy();else if(view==="rep")renderRep();else if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();
+  if(view==="my")renderMy();else if(view==="kpi")renderKpi();else if(view==="rep")renderRep();else if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();
   else if(view==="users")renderUsers();else if(view==="hist")renderHist();else renderMore();
   if($("rd").open)repDraw();
 }
