@@ -227,6 +227,7 @@ function applyRole(){
   $("logout").hidden=!viaLogin;document.querySelector(".tabs").hidden=false;$("login").hidden=true;
   $("ob-add").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();
   if(!tabs.includes(view))show("rep");
+  else ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==view;$("tab-"+x).setAttribute("aria-selected",String(x===view));});
 }
 function show(v){
   if(!tabsFor().includes(v))v="rep";
