@@ -10,9 +10,16 @@
  * После правки кода: Развернуть → Управление развертываниями → карандаш → Версия: Новая версия.
  */
 
-// Ключ ПТО: просмотр и ввод данных. Ключ руководителя: только просмотр сводки.
-const PTO_KEY = '{{PTO_KEY}}';
+// Ключ администратора: всё, включая сотрудников и историю изменений. Ключ руководителя (ГД): только согласованные данные.
+// Ключи специалистов и начальника ПТО хранятся на листе «Сотрудники» (выдаются со страницы администратора).
+const ADMIN_KEY = '{{ADMIN_KEY}}';
 const DIRECTOR_KEY = '{{DIRECTOR_KEY}}';
+
+const ROLE_NAMES = { spec: 'Специалист ПТО', head: 'Начальник ПТО', admin: 'Администратор' };
+const ST = { draft: 'Черновик', sent: 'На проверке', ret: 'На доработке', ok: 'Согласован' };
+const TYPE = { plan: 'План', fact: 'Факт' };
+// Поля КС, которые можно менять и после согласования отчёта (движение КС: подписание, оплата)
+const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note'];
 
 // Листы и столбцы базы (порядок столбцов в таблице можно менять — ищутся по заголовку).
 const SCHEMA = {{SCHEMA}};
@@ -108,21 +115,34 @@ function rowIndex_(s) {
   return map;
 }
 
+const LOG_HDR = ['Когда', 'Кто', 'Лист', 'ID', 'Действие', 'Стало', 'Было', 'Роль'];
+function logSheet_() {
+  let sh = ss_().getSheetByName(LOG_SHEET);
+  if (!sh) { sh = ss_().insertSheet(LOG_SHEET); sh.setFrozenRows(1); }
+  if (sh.getLastColumn() < LOG_HDR.length) sh.getRange(1, 1, 1, LOG_HDR.length).setValues([LOG_HDR]).setFontWeight('bold');
+  return sh;
+}
+/** items: [кто, лист, id, действие, стало, было, роль] */
 function log_(items) {
   if (!items.length) return;
-  let sh = ss_().getSheetByName(LOG_SHEET);
-  if (!sh) {
-    sh = ss_().insertSheet(LOG_SHEET);
-    sh.getRange(1, 1, 1, 6).setValues([['Когда', 'Кто', 'Лист', 'ID', 'Действие', 'Данные']]).setFontWeight('bold');
-    sh.setFrozenRows(1);
-  }
-  const now = new Date();
-  const vals = items.map(function (x) { return [now, x[0] || '', SCHEMA[x[1]][0], String(x[2]), x[3], x[4] ? JSON.stringify(x[4]) : '']; });
-  sh.getRange(sh.getLastRow() + 1, 1, vals.length, 6).setValues(vals);
+  const sh = logSheet_(), now = new Date();
+  const vals = items.map(function (x) {
+    return [now, x[0] || '', SCHEMA[x[1]] ? SCHEMA[x[1]][0] : x[1], String(x[2]), x[3], x[4] ? JSON.stringify(x[4]) : '', x[5] ? JSON.stringify(x[5]) : '', x[6] || ''];
+  });
+  sh.getRange(sh.getLastRow() + 1, 1, vals.length, LOG_HDR.length).setValues(vals);
+}
+function readLog_(n) {
+  const sh = ss_().getSheetByName(LOG_SHEET);
+  if (!sh || sh.getLastRow() < 2) return [];
+  const last = sh.getLastRow(), from = Math.max(2, last - (n || 1500) + 1);
+  return sh.getRange(from, 1, last - from + 1, LOG_HDR.length).getValues().map(function (v) {
+    const j = function (x) { try { return x ? JSON.parse(x) : null; } catch (e) { return null; } };
+    return { at: Object.prototype.toString.call(v[0]) === '[object Date]' ? v[0].toISOString() : String(v[0]), by: String(v[1]), sheet: String(v[2]), id: String(v[3]), act: String(v[4]), after: j(v[5]), before: j(v[6]), role: String(v[7] || '') };
+  }).reverse();
 }
 
 /** Записать строки (новые — в конец, существующие — по ID). base — «Изменено» на момент открытия: если строку уже поменяли, вернётся конфликт. */
-function upsert_(t, rows, by, force) {
+function upsert_(t, rows, by, force, role) {
   const s = sheet_(t), map = rowIndex_(s), now = new Date().toISOString(), conflicts = [], saved = [];
   const width = s.hdr.length, maxR = s.sh.getMaxRows();
   // форматы столбцов: ID и «Изменено» — текст (иначе таблица превратит их в даты/числа)
@@ -141,10 +161,12 @@ function upsert_(t, rows, by, force) {
     }
     delete r.base;
     r.upd = now; r.by = by || '';
+    const before = {};
+    if (at) s.cols.forEach(function (c) { if (c[0] in r && c[0] !== 'upd' && c[0] !== 'by') before[c[0]] = fromCell_(line[s.hdr.indexOf(c[1])], c[2]); });
     s.cols.forEach(function (c) { if (c[0] in r) line[s.hdr.indexOf(c[1])] = toCell_(r[c[0]], c[2]); });
     if (at) s.sh.getRange(at, 1, 1, width).setValues([line]);
     else fresh.push(line);
-    logs.push([by, t, r.id, at ? 'изменено' : 'добавлено', r]);
+    logs.push([by, t, r.id, at ? 'изменено' : 'добавлено', r, at ? before : null, role]);
     saved.push({ id: r.id, upd: now });
   });
   if (fresh.length) {
@@ -160,29 +182,30 @@ function upsert_(t, rows, by, force) {
   return { saved: saved, conflicts: conflicts };
 }
 
-function remove_(t, ids, by) {
+function remove_(t, ids, by, role) {
   const s = sheet_(t), map = rowIndex_(s);
+  const old = {}; readSheet_(t).forEach(function (r) { old[r.id] = r; });
   const rows = ids.map(function (id) { return map[String(id)]; }).filter(Boolean).sort(function (a, b) { return b - a; });
   rows.forEach(function (r) { s.sh.deleteRow(r); });
-  log_(ids.map(function (id) { return [by, t, id, 'удалено', null]; }));
+  log_(ids.map(function (id) { return [by, t, id, 'удалено', null, old[id] || null, role]; }));
   return rows.length;
 }
 
 /** Переименование объекта: имя меняется во всех листах. */
-function renameObject_(from, to, by) {
+function renameObject_(from, to, by, role) {
   if (!from || !to || from === to) return;
-  ['K', 'P', 'G', 'L'].forEach(function (t) {
+  ['K', 'P', 'G', 'L', 'R'].forEach(function (t) {
     const s = sheet_(t), n = s.sh.getLastRow();
     if (n < 2) return;
     const oc = s.hdr.indexOf('Объект') + 1, ic = s.hdr.indexOf('ID') + 1;
     const objs = s.sh.getRange(2, oc, n - 1, 1).getValues(), ids = s.sh.getRange(2, ic, n - 1, 1).getValues();
     let ch = false;
     objs.forEach(function (v, i) {
-      if (String(v[0]) === from) { v[0] = to; ch = true; if (t === 'L') ids[i][0] = String(ids[i][0]).replace(from + '|', to + '|'); }
+      if (String(v[0]) === from) { v[0] = to; ch = true; if (t === 'L') ids[i][0] = String(ids[i][0]).replace(from + '|', to + '|'); if (t === 'R') ids[i][0] = String(ids[i][0]).replace('|' + from + '|', '|' + to + '|'); }
     });
-    if (ch) { s.sh.getRange(2, oc, n - 1, 1).setValues(objs); if (t === 'L') s.sh.getRange(2, ic, n - 1, 1).setValues(ids); }
+    if (ch) { s.sh.getRange(2, oc, n - 1, 1).setValues(objs); if (t === 'L' || t === 'R') s.sh.getRange(2, ic, n - 1, 1).setValues(ids); }
   });
-  log_([[by, 'O', from, 'переименовано → ' + to, null]]);
+  log_([[by, 'O', from, 'переименовано → ' + to, null, null, role]]);
 }
 
 function saveLists_(lists) {
@@ -196,36 +219,186 @@ function saveLists_(lists) {
   s.sh.getRange(2, 1, n, s.hdr.length).setValues(vals);
 }
 
+
+// =====================================================================
+// РОЛИ, ОТЧЁТЫ, ПРАВА
+// =====================================================================
+function splitObjs_(s) { return String(s || '').split(';').map(function (x) { return x.trim(); }).filter(Boolean); }
+
+/** Кто пришёл по ключу. null — ключ неизвестен. */
+function who_(k) {
+  if (!k) return null;
+  if (k === ADMIN_KEY) return { role: 'admin', name: 'Администратор', objects: null };
+  if (k === DIRECTOR_KEY) return { role: 'dir', name: 'Руководитель', objects: null };
+  const u = readSheet_('U').filter(function (x) { return x.key && x.key === k && x.active !== 'нет'; })[0];
+  if (!u) return null;
+  const role = u.role === ROLE_NAMES.head ? 'head' : (u.role === ROLE_NAMES.admin ? 'admin' : 'spec');
+  return { role: role, name: u.name, id: u.id, objects: role === 'spec' ? splitObjs_(u.objects) : null };
+}
+function sees_(me, obj) { return !me.objects || me.objects.indexOf(obj) >= 0; }
+function repId_(type, obj, month) { return type + '|' + obj + '|' + month; }
+function reports_() { const m = {}; readSheet_('R').forEach(function (r) { m[r.id] = r; }); return m; }
+function stOf_(reps, type, obj, month) { const r = reps[repId_(type, obj, month)]; return r && r.status ? r.status : ST.draft; }
+
+/** '' — можно; иначе текст причины. statusOnly — меняются только поля движения КС. */
+function canEdit_(me, reps, type, obj, month, statusOnly) {
+  if (!obj || !month) return 'не указан объект или месяц';
+  if (me.role === 'admin') return '';
+  if (me.role === 'dir') return 'только просмотр';
+  if (!sees_(me, obj)) return 'объект «' + obj + '» не закреплён за вами';
+  const st = stOf_(reps, type, obj, month);
+  if (st === ST.ok) return statusOnly ? '' : 'отчёт «' + (type === 'plan' ? 'План' : 'Факт') + ' ' + month + '» по объекту «' + obj + '» согласован — изменения закрыты';
+  if (me.role === 'spec' && st === ST.sent) return statusOnly ? '' : 'отчёт отправлен на проверку — изменения закрыты до решения начальника ПТО';
+  return '';
+}
+
+function same_(a, b) { return String(a === null || a === undefined ? '' : a) === String(b === null || b === undefined ? '' : b); }
+
+/** Проверка строк перед записью. Возвращает { ok: [...], denied: [{id, why}] } */
+function filterRows_(me, t, rows, reps) {
+  const ok = [], denied = [];
+  if (t === 'K' || t === 'L') {
+    const cur = {}; readSheet_(t).forEach(function (r) { cur[r.id] = r; });
+    rows.forEach(function (r) {
+      const ex = cur[r.id];
+      const obj = 'obj' in r ? r.obj : (ex && ex.obj), month = 'month' in r ? r.month : (ex && ex.month);
+      let why = '';
+      if (t === 'L') {
+        why = canEdit_(me, reps, 'plan', obj, month, false);
+        if (!why && ex && (ex.obj !== obj || ex.month !== month)) why = canEdit_(me, reps, 'plan', ex.obj, ex.month, false);
+      } else {
+        const changed = Object.keys(r).filter(function (f) { return f !== 'id' && f !== 'base' && f !== 'upd' && f !== 'by' && (!ex || !same_(ex[f], r[f])); });
+        const statusOnly = !!ex && changed.every(function (f) { return STATUS_FIELDS.indexOf(f) >= 0; });
+        why = canEdit_(me, reps, 'fact', obj, month, statusOnly);
+        if (!why && ex && (ex.obj !== obj || ex.month !== month)) why = canEdit_(me, reps, 'fact', ex.obj, ex.month, false);
+      }
+      if (why) denied.push({ id: r.id, why: why }); else ok.push(r);
+    });
+    return { ok: ok, denied: denied };
+  }
+  // деньги, гарантии, объекты, «Главное за месяц», списки — начальник ПТО и администратор
+  if (me.role === 'head' || me.role === 'admin') return { ok: rows, denied: [] };
+  rows.forEach(function (r) { denied.push({ id: r.id, why: 'недостаточно прав' }); });
+  return { ok: [], denied: denied };
+}
+function filterDel_(me, t, ids, reps) {
+  if (t !== 'K' && t !== 'L') return (me.role === 'head' || me.role === 'admin') ? { ok: ids, denied: [] } : { ok: [], denied: ids.map(function (id) { return { id: id, why: 'недостаточно прав' }; }) };
+  const cur = {}; readSheet_(t).forEach(function (r) { cur[r.id] = r; });
+  const ok = [], denied = [];
+  ids.forEach(function (id) {
+    const ex = cur[id]; if (!ex) return;
+    const why = canEdit_(me, reps, t === 'L' ? 'plan' : 'fact', ex.obj, ex.month, false);
+    if (why) denied.push({ id: id, why: why }); else ok.push(id);
+  });
+  return { ok: ok, denied: denied };
+}
+
+/** Действие над отчётом: send | approve | return | reopen | comment */
+function reportAction_(me, b) {
+  const type = b.type, obj = b.obj, month = b.month, act = b.act, text = String(b.text || '').trim();
+  if (!TYPE[type] || !obj || !/^\d{4}-\d{2}$/.test(month || '')) throw new Error('неверный отчёт');
+  if (me.role === 'dir') throw new Error('только просмотр');
+  if (!sees_(me, obj)) throw new Error('объект не закреплён за вами');
+  const reps = reports_(), id = repId_(type, obj, month), r = reps[id] || { id: id, type: type, obj: obj, month: month, status: ST.draft, comments: '[]' };
+  const st = r.status || ST.draft, head = me.role === 'head' || me.role === 'admin';
+  let to = st;
+  if (act === 'send') { if (st !== ST.draft && st !== ST.ret) throw new Error('отчёт уже отправлен или согласован'); to = ST.sent; r.sentAt = new Date().toISOString(); r.sentBy = me.name; }
+  else if (act === 'approve') { if (!head) throw new Error('согласует начальник ПТО'); if (st === ST.ok) throw new Error('уже согласован'); to = ST.ok; r.decidedAt = new Date().toISOString(); r.decidedBy = me.name; }
+  else if (act === 'return') {
+    if (!head) throw new Error('возвращает начальник ПТО');
+    if (st === ST.ok && me.role !== 'admin') throw new Error('согласованный отчёт может открыть только администратор');
+    if (!text) throw new Error('напишите, что исправить');
+    to = ST.ret; r.decidedAt = new Date().toISOString(); r.decidedBy = me.name;
+  }
+  else if (act === 'reopen') { if (me.role !== 'admin') throw new Error('только администратор'); to = ST.ret; }
+  else if (act !== 'comment') throw new Error('неизвестное действие');
+  if (act === 'comment' && !text) throw new Error('пустой комментарий');
+  let cm = []; try { cm = JSON.parse(r.comments || '[]'); } catch (e) {}
+  cm.push({ at: new Date().toISOString(), by: me.name, role: me.role, act: act, text: text, from: st, to: to });
+  r.comments = JSON.stringify(cm); r.status = to; r.type = type; r.obj = obj; r.month = month;
+  upsert_('R', [r], me.name, true, me.role);
+  return r;
+}
+
+function saveUser_(me, u, newKey) {
+  if (me.role !== 'admin') throw new Error('только администратор');
+  if (!u || !String(u.name || '').trim()) throw new Error('укажите ФИО');
+  const all = readSheet_('U');
+  const ex = u.id ? all.filter(function (x) { return x.id === u.id; })[0] : null;
+  const row = { id: u.id || ('u' + Date.now().toString(36)), name: String(u.name).trim(), role: ROLE_NAMES[u.role] || ROLE_NAMES.spec,
+    objects: (u.objects || []).join('; '), active: u.active === false ? 'нет' : 'да' };
+  row.key = (!ex || newKey || !ex.key) ? Utilities.getUuid().replace(/-/g, '').slice(0, 24) : ex.key;
+  upsert_('U', [row], me.name, true, me.role);
+  return row;
+}
+
+/** Данные для роли: специалист — свои объекты; ГД — только согласованное; начальник и администратор — всё. */
+function dataFor_(me) {
+  const d = readAll_(), reps = reports_();
+  d.reports = Object.keys(reps).map(function (k) { return reps[k]; });
+  if (me.role === 'spec') {
+    const mine = function (r) { return sees_(me, r.obj); };
+    d.objects = d.objects.filter(function (o) { return sees_(me, o.name); });
+    d.ks = d.ks.filter(mine); d.plan = d.plan.filter(mine); d.reports = d.reports.filter(mine);
+    d.pays = []; d.gar = [];
+  } else if (me.role === 'dir') {
+    d.ks = d.ks.filter(function (k) { return stOf_(reps, 'fact', k.obj, k.month) === ST.ok; });
+    d.plan = d.plan.filter(function (p) { return stOf_(reps, 'plan', p.obj, p.month) === ST.ok; });
+    d.reports = [];
+    d.ks.forEach(function (k) { delete k.by; }); d.plan.forEach(function (p) { delete p.by; });
+  }
+  return d;
+}
+
 function doGet(e) {
   const p = (e && e.parameter) || {};
-  const role = p.k && p.k === PTO_KEY ? 'pto' : (p.k && p.k === DIRECTOR_KEY ? 'dir' : '');
-  if (!role) return out_({ ok: false, error: 'key' });
-  if (p.a === 'ping') return out_({ ok: true, role: role });
-  if (p.a === 'all') return out_({ ok: true, role: role, data: readAll_(), time: new Date().toISOString() });
+  const me = who_(p.k);
+  if (!me) return out_({ ok: false, error: 'key' });
+  const pub = { role: me.role, name: me.name, objects: me.objects };
+  if (p.a === 'ping') return out_({ ok: true, role: me.role, me: pub });
+  if (p.a === 'all') return out_({ ok: true, role: me.role, me: pub, data: dataFor_(me), time: new Date().toISOString() });
+  if (p.a === 'log' && me.role === 'admin') return out_({ ok: true, log: readLog_(+p.n || 1500) });
+  if (p.a === 'users' && me.role === 'admin') return out_({ ok: true, users: readSheet_('U') });
   return out_({ ok: false, error: 'action' });
 }
 
 function doPost(e) {
   let b;
   try { b = JSON.parse(e.postData.contents); } catch (err) { return out_({ ok: false, error: 'json' }); }
-  if (!b.k || b.k !== PTO_KEY) return out_({ ok: false, error: 'key' });
-  if (b.t && !SCHEMA[b.t]) return out_({ ok: false, error: 'table' });
+  const me = who_(b.k);
+  if (!me) return out_({ ok: false, error: 'key' });
+  if (me.role === 'dir') return out_({ ok: false, error: 'только просмотр' });
+  if (b.t && (!SCHEMA[b.t] || b.t === 'U' || b.t === 'R')) return out_({ ok: false, error: 'table' });
   const lock = LockService.getScriptLock();
   try {
     lock.waitLock(25000);
     let res = {};
     if (b.a === 'save') {
-      if (b.t === 'O' && b.rename) renameObject_(b.rename.from, b.rename.to, b.by);
-      res = upsert_(b.t, b.rows || [], b.by, !!b.force);
-      if (b.del && b.del.length) res.deleted = remove_(b.t, b.del, b.by);
+      const reps = reports_();
+      if (b.t === 'O' && b.rename) { if (me.role !== 'head' && me.role !== 'admin') throw new Error('недостаточно прав'); renameObject_(b.rename.from, b.rename.to, me.name, me.role); }
+      const f = filterRows_(me, b.t, b.rows || [], reps);
+      res = upsert_(b.t, f.ok, me.name, !!b.force, me.role);
+      res.denied = f.denied;
+      if (b.del && b.del.length) { const fd = filterDel_(me, b.t, b.del, reps); res.deleted = remove_(b.t, fd.ok, me.name, me.role); res.denied = res.denied.concat(fd.denied); }
     } else if (b.a === 'del') {
-      res.deleted = remove_(b.t, b.ids || [], b.by);
+      const fd = filterDel_(me, b.t, b.ids || [], reports_());
+      res.deleted = remove_(b.t, fd.ok, me.name, me.role); res.denied = fd.denied;
+    } else if (b.a === 'report') {
+      res.report = reportAction_(me, b);
     } else if (b.a === 'lists') {
+      if (me.role !== 'head' && me.role !== 'admin') throw new Error('недостаточно прав');
       saveLists_({ resp: (b.lists && b.lists.resp) || [], pto: (b.lists && b.lists.pto) || [] });
+    } else if (b.a === 'user') {
+      res.user = saveUser_(me, b.user, !!b.newKey);
+    } else if (b.a === 'wipe') {
+      // Очистка рабочих данных (КС, план, деньги, гарантии, «Главное», отчёты) — только администратор
+      if (me.role !== 'admin' || b.confirm !== 'ОЧИСТИТЬ') throw new Error('только администратор');
+      ['K', 'L', 'P', 'G', 'N', 'R'].forEach(function (t) { const s = sheet_(t); if (s.sh.getLastRow() > 1) s.sh.deleteRows(2, s.sh.getLastRow() - 1); });
+      log_([[me.name, 'K', '*', 'очистка базы: КС, план, поступления, гарантии, комментарии, отчёты', null, null, me.role]]);
     } else return out_({ ok: false, error: 'action' });
     return out_(Object.assign({ ok: true }, res));
   } catch (err) {
-    return out_({ ok: false, error: String(err) });
+    return out_({ ok: false, error: String(err && err.message || err) });
   } finally {
     lock.releaseLock();
   }

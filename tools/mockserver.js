@@ -14,7 +14,7 @@ Sheet.prototype = {
   getRange(r, c, nr, nc) { return new Range(this, r, c, nr || 1, nc || 1); },
   deleteRow(r) { this.rows.splice(r - 1, 1); },
   appendRow(v) { const n = this.getLastRow(); this.rows.splice(n, 0, v.slice()); },
-  insertRowsAfter() {}, setFrozenRows() {}
+  insertRowsAfter() {}, setFrozenRows() {}, deleteRows(r, n) { this.rows.splice(r - 1, n); }
 };
 function Range(sh, r, c, nr, nc) { Object.assign(this, { sh, r, c, nr, nc }); }
 const chain = function () { return this; };
@@ -45,12 +45,12 @@ const ctx = {
   LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
   Utilities: {
     formatDate: (d, tz, f) => f === "yyyy-MM" ? d.getFullYear() + "-" + pad(d.getMonth() + 1) : d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()),
-    parseDate: (s) => toD(s)
+    parseDate: (s) => toD(s), getUuid: () => require("crypto").randomUUID()
   },
-  console
+  console, require
 };
 vm.createContext(ctx);
-const code = fs.readFileSync(path.join(ROOT, "apps-script/Code.gs"), "utf8").replace("ВСТАВЬТЕ_КЛЮЧ_ПТО", "pto").replace("ВСТАВЬТЕ_КЛЮЧ_РУКОВОДИТЕЛЯ", "dir");
+const code = fs.readFileSync(path.join(ROOT, "apps-script/Code.gs"), "utf8").replace("ВСТАВЬТЕ_КЛЮЧ_АДМИНИСТРАТОРА", "adm").replace("ВСТАВЬТЕ_КЛЮЧ_РУКОВОДИТЕЛЯ", "dir");
 vm.runInContext(code, ctx);
 const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript", ".css": "text/css", ".json": "application/json" };
 http.createServer((req, res) => {

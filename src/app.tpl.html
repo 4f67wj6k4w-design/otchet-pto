@@ -28,27 +28,38 @@ html,body{margin:0}
 <div class="wrap">
   <header class="top">
     <div class="brandrow">
-      <div class="ttl"><div class="obj">Все объекты · <span id="who-h">ПТО</span></div><h1>Отчёт ПТО</h1></div>
+      <div class="ttl"><div class="obj" id="who-h">Отчёт ПТО</div><h1>Отчёт ПТО</h1></div>
       <img src="{{LOGO}}" alt="Группа компаний КРАШМАШ" width="120" height="48">
     </div>
     <nav class="tabs" role="tablist">
-      <button role="tab" id="tab-ks" aria-selected="true" data-v="ks">Журнал КС</button>
+      <button role="tab" id="tab-rep" aria-selected="true" data-v="rep">Отчёты</button>
+      <button role="tab" id="tab-ks" aria-selected="false" data-v="ks">Журнал КС</button>
       <button role="tab" id="tab-money" aria-selected="false" data-v="money">Деньги</button>
       <button role="tab" id="tab-plan" aria-selected="false" data-v="plan">План</button>
       <button role="tab" id="tab-obj" aria-selected="false" data-v="obj">Объекты</button>
+      <button role="tab" id="tab-users" aria-selected="false" data-v="users" hidden>Сотрудники</button>
+      <button role="tab" id="tab-hist" aria-selected="false" data-v="hist" hidden>История</button>
       <button role="tab" id="tab-more" aria-selected="false" data-v="more">Ещё</button>
     </nav>
   </header>
   <div id="status" class="banner" hidden></div>
 
-  <section class="card" id="who-card" hidden>
-    <h2>Кто вносит данные</h2>
-    <div class="who"><label class="f">Ваша фамилия (пишется в журнал изменений базы)<input id="who-in" autocomplete="family-name" placeholder="Например: Иванов"></label>
-      <button type="button" class="btn primary" id="who-ok">Готово</button></div>
-  </section>
+  <!-- ОТЧЁТЫ -->
+  <div id="v-rep">
+    <section class="card">
+      <div class="toolbar">
+        <label class="f">Показать<select id="rp-st">
+          <option value="todo">Требуют действия</option><option value="">Все</option><option>Черновик</option><option>На проверке</option><option>На доработке</option><option>Согласован</option></select></label>
+        <label class="f">Месяц<select id="rp-m"></select></label>
+        <label class="f">Вид<select id="rp-t"><option value="">План и факт</option><option value="plan">План на месяц</option><option value="fact">Факт за месяц (КС)</option></select></label>
+      </div>
+      <div class="hint" id="rp-hint"></div>
+    </section>
+    <section class="card"><div class="list" id="rp-out"><div class="empty">Загрузка…</div></div></section>
+  </div>
 
   <!-- ЖУРНАЛ КС -->
-  <div id="v-ks">
+  <div id="v-ks" hidden>
     <section class="card">
       <div class="toolbar">
         <label class="f">Поиск<input id="ks-q" type="search" placeholder="объект, № КС, примечание"></label>
@@ -102,20 +113,41 @@ html,body{margin:0}
     <section class="card"><div class="list" id="ob-out"></div></section>
   </div>
 
+  <!-- СОТРУДНИКИ (администратор) -->
+  <div id="v-users" hidden>
+    <section class="card"><h2><span>Сотрудники и личные ссылки</span><button type="button" class="btn small primary" id="us-add">+ Сотрудник</button></h2>
+      <div class="hint" style="margin-bottom:8px">У каждого сотрудника своя ссылка: по ней видно, кто вносил данные. Специалист видит только закреплённые объекты. Если ссылка попала не к тому человеку — «Новая ссылка», старая перестанет работать.</div>
+      <div class="list" id="us-out"></div></section>
+    <section class="card"><h2>Ссылки руководителей</h2><div id="us-fixed"></div></section>
+  </div>
+
+  <!-- ИСТОРИЯ (администратор) -->
+  <div id="v-hist" hidden>
+    <section class="card">
+      <div class="toolbar">
+        <label class="f">Поиск<input id="hi-q" type="search" placeholder="объект, № КС, фамилия"></label>
+        <label class="f">Кто<select id="hi-who"></select></label>
+        <label class="f">Что<select id="hi-t"><option value="">Всё</option><option value="Журнал КС">КС</option><option value="План">План</option><option value="Отчёты">Отчёты (отправка, согласование)</option><option value="Объекты">Объекты</option><option value="Поступления">Деньги</option><option value="Сотрудники">Сотрудники</option></select></label>
+        <label class="f" style="flex:0 0 auto;flex-direction:row;align-items:center;gap:6px;padding-bottom:12px"><input type="checkbox" id="hi-head" style="width:auto;min-height:0"> только правки начальника ПТО</label>
+      </div>
+      <div class="hint">История видна только вам. Показаны последние 1500 действий; полный журнал — лист «Журнал изменений» в таблице.</div>
+    </section>
+    <section class="card"><div class="list" id="hi-out"></div></section>
+  </div>
+
   <!-- ЕЩЁ -->
   <div id="v-more" hidden>
-    <section class="card"><h2>Главное за месяц — комментарий начальника ПТО</h2>
+    <section class="card" id="more-note"><h2>Главное за месяц — комментарий начальника ПТО</h2>
       <div class="row"><label class="f" style="flex:0 1 220px">Месяц<select id="nt-m"></select></label></div>
       <label class="f" style="margin-top:8px">Текст (выводится руководителю на «Сводке»)<textarea id="nt-t" rows="5" placeholder="Что главное за месяц: срывы, риски, договорённости с заказчиками…"></textarea></label>
       <div style="margin-top:8px"><button type="button" class="btn primary" id="nt-save">Сохранить комментарий</button></div></section>
-    <section class="card"><h2>Списки выбора</h2>
+    <section class="card" id="more-lists"><h2>Списки выбора</h2>
       <div class="row"><label class="f">Ответственные (руководители объектов) — по одной фамилии в строке<textarea id="ls-r" rows="7"></textarea></label>
         <label class="f">Специалисты ПТО — по одному в строке<textarea id="ls-p" rows="7"></textarea></label></div>
       <div style="margin-top:8px"><button type="button" class="btn" id="ls-save">Сохранить списки</button></div></section>
-    <section class="card"><h2>Кто вносит данные</h2>
-      <div class="who"><label class="f">Фамилия на этом устройстве<input id="who-in2"></label><button type="button" class="btn" id="who-ok2">Сохранить</button></div></section>
     <section class="card"><h2>Как заполнять</h2>
       <ol style="margin:0;padding-left:20px;line-height:1.5">
+        <li><b>Порядок согласования.</b> Специалист вносит данные по своим объектам и на вкладке «Отчёты» нажимает «Отправить на проверку». Начальник ПТО согласует или возвращает на доработку с комментарием. Руководитель видит в сводке только согласованные отчёты. После согласования суммы и реквизиты КС закрыты, отмечать подписание и оплату можно и дальше.</li>
         <li><b>Раз в месяц</b> — вкладка «План»: план выполнения по каждому объекту на месяц.</li>
         <li><b>По каждой КС</b> — «Журнал КС» → «+ Новая КС»: дата, объект, № КС, сумма КС-2. Отчётный месяц подставится по дате сам; «К оплате КС-3» — если пусто, считается по % удержания договора.</li>
         <li><b>По мере движения КС</b> открывайте ту же КС и меняйте статусы: согласование → подписание → оплата, после оплаты — дата оплаты. Новую строку для той же КС не заводите — будет двойной счёт.</li>
@@ -138,6 +170,12 @@ html,body{margin:0}
     <button type="button" class="btn" id="ed-c">Отмена</button><button type="submit" class="btn primary" id="ed-s">Сохранить</button></div>
 </form></dialog>
 
+<dialog class="ed" id="rd"><div class="rdf">
+  <div class="eh"><h3 id="rd-t"></h3><button type="button" id="rd-x" aria-label="Закрыть">×</button></div>
+  <div class="eb" id="rd-b"></div>
+  <div class="ef" id="rd-f"></div>
+</div></dialog>
+
 <script>{{CALC}}</script>
 <script>{{UI}}</script>
 <script>
@@ -145,43 +183,74 @@ html,body{margin:0}
 "use strict";
 const {$,el}=U;
 const db=U.db("pto-db");
-let RAW=null,view=U.sget("pto-tab")||"ks",who=U.sget("pto-who")||"",ksLimit=150;
+let RAW=null,ME=null,view=U.sget("pto-tab")||"rep",ksLimit=150,USERS=null,LOG=null;
+const SCH={{SCHEMA}};
+const RS={draft:"Черновик",sent:"На проверке",ret:"На доработке",ok:"Согласован"};
+const RSC={"Черновик":"draft","На проверке":"sent","На доработке":"ret","Согласован":"ok"};
+const ROLE_RU={spec:"Специалист ПТО",head:"Начальник ПТО",admin:"Администратор",dir:"Руководитель"};
+const STATUS_FIELDS=["agr","sign","pay","payDate","signDate","note"];
+const ALLTABS=["rep","ks","money","plan","obj","users","hist","more"];
+const isHead=()=>!!ME&&(ME.role==="head"||ME.role==="admin");
+const isAdmin=()=>!!ME&&ME.role==="admin";
+function tabsFor(){if(!ME)return ["rep"];if(ME.role==="admin")return ALLTABS;if(ME.role==="head")return ["rep","ks","money","plan","obj","more"];return ["rep","ks","plan","obj","more"];}
 const STATUSES=["В работе","Нет ДС","Нет договора","Приостановлен","Завершён"];
 const PAYKIND=["Оплата КС","Аванс","Возврат ГУ","Прочее"];
 const SCHED=["Ежемесячно (25–30 число)","Дважды в месяц (15 и 30 число)"];
 
 function status(t,cls,ms){const s=$("status");s.hidden=!t;s.className="banner"+(cls?" "+cls:"");s.textContent=t||"";clearTimeout(status.t);if(ms)status.t=setTimeout(()=>{s.hidden=true;},ms);}
-function setWho(v){who=(v||"").trim();U.sset("pto-who",who);$("who-h").textContent=who||"ПТО";$("who-card").hidden=!!who;$("who-in2").value=who;}
+function applyRole(){
+  $("who-h").textContent=(ME.role==="admin"?"Администратор":ME.name+" · "+ROLE_RU[ME.role])+(ME.role==="spec"?" · объектов: "+(ME.objects||[]).length:"");
+  const tabs=tabsFor();ALLTABS.forEach(x=>{$("tab-"+x).hidden=!tabs.includes(x);});
+  $("ob-add").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();
+  if(!tabs.includes(view))show("rep");
+}
 function show(v){
+  if(!tabsFor().includes(v))v="rep";
   if(view==="plan"&&v!=="plan"&&Object.keys(planCh).length&&!confirm("План не сохранён. Уйти без сохранения?"))return;
   if(v!=="plan"){planCh={};$("pl-bar").hidden=true;}
-  view=v;["ks","money","plan","obj","more"].forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-tab",v);render();}
+  view=v;ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-tab",v);render();}
 
 // ---------- загрузка / запись ----------
 async function load(quiet){
   if(!db){status("Откройте страницу по ссылке ПТО (в ней адрес базы).","bad");return;}
-  if(!RAW){try{RAW=JSON.parse(U.sget("pto-cache")||"null");}catch(e){}if(RAW)render();}
+  const CK="pto-cache-"+db.k.slice(0,8);
+  if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;ME=c.me;applyRole();render();}}catch(e){}}
   if(!quiet)status("Загрузка базы…");
-  try{const j=await U.get(db,{a:"all"});if(j.role!=="pto"){status("Эта ссылка — только для просмотра. Для ввода нужна ссылка ПТО.","bad");}else status("");
-    RAW=j.data;U.sset("pto-cache",JSON.stringify(RAW));$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
+  try{const j=await U.get(db,{a:"all"});
+    if(j.role==="dir"){status("Это ссылка руководителя — она открывает сводку.","bad");location.replace("director.html"+location.hash);return;}
+    status("");ME=j.me;RAW=j.data;RAW.reports=RAW.reports||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
   catch(e){status("Не удалось загрузить базу: "+(e.message||"нет связи")+(RAW?" — показана сохранённая копия":""),"bad");}
 }
 const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects"};
+function cacheSave(){U.sset("pto-cache-"+db.k.slice(0,8),JSON.stringify({me:ME,data:RAW}));}
 async function save(t,rows,extra){
-  if(!who){status("Сначала укажите свою фамилию (вверху страницы).","bad");$("who-card").hidden=false;$("who-in").focus();throw new Error("who");}
-  const j=await U.post(db,Object.assign({a:"save",t,rows,by:who},extra||{}));
+  const j=await U.post(db,Object.assign({a:"save",t,rows},extra||{}));
+  const den=j.denied||[];
   if(j.conflicts&&j.conflicts.length){await load(true);throw new Error("Эту запись только что изменил другой сотрудник. Данные обновлены — откройте и внесите изменение ещё раз.");}
   const arr=RAW[TBL[t]];
-  (j.saved||[]).forEach(s=>{const r=rows.find(x=>x.id===s.id);const row=Object.assign({},r,{upd:s.upd,by:who});delete row.base;const i=arr.findIndex(x=>x.id===s.id);if(i>=0)arr[i]=Object.assign({},arr[i],row);else arr.push(row);});
-  if(extra&&extra.del)extra.del.forEach(id=>{const i=arr.findIndex(x=>x.id===id);if(i>=0)arr.splice(i,1);});
+  (j.saved||[]).forEach(s=>{const r=rows.find(x=>x.id===s.id);const row=Object.assign({},r,{upd:s.upd,by:ME.name});delete row.base;const i=arr.findIndex(x=>x.id===s.id);if(i>=0)arr[i]=Object.assign({},arr[i],row);else arr.push(row);});
+  if(extra&&extra.del)extra.del.filter(id=>!den.some(d=>d.id===id)).forEach(id=>{const i=arr.findIndex(x=>x.id===id);if(i>=0)arr.splice(i,1);});
   if(extra&&extra.rename){const {from,to}=extra.rename;["ks","pays","gar"].forEach(k=>RAW[k].forEach(r=>{if(r.obj===from)r.obj=to;}));RAW.plan.forEach(p=>{if(p.obj===from){p.obj=to;p.id=to+"|"+p.month;}});}
-  U.sset("pto-cache",JSON.stringify(RAW));return j;
+  cacheSave();
+  if(den.length)throw new Error([...new Set(den.map(d=>d.why))].join("; "));
+  return j;
 }
 async function del(t,id){
-  if(!who){status("Сначала укажите свою фамилию.","bad");throw new Error("who");}
-  await U.post(db,{a:"del",t,ids:[id],by:who});
-  const arr=RAW[TBL[t]];const i=arr.findIndex(x=>x.id===id);if(i>=0)arr.splice(i,1);U.sset("pto-cache",JSON.stringify(RAW));
+  const j=await U.post(db,{a:"del",t,ids:[id]});
+  if(j.denied&&j.denied.length)throw new Error(j.denied[0].why);
+  const arr=RAW[TBL[t]];const i=arr.findIndex(x=>x.id===id);if(i>=0)arr.splice(i,1);cacheSave();
 }
+// ---------- отчёты: статус и блокировки ----------
+function repOf(type,obj,month){return (RAW.reports||[]).find(r=>r.type===type&&r.obj===obj&&r.month===month)||{type,obj,month,status:RS.draft,comments:"[]"};}
+function lockInfo(type,obj,month){
+  if(!obj||!month)return {full:true,status:true,st:RS.draft};
+  const st=repOf(type,obj,month).status||RS.draft;
+  if(ME.role==="admin")return {full:true,status:true,st};
+  if(st===RS.ok)return {full:false,status:type==="fact",st,why:type==="fact"?"Отчёт за этот месяц согласован — сумма и реквизиты КС закрыты. Можно отмечать согласование, подписание и оплату.":"План согласован — изменения закрыты."};
+  if(ME.role==="spec"&&st===RS.sent)return {full:false,status:false,st,why:"Отчёт на проверке у начальника ПТО — изменения закрыты до её решения."};
+  return {full:true,status:true,st};
+}
+function disableInp(inp){if(!inp)return;if(inp.classList&&inp.classList.contains("seg"))inp.querySelectorAll("button").forEach(b=>b.disabled=true);else inp.disabled=true;}
 
 // ---------- справочники для выбора ----------
 const objNames=()=>RAW.objects.map(o=>o.name);
@@ -235,11 +304,12 @@ function field(spec,val){
 function openEd(cfg){
   ED=cfg;ED.inp={};$("ed-t").textContent=cfg.title;const b=$("ed-b");b.innerHTML="";
   cfg.layout.forEach(line=>{const row=el("div","row");line.forEach(spec=>{const w=field(spec,cfg.row[spec.f]);if(spec.grow)w.style.flex=spec.grow;ED.inp[spec.f]=w.inp;row.appendChild(w);});b.appendChild(row);});
+  ED.lockBox=el("div","lockbar");ED.lockBox.hidden=true;b.insertBefore(ED.lockBox,b.firstChild);
   ED.calcBox=el("div","calc");ED.calcBox.hidden=true;b.appendChild(ED.calcBox);
   ED.warnBox=el("div","warnbox");ED.warnBox.hidden=true;b.appendChild(ED.warnBox);
   if(cfg.meta){b.appendChild(el("div","hint",cfg.meta));}
   const d=$("ed-del");d.hidden=!cfg.onDelete;d.classList.remove("armed");d.textContent="Удалить";
-  $("ed-s").disabled=false;$("ed-s").textContent="Сохранить";
+  $("ed-s").disabled=false;$("ed-s").textContent="Сохранить";$("ed-s").hidden=false;
   if(cfg.init)cfg.init();if(ED.calc)ED.calc();
   $("ed").showModal();
   const first=b.querySelector("input,select,textarea");if(first&&cfg.isNew)setTimeout(()=>first.focus(),50);
@@ -253,17 +323,19 @@ $("ed-f").addEventListener("submit",async ev=>{ev.preventDefault();
   let row;try{row=ED.collect();}catch(e){setWarn(e.message,true);return;}
   s.disabled=true;s.textContent="Сохраняю…";
   try{await ED.onSave(row);$("ed").close();status("Сохранено","okb",2500);render();}
-  catch(e){if(e.message!=="who")setWarn("Не сохранилось: "+e.message,true);else $("ed").close();}
+  catch(e){setWarn("Не сохранилось: "+e.message,true);}
   finally{s.disabled=false;s.textContent="Сохранить";}
 });
 $("ed-del").onclick=async()=>{const d=$("ed-del");if(!d.classList.contains("armed")){d.classList.add("armed");d.textContent="Точно удалить?";return;}
-  d.disabled=true;try{await ED.onDelete();$("ed").close();status("Удалено","okb",2500);render();}catch(e){if(e.message!=="who")setWarn("Не удалилось: "+e.message,true);}finally{d.disabled=false;}};
+  d.disabled=true;try{await ED.onDelete();$("ed").close();status("Удалено","okb",2500);render();}catch(e){setWarn("Не удалилось: "+e.message,true);}finally{d.disabled=false;}};
 const need=(v,name)=>{if(v===null||v===undefined||v==="")throw new Error("Заполните: "+name);return v;};
 const numOk=(v,name)=>{if(v!==null&&isNaN(v))throw new Error("Неверное число: "+name);return v;};
 
 // ---------- ЖУРНАЛ КС ----------
-function ksEditor(k){
+function ksEditor(k,preset){
   const isNew=!k;k=k||{id:U.uid("k"),date:U.todayISO(),month:"",agr:"Не согласована",sign:"Не подписана",pay:"Не оплачена"};
+  if(isNew&&preset){k.obj=preset.obj;k.month=preset.month;if(preset.month!==U.todayISO().slice(0,7))k.date=PTO.eom(preset.month);}
+  const KL=isNew?{full:true,status:true}:lockInfo("fact",k.obj,k.month);
   let monthTouched=!!k.month&&k.month!==(k.date||"").slice(0,7);
   openEd({title:isNew?"Новая КС":"КС: "+(k.num||k.obj),row:k,isNew,
     meta:isNew?"":"Изменено: "+(k.upd?new Date(k.upd).toLocaleString("ru-RU"):"при переносе из Excel")+(k.by?" · "+k.by:""),
@@ -281,6 +353,8 @@ function ksEditor(k){
       if(!k.month&&k.date)ED.inp.month.value=k.date.slice(0,7);
       ED.inp.date.addEventListener("change",()=>{if(!monthTouched&&val("date"))ED.inp.month.value=val("date").slice(0,7);ED.calc();});
       ED.inp.month.addEventListener("change",()=>{monthTouched=val("month")!==(val("date")||"").slice(0,7);});
+      if(!KL.full){Object.keys(ED.inp).forEach(f=>{if(!(KL.status&&STATUS_FIELDS.includes(f)))disableInp(ED.inp[f]);});
+        ED.lockBox.textContent="🔒 "+KL.why;ED.lockBox.hidden=false;if(!KL.status)$("ed-s").hidden=true;$("ed-del").hidden=true;}
     },
     calc(){
       const r=collectKs(true);const by=PTO.index(RAW);const e=PTO.enrichKs(r,by);const o=by[r.obj];
@@ -297,7 +371,10 @@ function ksEditor(k){
       if(r.date&&r.month&&r.month!==r.date.slice(0,7))wr.push("Отчётный месяц ("+PTO.monthLabel(r.month)+") не совпадает с месяцем даты КС — проверьте, что это так и нужно.");
       setWarn(wr.join(" "),!!dup);
     },
-    collect(){const r=collectKs(false);need(r.obj,"объект");need(r.ks2,"сумма КС-2");numOk(r.ks2,"КС-2");numOk(r.ks3,"КС-3");need(r.month,"отчётный месяц");return r;},
+    collect(){const r=collectKs(false);need(r.obj,"объект");need(r.ks2,"сумма КС-2");numOk(r.ks2,"КС-2");numOk(r.ks3,"КС-3");need(r.month,"отчётный месяц");
+      if(isNew||r.obj!==k.obj||r.month!==k.month){const L=lockInfo("fact",r.obj,r.month);if(!L.full)throw new Error("«Факт за "+PTO.monthLabel(r.month).toLowerCase()+"» по объекту «"+r.obj+"»: "+L.why);}
+      if(!KL.full){Object.keys(r).forEach(f=>{if(f!=="id"&&!STATUS_FIELDS.includes(f))r[f]=k[f];});}
+      return r;},
     async onSave(r){r.base=k.upd||"";await save("K",[r]);},
     onDelete:isNew?null:async()=>{await del("K",k.id);}
   });
@@ -393,9 +470,12 @@ function renderPlan(){
     let tot=0;
     months.forEach(m=>{const td=el("td");if(m<curM)td.className="past";const key=o.name+"|"+m;const v=key in planCh?planCh[key]:planVal(o.name,m);if(v)tot+=v;
       const inp=el("input");inp.inputMode="decimal";inp.value=v?U.rub0(v):"";inp.setAttribute("aria-label",o.name+", "+PTO.monthLabel(m));if(key in planCh)inp.classList.add("ch");
+      const PL=lockInfo("plan",o.name,m);if(!PL.full){inp.disabled=true;inp.title=PL.why;}
       inp.onchange=()=>{const nv=U.parseNum(inp.value);if(nv!==null&&isNaN(nv)){inp.value="";return;}const old=planVal(o.name,m);
         if((nv||null)===(old||null))delete planCh[key];else planCh[key]=nv||null;inp.classList.toggle("ch",key in planCh);if(nv)inp.value=U.rub0(nv);planBar();renderPlanTotals();};
-      td.appendChild(inp);if(fact[key])td.appendChild(el("div","fact","ф "+U.mln(fact[key])+" млн"));tr.appendChild(td);});
+      td.appendChild(inp);
+      const tags=[];if(PL.st!==RS.draft&&(v||PL.st!==RS.draft))tags.push({"На проверке":"на проверке","На доработке":"⟲ доработка","Согласован":"✓ согласован"}[PL.st]);if(fact[key])tags.push("ф "+U.mln(fact[key])+" млн");
+      if(tags.length)td.appendChild(el("div","fact",tags.join(" · ")));tr.appendChild(td);});
     const tc=el("td","tot",U.rub0(tot));tc.dataset.obj=o.name;tr.appendChild(tc);
     const capY=!+o.sum?null:Math.max(0,+o.sum-(+o.done0||0)-RAW.ks.filter(k=>k.obj===o.name&&k.month&&k.month>=PTO.BASE&&k.month<year+"-01").reduce((a,k)=>a+(+k.ks2||0),0));
     const cc=el("td","tot",capY===null?"нет суммы":U.rub0(capY));cc.dataset.cap=capY===null?"":capY;if(capY!==null&&tot>capY+0.5){cc.classList.add("bad");cc.title="План года больше остатка по договору";cc.textContent="⚠ "+cc.textContent;}tr.appendChild(cc);
@@ -415,8 +495,8 @@ $("pl-undo").onclick=()=>{planCh={};renderPlan();};
 $("pl-save").onclick=async()=>{const b=$("pl-save");b.disabled=true;b.textContent="Сохраняю…";
   try{const rows=[],dels=[];Object.keys(planCh).forEach(key=>{const [obj,m]=[key.slice(0,key.lastIndexOf("|")),key.slice(key.lastIndexOf("|")+1)];const v=planCh[key];
       const ex=RAW.plan.find(x=>x.obj===obj&&x.month===m);if(v)rows.push({id:ex?ex.id:key,obj,month:m,sum:v});else if(ex)dels.push(ex.id);});
-    await save("L",rows,{del:dels});planCh={};status("План сохранён","okb",2500);renderPlan();}
-  catch(e){if(e.message!=="who")status("План не сохранился: "+e.message,"bad");}finally{b.disabled=false;b.textContent="Сохранить план";}};
+    await save("L",rows,{del:dels});planCh={};status("План сохранён. Чтобы руководитель его увидел, отправьте «План на месяц» на проверку во вкладке «Отчёты».","okb",6000);renderPlan();}
+  catch(e){status("План сохранён не полностью: "+e.message,"bad");planCh={};renderPlan();}finally{b.disabled=false;b.textContent="Сохранить план";}};
 addEventListener("beforeunload",e=>{if(Object.keys(planCh).length){e.preventDefault();e.returnValue="";}});
 
 // ---------- ОБЪЕКТЫ ----------
@@ -431,6 +511,7 @@ function objEditor(o){
       [{f:"ret",label:"% удержания",type:"pct"},{f:"payDays",label:"Срок оплаты, дней",type:"select",opts:[10,15,30,45,60],blank:false},{f:"due",label:"Срок по договору",type:"date"}],
       [{f:"sched",label:"График подачи КС заказчику",type:"select",opts:SCHED,blank:false}],
       [{f:"note",label:"Примечание",type:"textarea"}]],
+    init(){if(!isHead()){Object.values(ED.inp).forEach(disableInp);$("ed-s").hidden=true;$("ed-del").hidden=true;ED.lockBox.textContent="Справочник объектов ведёт начальник ПТО.";ED.lockBox.hidden=false;}},
     calc(){const nm=val("name");const wr=[];
       if(nm&&RAW.objects.some(x=>x.id!==o.id&&x.name.trim().toLowerCase()===nm.toLowerCase()))wr.push("Объект с таким названием уже есть.");
       if(!isNew&&nm&&nm!==o.name&&used)wr.push("Название поменяется во всех КС, поступлениях и плане этого объекта.");
@@ -469,22 +550,179 @@ function renderMore(){
 function noteFill(){const n=RAW.notes.find(x=>x.month===$("nt-m").value);$("nt-t").value=n?n.text:"";}
 $("nt-m").onchange=noteFill;
 $("nt-save").onclick=async()=>{const m=$("nt-m").value;if(!m)return;const ex=RAW.notes.find(x=>x.month===m);
-  try{await save("N",[{id:m,month:m,text:$("nt-t").value.trim(),base:ex?ex.upd||"":""}]);status("Комментарий сохранён","okb",2500);}catch(e){if(e.message!=="who")status("Не сохранилось: "+e.message,"bad");}};
+  try{await save("N",[{id:m,month:m,text:$("nt-t").value.trim(),base:ex?ex.upd||"":""}]);status("Комментарий сохранён","okb",2500);}catch(e){status("Не сохранилось: "+e.message,"bad");}};
 $("ls-save").onclick=async()=>{const split=s=>s.split("\n").map(x=>x.trim()).filter(Boolean);const lists={resp:split($("ls-r").value),pto:split($("ls-p").value)};
-  if(!who){status("Сначала укажите свою фамилию.","bad");return;}
-  try{await U.post(db,{a:"lists",lists,by:who});RAW.lists=lists;U.sset("pto-cache",JSON.stringify(RAW));status("Списки сохранены","okb",2500);}catch(e){status("Не сохранилось: "+e.message,"bad");}};
-$("who-ok").onclick=()=>{if($("who-in").value.trim())setWho($("who-in").value);};
-$("who-in").addEventListener("keydown",e=>{if(e.key==="Enter")$("who-ok").click();});
-$("who-ok2").onclick=()=>{setWho($("who-in2").value);status("Сохранено","okb",2000);};
+  try{await U.post(db,{a:"lists",lists});RAW.lists=lists;cacheSave();status("Списки сохранены","okb",2500);}catch(e){status("Не сохранилось: "+e.message,"bad");}};
+// ---------- ОТЧЁТЫ ----------
+const TYPE_RU={plan:"План на",fact:"Факт за"};
+const ml=m=>PTO.monthLabel(m).toLowerCase();
+function rsChip(st){return el("span","rs "+(RSC[st]||"draft"),st);}
+function comments(R){try{return JSON.parse(R.comments||"[]");}catch(e){return [];}}
+function repItems(){
+  const cur=U.todayISO().slice(0,7),prev=PTO.addM(cur,-1),next=PTO.addM(cur,1),items={};
+  const add=(type,obj,month)=>{if(!obj||!month)return;const id=type+"|"+obj+"|"+month;if(!items[id])items[id]={id,type,obj,month};};
+  RAW.objects.filter(o=>o.status!=="Завершён").forEach(o=>{add("fact",o.name,prev);add("fact",o.name,cur);add("plan",o.name,cur);add("plan",o.name,next);});
+  (RAW.reports||[]).forEach(r=>add(r.type,r.obj,r.month));
+  RAW.ks.forEach(k=>add("fact",k.obj,k.month));RAW.plan.forEach(p=>add("plan",p.obj,p.month));
+  return Object.values(items).map(x=>{const R=repOf(x.type,x.obj,x.month);const ks=x.type==="fact"?RAW.ks.filter(k=>k.obj===x.obj&&k.month===x.month):[];
+    const pl=x.type==="plan"?RAW.plan.find(p=>p.obj===x.obj&&p.month===x.month):null;
+    return Object.assign(x,{R,st:R.status||RS.draft,ks,pl,sum:x.type==="fact"?ks.reduce((a,k)=>a+(+k.ks2||0),0):(pl?+pl.sum||0:0)});});
+}
+function isTodo(x){
+  const cur=U.todayISO().slice(0,7);
+  if(ME.role==="spec")return x.st===RS.ret||(x.st===RS.draft&&x.month>=PTO.addM(cur,-1)&&x.month<=PTO.addM(cur,1));
+  return x.st===RS.sent;
+}
+function renderRep(){
+  const all=repItems(),fs=$("rp-st").value,fm=$("rp-m"),mv=fm.value,ft=$("rp-t").value;
+  fm.innerHTML="";fm.appendChild(Object.assign(el("option",null,"Все месяцы"),{value:""}));
+  [...new Set(all.map(x=>x.month))].sort().reverse().forEach(m=>fm.appendChild(Object.assign(el("option",null,PTO.monthLabel(m)),{value:m})));fm.value=mv;
+  const ord={"На доработке":0,"На проверке":1,"Черновик":2,"Согласован":3};
+  const list=all.filter(x=>(fs==="todo"?isTodo(x):!fs||x.st===fs)&&(!mv||x.month===mv)&&(!ft||x.type===ft))
+    .sort((a,b)=>ord[a.st]-ord[b.st]||b.month.localeCompare(a.month)||a.obj.localeCompare(b.obj)||a.type.localeCompare(b.type));
+  $("rp-hint").textContent=ME.role==="spec"?"Внесите план и КС по своим объектам, затем откройте отчёт и нажмите «Отправить на проверку». Вернувшиеся на доработку — вверху списка.":
+    "«Требуют действия» — отчёты, присланные на проверку. Откройте отчёт, проверьте, при необходимости поправьте и согласуйте или верните с комментарием.";
+  const o=$("rp-out");o.innerHTML="";
+  if(!list.length){o.appendChild(el("div","empty",fs==="todo"?"Нет отчётов, которые требуют действия. Выберите «Все», чтобы увидеть остальные.":"Ничего не найдено."));return;}
+  list.forEach(x=>{const b=el("button","rp");b.type="button";b.onclick=()=>openRep(x.type,x.obj,x.month);
+    const n=el("div","o");n.appendChild(el("b",null,x.obj));n.appendChild(el("small",null,TYPE_RU[x.type]+" "+ml(x.month)+(x.type==="fact"?" · КС: "+x.ks.length:"")));b.appendChild(n);
+    const s=el("div","m");s.appendChild(rsChip(x.st));const cm=comments(x.R),last=cm[cm.length-1];
+    if(last)s.appendChild(el("small",null,last.by+" · "+new Date(last.at).toLocaleDateString("ru-RU")));b.appendChild(s);
+    const v=el("div","v",x.sum?U.mln(x.sum,2)+" млн":"—");v.appendChild(el("small",null,x.type==="plan"?"план":"КС-2"));b.appendChild(v);
+    const w=el("div","v");if(last&&last.text&&x.st===RS.ret){w.appendChild(el("small","over","⟲ "+last.text.slice(0,60)));}b.appendChild(w);
+    o.appendChild(b);});
+}
+["rp-st","rp-m","rp-t"].forEach(id=>$(id).onchange=renderRep);
+
+let REP=null;
+function openRep(type,obj,month){REP={type,obj,month};repDraw();if(!$("rd").open)$("rd").showModal();}
+function repDraw(){
+  if(!REP)return;const {type,obj,month}=REP,R=repOf(type,obj,month),st=R.status||RS.draft,L=lockInfo(type,obj,month);
+  $("rd-t").textContent=TYPE_RU[type]+" "+ml(month)+" — "+obj;
+  const b=$("rd-b");b.innerHTML="";
+  const head=el("div","row");const hs=el("div");hs.appendChild(rsChip(st));
+  const info=[];if(R.sentBy)info.push("отправил: "+R.sentBy+(R.sentAt?" "+new Date(R.sentAt).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"}):""));
+  if(R.decidedBy&&(st===RS.ok||st===RS.ret))info.push((st===RS.ok?"согласовал(а): ":"вернул(а): ")+R.decidedBy);
+  if(info.length)hs.appendChild(el("span","hint"," "+info.join(" · ")));head.appendChild(hs);b.appendChild(head);
+  if(!L.full&&L.why){const lb=el("div","lockbar","🔒 "+L.why);b.appendChild(lb);}
+  if(type==="plan"){
+    const pl=RAW.plan.find(p=>p.obj===obj&&p.month===month);const o=RAW.objects.find(x=>x.name===obj)||{};
+    const w=el("label","f");w.appendChild(el("span",null,"План выполнения на "+ml(month)+", руб"));const inp=el("input");inp.inputMode="decimal";inp.value=pl?U.rub(pl.sum):"";inp.disabled=!L.full;w.appendChild(inp);b.appendChild(w);
+    const cap=!+o.sum?null:Math.max(0,+o.sum-(+o.done0||0)-RAW.ks.filter(k=>k.obj===obj&&k.month&&k.month>=PTO.BASE&&k.month<month).reduce((a,k)=>a+(+k.ks2||0),0));
+    b.appendChild(el("div","hint",cap===null?"Сумма договора не указана.":"Остаток по договору на начало месяца: "+U.rub0(cap)+" руб."));
+    if(L.full){const sv=el("button","btn","Сохранить план");sv.type="button";sv.style.alignSelf="flex-start";
+      sv.onclick=async()=>{const v=U.parseNum(inp.value);if(v!==null&&isNaN(v)){status("Неверное число","bad",3000);return;}sv.disabled=true;
+        try{if(v)await save("L",[{id:pl?pl.id:obj+"|"+month,obj,month,sum:v}]);else if(pl)await save("L",[],{del:[pl.id]});status("План сохранён","okb",2500);render();}catch(e){status("Не сохранилось: "+e.message,"bad");}finally{sv.disabled=false;}};
+      b.appendChild(sv);}
+  }else{
+    const ks=RAW.ks.filter(k=>k.obj===obj&&k.month===month).map(k=>PTO.enrichKs(k,PTO.index(RAW)));
+    const t=el("table","t mini");t.innerHTML="<thead><tr><th>№ КС / описание</th><th>КС-2, руб</th><th>К оплате</th><th>Статус</th></tr></thead>";
+    const tb=el("tbody");ks.forEach(k=>{const tr=el("tr");tr.style.cursor="pointer";tr.onclick=()=>ksEditor(RAW.ks.find(x=>x.id===k.id));
+      const n=el("td");n.appendChild(document.createTextNode(k.num||"—"));n.appendChild(el("small",null,[k.date?U.ru(k.date):"",k.period].filter(Boolean).join(" · ")));tr.appendChild(n);
+      tr.appendChild(el("td","n",U.rub(k.ks2)));tr.appendChild(el("td","n",U.rub(k.toPay)));const sc=el("td");sc.appendChild(el("span","st "+k.st,k.stLabel));tr.appendChild(sc);tb.appendChild(tr);});
+    t.appendChild(tb);
+    if(ks.length){const tf=el("tfoot");const tr=el("tr");tr.appendChild(el("td",null,"Итого: "+ks.length+" шт."));tr.appendChild(el("td","n",U.rub(ks.reduce((a,k)=>a+(+k.ks2||0),0))));tr.appendChild(el("td","n",U.rub(ks.reduce((a,k)=>a+(k.toPay||0),0))));tr.appendChild(el("td"));tf.appendChild(tr);t.appendChild(tf);
+      const tw=el("div","tablewrap");tw.appendChild(t);b.appendChild(tw);}
+    else b.appendChild(el("div","empty","КС за этот месяц не внесены."+(L.full?" Если КС не было — так и отправьте отчёт.":"")));
+    if(L.full){const ad=el("button","btn","+ КС в этот отчёт");ad.type="button";ad.style.alignSelf="flex-start";ad.onclick=()=>ksEditor(null,{obj,month});b.appendChild(ad);}
+  }
+  const cm=comments(R);
+  if(cm.length){b.appendChild(el("div","secttl","История отчёта"));const th=el("div","thread");
+    const AN={send:"отправил(а) на проверку",approve:"согласовал(а)",return:"вернул(а) на доработку",reopen:"открыл(а) для исправления",comment:"комментарий"};
+    cm.forEach(c=>{const d=el("div","c "+({approve:"ok",return:"ret",send:"sent"}[c.act]||""));d.appendChild(el("small",null,new Date(c.at).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})+" · "+c.by+" — "+AN[c.act]));
+      if(c.text)d.appendChild(document.createTextNode(c.text));th.appendChild(d);});b.appendChild(th);}
+  const cw=el("label","f");cw.appendChild(el("span",null,"Комментарий"));const ta=el("textarea");ta.id="rd-c";ta.rows=2;ta.placeholder=isHead()?"Что исправить / замечания":"Пояснение к отчёту";cw.appendChild(ta);b.appendChild(cw);
+  const f=$("rd-f");f.innerHTML="";
+  const btn=(txt,cls,act)=>{const x=el("button","btn"+(cls?" "+cls:""),txt);x.type="button";x.onclick=()=>repAct(act,x);f.appendChild(x);return x;};
+  btn("Добавить комментарий","","comment");f.appendChild(el("span","grow"));
+  if(ME.role==="admin"&&st===RS.ok)btn("Открыть для исправления","danger","reopen");
+  if(isHead()&&st!==RS.ok){btn("Вернуть на доработку","danger","return");btn("Согласовать","primary","approve");}
+  if(ME.role==="spec"&&(st===RS.draft||st===RS.ret))btn("Отправить на проверку","primary","send");
+  const cl=el("button","btn","Закрыть");cl.type="button";cl.onclick=()=>$("rd").close();f.appendChild(cl);
+}
+async function repAct(act,x){
+  const text=($("rd-c")||{}).value||"";
+  if((act==="return"||act==="reopen"||act==="comment")&&!text.trim()){status("Напишите комментарий: "+(act==="comment"?"текст":"что нужно исправить"),"bad",4000);$("rd-c").focus();return;}
+  if(act==="send"&&REP.type==="fact"&&!RAW.ks.some(k=>k.obj===REP.obj&&k.month===REP.month)&&!confirm("КС за месяц не внесены. Отправить отчёт «КС не было»?"))return;
+  if(act==="send"&&REP.type==="plan"&&!RAW.plan.some(p=>p.obj===REP.obj&&p.month===REP.month)&&!confirm("План не внесён. Отправить нулевой план?"))return;
+  if(act==="approve"&&!confirm("Согласовать? После согласования данные отчёта нельзя будет изменить."))return;
+  x.disabled=true;
+  try{const j=await U.post(db,Object.assign({a:"report",act,text},REP));const r=j.report;const i=RAW.reports.findIndex(y=>y.id===r.id);if(i>=0)RAW.reports[i]=r;else RAW.reports.push(r);cacheSave();
+    status({send:"Отчёт отправлен начальнику ПТО",approve:"Отчёт согласован",return:"Отчёт возвращён на доработку",reopen:"Отчёт открыт для исправления",comment:"Комментарий добавлен"}[act],"okb",3000);render();}
+  catch(e){status("Не получилось: "+e.message,"bad");}finally{x.disabled=false;}
+}
+$("rd-x").onclick=()=>$("rd").close();
+$("rd").addEventListener("close",()=>{REP=null;});
+
+// ---------- СОТРУДНИКИ (администратор) ----------
+function pageLink(key,page){return location.origin+location.pathname.replace(/[^/]*$/,"")+(page||"index.html")+"#u="+encodeURIComponent(db.u)+"&k="+encodeURIComponent(key);}
+async function copyText(t,msg){try{await navigator.clipboard.writeText(t);status(msg||"Скопировано","okb",2500);}catch(e){prompt("Скопируйте ссылку:",t);}}
+async function loadUsers(){try{const j=await U.get(db,{a:"users"});USERS=j.users;renderUsers();}catch(e){status("Не удалось загрузить сотрудников: "+e.message,"bad");}}
+function renderUsers(){
+  const f=$("us-fixed");f.innerHTML="";const r=el("div","us");const a=el("div");a.appendChild(el("b",null,"Администратор (вы)"));a.appendChild(el("small",null,"всё, включая сотрудников и историю"));r.appendChild(a);r.appendChild(el("div","hint","Ссылка руководителя (ГД) осталась прежней."));
+  const ac=el("div","acts");const cb=el("button","btn small","Скопировать мою ссылку");cb.type="button";cb.onclick=()=>copyText(location.href.split("#")[0]+"#u="+encodeURIComponent(db.u)+"&k="+encodeURIComponent(db.k));ac.appendChild(cb);r.appendChild(ac);f.appendChild(r);
+  if(!USERS){$("us-out").innerHTML='<div class="empty">Загрузка…</div>';loadUsers();return;}
+  const o=$("us-out");o.innerHTML="";
+  if(!USERS.length)o.appendChild(el("div","empty","Сотрудников пока нет. Нажмите «+ Сотрудник»."));
+  USERS.slice().sort((a,b)=>(a.role>b.role?1:-1)||a.name.localeCompare(b.name)).forEach(u=>{const r=el("div","us");
+    const a=el("div");a.appendChild(el("b",null,u.name+(u.active==="нет"?" (отключён)":"")));a.appendChild(el("small",null,u.role));r.appendChild(a);
+    r.appendChild(el("div","hint",u.role==="Специалист ПТО"?(u.objects||"объекты не закреплены"):"все объекты"));
+    const ac=el("div","acts");const b1=el("button","btn small primary","Скопировать ссылку");b1.type="button";b1.onclick=()=>copyText(pageLink(u.key),"Ссылка для «"+u.name+"» скопирована — отправьте её сотруднику");
+    const b2=el("button","btn small","Изменить");b2.type="button";b2.onclick=()=>userEditor(u);ac.appendChild(b1);ac.appendChild(b2);r.appendChild(ac);o.appendChild(r);});
+}
+function userEditor(u){
+  const isNew=!u;u=u||{name:"",role:"Специалист ПТО",objects:"",active:"да"};
+  const RK={"Специалист ПТО":"spec","Начальник ПТО":"head","Администратор":"admin"};
+  openEd({title:isNew?"Новый сотрудник":u.name,row:{name:u.name,role:u.role,active:u.active||"да"},isNew,
+    layout:[[{f:"name",label:"ФИО",req:1,ph:"Иванов А.С."}],[{f:"role",label:"Роль",type:"select",opts:["Специалист ПТО","Начальник ПТО","Администратор"],blank:false},{f:"active",label:"Доступ",type:"seg",opts:["да","нет"]}]],
+    init(){const sel=(u.objects||"").split(";").map(x=>x.trim()).filter(Boolean);const w=el("div","f");w.appendChild(el("span",null,"Закреплённые объекты (для специалиста)"));
+      const box=el("div","chk");RAW.objects.slice().sort((a,b)=>(a.status==="Завершён")-(b.status==="Завершён")||a.name.localeCompare(b.name)).forEach(o=>{const l=el("label");const c=el("input");c.type="checkbox";c.value=o.name;c.checked=sel.includes(o.name);l.appendChild(c);l.appendChild(document.createTextNode(o.name+(o.status==="Завершён"?" (завершён)":"")));box.appendChild(l);});
+      w.appendChild(box);ED.box=box;$("ed-b").insertBefore(w,ED.calcBox);
+      if(!isNew){const nk=el("label","f");nk.style.flexDirection="row";nk.style.alignItems="center";nk.style.gap="8px";const c=el("input");c.type="checkbox";c.style.width="auto";c.style.minHeight="0";ED.newKey=c;nk.appendChild(c);nk.appendChild(document.createTextNode("Выдать новую ссылку (старая перестанет работать)"));$("ed-b").insertBefore(nk,ED.calcBox);}},
+    collect(){return {id:u.id,name:need(val("name"),"ФИО"),role:RK[val("role")],active:val("active")!=="нет",objects:[...ED.box.querySelectorAll("input:checked")].map(c=>c.value)};},
+    async onSave(r){const j=await U.post(db,{a:"user",user:r,newKey:!!(ED.newKey&&ED.newKey.checked)});const nu=j.user;const i=USERS.findIndex(x=>x.id===nu.id);if(i>=0)USERS[i]=nu;else USERS.push(nu);
+      if(isNew||(ED.newKey&&ED.newKey.checked))setTimeout(()=>copyText(pageLink(nu.key),"Сохранено. Ссылка для «"+nu.name+"» скопирована — отправьте её сотруднику"),100);}
+  });
+}
+$("us-add").onclick=()=>userEditor(null);
+
+// ---------- ИСТОРИЯ (администратор) ----------
+const LBL={};Object.values(SCH).forEach(([sheet,cols])=>{LBL[sheet]={};cols.forEach(([f,l])=>LBL[sheet][f]=l);});
+async function loadLog(){try{const j=await U.get(db,{a:"log",n:1500});LOG=j.log;renderHist();}catch(e){status("Не удалось загрузить историю: "+e.message,"bad");}}
+const fmtV=v=>v===null||v===undefined||v===""?"пусто":(typeof v==="number"?U.rub(v):String(v));
+function renderHist(){
+  if(!LOG){$("hi-out").innerHTML='<div class="empty">Загрузка…</div>';loadLog();return;}
+  const sw=$("hi-who"),wv=sw.value;sw.innerHTML="";sw.appendChild(Object.assign(el("option",null,"Все"),{value:""}));[...new Set(LOG.map(x=>x.by).filter(Boolean))].sort().forEach(n=>sw.appendChild(Object.assign(el("option",null,n),{value:n})));sw.value=wv;
+  const q=$("hi-q").value.trim().toLowerCase(),ft=$("hi-t").value,onlyHead=$("hi-head").checked;
+  const AN={send:"отправил(а) на проверку",approve:"согласовал(а)",return:"вернул(а) на доработку",reopen:"открыл(а) для исправления",comment:"комментарий"};
+  const list=LOG.filter(x=>(!wv||x.by===wv)&&(!ft||x.sheet===ft)&&(!onlyHead||x.role==="head")&&(!q||JSON.stringify([x.by,x.id,x.after,x.before]).toLowerCase().includes(q))).slice(0,400);
+  const o=$("hi-out");o.innerHTML="";if(!list.length){o.appendChild(el("div","empty","Записей нет."));return;}
+  list.forEach(x=>{const d=el("div","hi"+(x.role==="head"?" head":""));const h=el("div","h");
+    h.appendChild(el("small",null,new Date(x.at).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})));
+    h.appendChild(el("b",null,x.by||"—"));if(x.role)h.appendChild(el("small",null,ROLE_RU[x.role]||x.role));
+    const a=x.after||{},bf=x.before||{};const obj=a.obj||bf.obj||"";
+    let what=x.sheet+" · "+x.act;if(x.sheet==="Отчёты"){const cm=(()=>{try{return JSON.parse(a.comments||"[]");}catch(e){return [];}})();const last=cm[cm.length-1];
+      what=(a.type==="plan"?"План на ":"Факт за ")+(a.month?ml(a.month):"")+" · "+(last?AN[last.act]+(last.from&&last.to&&last.from!==last.to?" ("+last.from+" → "+last.to+")":""):x.act);}
+    h.appendChild(el("span",null,what+(obj?" · "+obj:"")));d.appendChild(h);
+    const det=el("div","d");const lb=LBL[x.sheet]||{};
+    if(x.sheet==="Отчёты"){const cm=(()=>{try{return JSON.parse(a.comments||"[]");}catch(e){return [];}})();const last=cm[cm.length-1];if(last&&last.text)det.appendChild(el("div",null,"«"+last.text+"»"));}
+    else if(x.act==="изменено"){Object.keys(a).filter(k=>!["id","upd","by","base"].includes(k)&&k in bf&&String(bf[k]??"")!==String(a[k]??"")).forEach(k=>{const r=el("div");r.appendChild(document.createTextNode((lb[k]||k)+": "));r.appendChild(el("s",null,fmtV(bf[k])));r.appendChild(document.createTextNode(" → "));r.appendChild(el("ins",null,fmtV(a[k])));det.appendChild(r);});}
+    else if(x.act==="добавлено"){det.appendChild(el("div",null,["num","name","month","ks2","sum"].filter(k=>a[k]!==undefined&&a[k]!=="").map(k=>(lb[k]||k)+": "+fmtV(a[k])).join(" · ")));}
+    else if(x.act==="удалено"&&x.before){det.appendChild(el("div",null,"было: "+["obj","num","month","ks2","sum"].filter(k=>bf[k]!==undefined&&bf[k]!=="").map(k=>(lb[k]||k)+": "+fmtV(bf[k])).join(" · ")));}
+    if(det.childNodes.length)d.appendChild(det);o.appendChild(d);});
+}
+["hi-q"].forEach(id=>$(id).oninput=renderHist);["hi-who","hi-t","hi-head"].forEach(id=>$(id).onchange=renderHist);
+
 
 function render(){
   if(!RAW)return;
-  if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();else renderMore();
+  if(view==="rep")renderRep();else if(view==="ks")renderKs();else if(view==="money")renderMoney();else if(view==="plan")renderPlan();else if(view==="obj")renderObj();
+  else if(view==="users")renderUsers();else if(view==="hist")renderHist();else renderMore();
+  if($("rd").open)repDraw();
 }
 document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&RAW&&!$("ed").open&&!Object.keys(planCh).length)load(true);});
-setWho(who);
-show(["ks","money","plan","obj","more"].includes(view)?view:"ks");load();
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&RAW&&!$("ed").open&&!$("rd").open&&!Object.keys(planCh).length)load(true);});
+ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==view;});load();
 })();
 </script>
 </body>
