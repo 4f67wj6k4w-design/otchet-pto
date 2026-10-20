@@ -145,9 +145,9 @@ function readLog_(n) {
 function upsert_(t, rows, by, force, role) {
   const s = sheet_(t), map = rowIndex_(s), now = new Date().toISOString(), conflicts = [], saved = [];
   const width = s.hdr.length, maxR = s.sh.getMaxRows();
-  // форматы столбцов: ID и «Изменено» — текст (иначе таблица превратит их в даты/числа)
+  // форматы столбцов: ID, «Изменено» и все текстовые поля — текст (иначе таблица превратит «9 Мая» или «15.03» в дату)
   s.cols.forEach(function (c) {
-    const f = (c[0] === 'id' || c[0] === 'upd') ? '@' : FMT_[c[2]];
+    const f = (c[0] === 'id' || c[0] === 'upd' || c[2] === 's') ? '@' : FMT_[c[2]];   // текстовые столбцы — как текст: «9 Мая», «15.03» не станут датами
     if (f && maxR > 1) s.sh.getRange(2, s.hdr.indexOf(c[1]) + 1, maxR - 1, 1).setNumberFormat(f);
   });
   const updCol = s.hdr.indexOf('Изменено'), fresh = [], logs = [];
@@ -173,7 +173,7 @@ function upsert_(t, rows, by, force, role) {
     const start = s.sh.getLastRow() + 1;
     if (start + fresh.length - 1 > s.sh.getMaxRows()) s.sh.insertRowsAfter(s.sh.getMaxRows(), start + fresh.length - 1 - s.sh.getMaxRows());
     s.cols.forEach(function (c) {
-      const f = (c[0] === 'id' || c[0] === 'upd') ? '@' : FMT_[c[2]];
+      const f = (c[0] === 'id' || c[0] === 'upd' || c[2] === 's') ? '@' : FMT_[c[2]];   // текстовые столбцы — как текст: «9 Мая», «15.03» не станут датами
       if (f) s.sh.getRange(start, s.hdr.indexOf(c[1]) + 1, fresh.length, 1).setNumberFormat(f);
     });
     s.sh.getRange(start, 1, fresh.length, width).setValues(fresh);
@@ -203,7 +203,7 @@ function renameObject_(from, to, by, role) {
     objs.forEach(function (v, i) {
       if (String(v[0]) === from) { v[0] = to; ch = true; if (t === 'L') ids[i][0] = String(ids[i][0]).replace(from + '|', to + '|'); if (t === 'R') ids[i][0] = String(ids[i][0]).replace('|' + from + '|', '|' + to + '|'); }
     });
-    if (ch) { s.sh.getRange(2, oc, n - 1, 1).setValues(objs); if (t === 'L' || t === 'R') s.sh.getRange(2, ic, n - 1, 1).setValues(ids); }
+    if (ch) { s.sh.getRange(2, oc, n - 1, 1).setNumberFormat('@').setValues(objs); if (t === 'L' || t === 'R') s.sh.getRange(2, ic, n - 1, 1).setValues(ids); }
   });
   log_([[by, 'O', from, 'переименовано → ' + to, null, null, role]]);
 }
