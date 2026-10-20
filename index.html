@@ -2198,14 +2198,14 @@ function k2Draw(){
   const nm=/№\s*([\wА-Яа-я\-\/.]+)/.exec(k.num||"");fld("№ документа","docNum","text",nm?nm[1]:(k.num||""));fld("Период с","pFrom","date");fld("Период по","pTo","date");
   b.appendChild(row);
   const dl=el("datalist");dl.id="k2-works";Object.keys(W).forEach(n=>dl.appendChild(Object.assign(el("option"),{value:n})));b.appendChild(dl);
-  if(o&&o.rp)b.appendChild(el("div","hint",Object.keys(W).length?"Наименование можно выбрать из работ паспорта объекта — подставятся единица и цена. Справа — объём по рапортам прорабов за период, для сверки.":(RP?"В паспорте объекта нет работ.":"Загружаю работы паспорта…")));
+  if(o&&o.rp)b.appendChild(el("div","hint",Object.keys(W).length?"Наименование можно выбрать из работ паспорта объекта — подставятся единица и цена. Справа — объём по рапортам прорабов за период, только для справки: прорабы пишут работы по бюджету, а КС-2 идёт по РДЦ, поэтому цифры могут законно отличаться.":(RP?"В паспорте объекта нет работ.":"Загружаю работы паспорта…")));
   const tw=el("div","tablewrap"),t=el("table","t k2t");tw.appendChild(t);b.appendChild(tw);
   const hd=el("tr");["№","Поз. по смете","Наименование работ","№ расценки","Ед. изм.","Кол-во","Цена, руб","Стоимость, руб",o&&o.rp?"По рапортам":"",""].forEach(x=>hd.appendChild(el("th",null,x)));
   const th=el("thead");th.appendChild(hd);t.appendChild(th);const tb=el("tbody");t.appendChild(tb);
   const totBox=el("div","calc");
   const recalc=()=>{const T=k2Tot(st.lines,f?f.vat:0);totBox.innerHTML="";[["Итого:",m2(T.net)+" руб"],[T.vat?"НДС "+T.vat+"%:":"НДС:",T.vat?m2(T.tax)+" руб":"без НДС"],["Всего по акту:",m2(T.all)+" руб"]].forEach(([l,v])=>{const s=el("span",null,l+" ");s.appendChild(el("b",null,v));totBox.appendChild(s);});
     tb.querySelectorAll("tr").forEach((tr,i)=>{const l=st.lines[i];if(l)tr.querySelector(".sum").textContent=m2(r2((+l.q||0)*(+l.p||0)));});};
-  const k2Rp=()=>{tb.querySelectorAll("tr").forEach((tr,i)=>{const l=st.lines[i],c=tr.querySelector(".rpq");if(!c||!l)return;const q=k2RpQty(W,l.n,st.pFrom,st.pTo);c.textContent=q===null?"":q3(q)+(l.u?" "+l.u:"");c.classList.toggle("bad",q!==null&&l.q!==undefined&&l.q!==""&&Math.abs((+l.q||0)-q)>1e-6);c.title=q===null?"":"Объём по рапортам прорабов за "+ruD(st.pFrom)+"–"+ruD(st.pTo);});};
+  const k2Rp=()=>{tb.querySelectorAll("tr").forEach((tr,i)=>{const l=st.lines[i],c=tr.querySelector(".rpq");if(!c||!l)return;const q=k2RpQty(W,l.n,st.pFrom,st.pTo);c.textContent=q===null?"":q3(q)+(l.u?" "+l.u:"");c.title=q===null?"":"Для справки: объём по рапортам прорабов за "+ruD(st.pFrom)+"–"+ruD(st.pTo)+". Работы прорабов идут по бюджету и могут не совпадать с позициями РДЦ — это не ошибка.";});};
   st.lines.forEach((l,i)=>{
     const tr=el("tr");tr.appendChild(el("td","num",String(i+1)));
     const PH={pos:"Поз. по смете",n:"Наименование работ",rate:"№ расценки",u:"Ед. изм.",q:"Кол-во",p:"Цена, руб"};
