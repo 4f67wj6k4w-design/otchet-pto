@@ -19,10 +19,13 @@ const ROLE_NAMES = { spec: 'Специалист ПТО', head: 'Начальн�
 const ST = { draft: 'Черновик', sent: 'На проверке', ret: 'На доработке', ok: 'Согласован' };
 const TYPE = { plan: 'План', fact: 'Факт' };
 // Поля КС, которые можно менять и после согласования отчёта (движение КС: подписание, оплата)
-const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note', 'remarks', 'dsNeed', 'dsDate', 'letterDate'];
+const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note', 'remarks', 'dsNeed', 'dsDate', 'letterDate', 'fixed'];
+// Режим исправлений КС (лист «Настройки KPI», параметр edit:ks = 1): специалисты и начальник ПТО правят любые КС,
+// в том числе в согласованных отчётах. Отчёт остаётся согласованным, правка — в журнале и с отметкой «исправлено после согласования».
+function editMode_() { const r = readSheet_('Q').filter(function (x) { return x.id === 'edit:ks'; }).pop(); return !!r && String(r.value) === '1'; }
 
 // Листы и столбцы базы (порядок столбцов в таблице можно менять — ищутся по заголовку).
-const SCHEMA = {"O": ["Объекты", [["id", "ID", "s"], ["name", "Объект", "s"], ["resp", "Ответственный", "s"], ["pto", "Специалист ПТО", "s"], ["status", "Статус", "s"], ["sum", "Сумма договора с ДС, руб", "n"], ["done0", "Выполнено до 01.01.2026, руб", "n"], ["ret", "% удержания", "p"], ["payDays", "Срок оплаты, дней", "n"], ["due", "Срок по договору", "d"], ["sched", "График подачи КС", "s"], ["contract", "№ договора", "s"], ["contractDate", "Дата договора", "d"], ["start", "Начало по договору", "d"], ["rp", "Код объекта в «Рапорте прораба»", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "K": ["Журнал КС", [["id", "ID", "s"], ["date", "Дата КС", "d"], ["month", "Отчётный месяц", "m"], ["obj", "Объект", "s"], ["num", "№ КС / описание", "s"], ["period", "Период работ", "s"], ["ks2", "Выполнение КС-2, руб", "n"], ["ks3", "К оплате КС-3, руб", "n"], ["agr", "Согласование", "s"], ["sign", "Подписание", "s"], ["pay", "Оплата", "s"], ["payDate", "Дата оплаты", "d"], ["signDate", "Дата подписания", "d"], ["remarks", "Замечания заказчика", "s"], ["dsNeed", "Нужен ДС", "s"], ["dsDate", "ДС подан заказчику", "d"], ["letterDate", "Письмо / претензия заказчику", "d"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "P": ["Поступления", [["id", "ID", "s"], ["date", "Дата поступления", "d"], ["obj", "Объект", "s"], ["sum", "Сумма, руб", "n"], ["kind", "Вид поступления", "s"], ["basis", "№ КС / основание", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "L": ["План", [["id", "ID", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["sum", "План, руб", "n"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "G": ["Гарантии", [["id", "ID", "s"], ["obj", "Объект", "s"], ["due", "Срок возврата", "d"], ["sum", "Сумма ГУ, руб", "n"], ["status", "Статус оплаты", "s"], ["party", "Контрагент", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "N": ["Главное за месяц", [["id", "ID", "s"], ["month", "Месяц", "m"], ["text", "Комментарий начальника ПТО", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "S": ["Списки", [["resp", "Ответственные (руководители объектов)", "s"], ["pto", "Специалисты ПТО", "s"]]], "U": ["Сотрудники", [["id", "ID", "s"], ["name", "ФИО", "s"], ["role", "Роль", "s"], ["objects", "Объекты (через ;)", "s"], ["login", "Логин", "s"], ["password", "Пароль", "s"], ["mustChange", "Сменить пароль при входе", "s"], ["lastLogin", "Последний вход", "s"], ["key", "Ключ ссылки", "s"], ["active", "Активен", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "R": ["Отчёты", [["id", "ID", "s"], ["type", "Вид", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["status", "Статус", "s"], ["sentAt", "Отправлен", "s"], ["sentBy", "Кто отправил", "s"], ["decidedAt", "Решение", "s"], ["decidedBy", "Кто решил", "s"], ["comments", "Комментарии (JSON)", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "Q": ["Настройки KPI", [["id", "Параметр", "s"], ["value", "Значение", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]]};
+const SCHEMA = {"O": ["Объекты", [["id", "ID", "s"], ["name", "Объект", "s"], ["resp", "Ответственный", "s"], ["pto", "Специалист ПТО", "s"], ["status", "Статус", "s"], ["sum", "Сумма договора с ДС, руб", "n"], ["done0", "Выполнено до 01.01.2026, руб", "n"], ["ret", "% удержания", "p"], ["payDays", "Срок оплаты, дней", "n"], ["due", "Срок по договору", "d"], ["sched", "График подачи КС", "s"], ["contract", "№ договора", "s"], ["contractDate", "Дата договора", "d"], ["start", "Начало по договору", "d"], ["rp", "Код объекта в «Рапорте прораба»", "s"], ["firm", "Подрядчик (юрлицо)", "s"], ["customer", "Заказчик (организация, адрес, телефон)", "s"], ["investor", "Инвестор", "s"], ["site", "Стройка (наименование, адрес)", "s"], ["custSigner", "Принял от заказчика (должность, ФИО)", "s"], ["ourSigner", "Сдал от подрядчика (должность, ФИО)", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "K": ["Журнал КС", [["id", "ID", "s"], ["date", "Дата КС", "d"], ["month", "Отчётный месяц", "m"], ["obj", "Объект", "s"], ["num", "№ КС / описание", "s"], ["period", "Период работ", "s"], ["ks2", "Выполнение КС-2, руб", "n"], ["ks3", "К оплате КС-3, руб", "n"], ["agr", "Согласование", "s"], ["sign", "Подписание", "s"], ["pay", "Оплата", "s"], ["payDate", "Дата оплаты", "d"], ["signDate", "Дата подписания", "d"], ["remarks", "Замечания заказчика", "s"], ["dsNeed", "Нужен ДС", "s"], ["dsDate", "ДС подан заказчику", "d"], ["letterDate", "Письмо / претензия заказчику", "d"], ["docNum", "№ документа КС-2", "s"], ["pFrom", "Период с", "d"], ["pTo", "Период по", "d"], ["lines", "Строки КС-2 (JSON)", "s"], ["fixed", "Исправлено после согласования", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "P": ["Поступления", [["id", "ID", "s"], ["date", "Дата поступления", "d"], ["obj", "Объект", "s"], ["sum", "Сумма, руб", "n"], ["kind", "Вид поступления", "s"], ["basis", "№ КС / основание", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "L": ["План", [["id", "ID", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["sum", "План, руб", "n"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "G": ["Гарантии", [["id", "ID", "s"], ["obj", "Объект", "s"], ["due", "Срок возврата", "d"], ["sum", "Сумма ГУ, руб", "n"], ["status", "Статус оплаты", "s"], ["party", "Контрагент", "s"], ["note", "Примечание", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "N": ["Главное за месяц", [["id", "ID", "s"], ["month", "Месяц", "m"], ["text", "Комментарий начальника ПТО", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "S": ["Списки", [["resp", "Ответственные (руководители объектов)", "s"], ["pto", "Специалисты ПТО", "s"]]], "U": ["Сотрудники", [["id", "ID", "s"], ["name", "ФИО", "s"], ["role", "Роль", "s"], ["objects", "Объекты (через ;)", "s"], ["login", "Логин", "s"], ["password", "Пароль", "s"], ["mustChange", "Сменить пароль при входе", "s"], ["lastLogin", "Последний вход", "s"], ["key", "Ключ ссылки", "s"], ["active", "Активен", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "R": ["Отчёты", [["id", "ID", "s"], ["type", "Вид", "s"], ["obj", "Объект", "s"], ["month", "Месяц", "m"], ["status", "Статус", "s"], ["sentAt", "Отправлен", "s"], ["sentBy", "Кто отправил", "s"], ["decidedAt", "Решение", "s"], ["decidedBy", "Кто решил", "s"], ["comments", "Комментарии (JSON)", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "Q": ["Настройки KPI", [["id", "Параметр", "s"], ["value", "Значение", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]], "F": ["Юрлица", [["id", "ID", "s"], ["name", "Наименование (организация, адрес, телефон)", "s"], ["short", "Краткое название", "s"], ["inn", "ИНН", "s"], ["okpo", "ОКПО", "s"], ["vat", "НДС, %", "n"], ["signer", "Подписант (должность, ФИО)", "s"], ["upd", "Изменено", "s"], ["by", "Кто изменил", "s"]]]};
 const LOG_SHEET = 'Журнал изменений';
 
 function out_(obj) {
@@ -105,12 +108,13 @@ function readAll_() {
   readSheet_('S').forEach(function (r) { if (r.resp) lists.resp.push(r.resp); if (r.pto) lists.pto.push(r.pto); });
   return {
     objects: readSheet_('O'), ks: readSheet_('K'), pays: readSheet_('P'), plan: readSheet_('L'),
-    gar: readSheet_('G'), notes: readSheet_('N'), kpi: readSheet_('Q'), lists: lists
+    gar: readSheet_('G'), notes: readSheet_('N'), kpi: readSheet_('Q'), firms: readSheet_('F'), lists: lists
   };
 }
 
 function rowIndex_(s) {
-  const n = s.sh.getLastRow(), col = s.hdr.indexOf('ID') + 1, map = {};
+  const idName = (s.cols.filter(function (c) { return c[0] === 'id'; })[0] || [0, 'ID'])[1];   // у «Настроек KPI» столбец ID называется «Параметр»
+  const n = s.sh.getLastRow(), col = s.hdr.indexOf(idName) + 1, map = {};
   if (n >= 2) s.sh.getRange(2, col, n - 1, 1).getValues().forEach(function (v, i) { if (v[0] !== '') map[String(v[0])] = i + 2; });
   return map;
 }
@@ -241,12 +245,13 @@ function reports_() { const m = {}; readSheet_('R').forEach(function (r) { m[r.i
 function stOf_(reps, type, obj, month) { const r = reps[repId_(type, obj, month)]; return r && r.status ? r.status : ST.draft; }
 
 /** '' — можно; иначе текст причины. statusOnly — меняются только поля движения КС. */
-function canEdit_(me, reps, type, obj, month, statusOnly) {
+function canEdit_(me, reps, type, obj, month, statusOnly, em) {
   if (!obj || !month) return 'не указан объект или месяц';
   if (me.role === 'admin') return '';
   if (me.role === 'dir') return 'только просмотр';
   if (!sees_(me, obj)) return 'объект «' + obj + '» не закреплён за вами';
   const st = stOf_(reps, type, obj, month);
+  if (em && type === 'fact') return '';
   if (st === ST.ok) return statusOnly ? '' : 'отчёт «' + (type === 'plan' ? 'План' : 'Факт') + ' ' + month + '» по объекту «' + obj + '» согласован — изменения закрыты';
   if (me.role === 'spec' && st === ST.sent) return statusOnly ? '' : 'отчёт отправлен на проверку — изменения закрыты до решения начальника ПТО';
   return '';
@@ -259,7 +264,9 @@ function filterRows_(me, t, rows, reps) {
   const ok = [], denied = [];
   if (t === 'K' || t === 'L') {
     const cur = {}; readSheet_(t).forEach(function (r) { cur[r.id] = r; });
+    const em = t === 'K' && editMode_(), stamp = Utilities.formatDate(new Date(), tz_(), 'dd.MM.yyyy HH:mm') + ' · ' + me.name;
     rows.forEach(function (r) {
+      if (t === 'K' && me.role === 'spec') delete r.fixed;   // отметку «исправлено» снимает только начальник ПТО
       const ex = cur[r.id];
       const obj = 'obj' in r ? r.obj : (ex && ex.obj), month = 'month' in r ? r.month : (ex && ex.month);
       let why = '';
@@ -269,8 +276,10 @@ function filterRows_(me, t, rows, reps) {
       } else {
         const changed = Object.keys(r).filter(function (f) { return f !== 'id' && f !== 'base' && f !== 'upd' && f !== 'by' && (!ex || !same_(ex[f], r[f])); });
         const statusOnly = !!ex && changed.every(function (f) { return STATUS_FIELDS.indexOf(f) >= 0; });
-        why = canEdit_(me, reps, 'fact', obj, month, statusOnly);
-        if (!why && ex && (ex.obj !== obj || ex.month !== month)) why = canEdit_(me, reps, 'fact', ex.obj, ex.month, false);
+        why = canEdit_(me, reps, 'fact', obj, month, statusOnly, em);
+        if (!why && ex && (ex.obj !== obj || ex.month !== month)) why = canEdit_(me, reps, 'fact', ex.obj, ex.month, false, em);
+        // правка суммы, номера, даты или строк КС-2 в согласованном отчёте — отметка для начальника ПТО
+        if (!why && !statusOnly && (stOf_(reps, 'fact', obj, month) === ST.ok || (ex && stOf_(reps, 'fact', ex.obj, ex.month) === ST.ok))) r.fixed = stamp;
       }
       if (why) denied.push({ id: r.id, why: why }); else ok.push(r);
     });
@@ -293,10 +302,10 @@ function filterRows_(me, t, rows, reps) {
 function filterDel_(me, t, ids, reps) {
   if (t !== 'K' && t !== 'L') return (me.role === 'head' || me.role === 'admin') ? { ok: ids, denied: [] } : { ok: [], denied: ids.map(function (id) { return { id: id, why: 'недостаточно прав' }; }) };
   const cur = {}; readSheet_(t).forEach(function (r) { cur[r.id] = r; });
-  const ok = [], denied = [];
+  const ok = [], denied = [], em = t === 'K' && editMode_();
   ids.forEach(function (id) {
     const ex = cur[id]; if (!ex) return;
-    const why = canEdit_(me, reps, t === 'L' ? 'plan' : 'fact', ex.obj, ex.month, false);
+    const why = canEdit_(me, reps, t === 'L' ? 'plan' : 'fact', ex.obj, ex.month, false, em);
     if (why) denied.push({ id: id, why: why }); else ok.push(id);
   });
   return { ok: ok, denied: denied };
@@ -392,11 +401,12 @@ function dataFor_(me) {
     d.objects = d.objects.filter(function (o) { return sees_(me, o.name); });
     d.ks = d.ks.filter(mine); d.plan = d.plan.filter(mine); d.reports = d.reports.filter(mine);
     d.pays = []; d.gar = [];
-    d.kpi = d.kpi.filter(function (r) { return String(r.id).indexOf('w:') === 0; });   // веса — да, деньги и доли — нет
+    d.kpi = d.kpi.filter(function (r) { return String(r.id).indexOf('w:') === 0 || String(r.id).indexOf('edit:') === 0; });   // веса и режим исправлений — да, деньги и доли — нет
   } else if (me.role === 'dir') {
     d.ks = d.ks.filter(function (k) { return stOf_(reps, 'fact', k.obj, k.month) === ST.ok; });
     d.plan = d.plan.filter(function (p) { return stOf_(reps, 'plan', p.obj, p.month) === ST.ok; });
-    d.reports = []; d.kpi = [];
+    d.reports = []; d.kpi = []; d.firms = [];
+    d.ks.forEach(function (k) { delete k.lines; delete k.fixed; });
     d.ks.forEach(function (k) { delete k.by; }); d.plan.forEach(function (p) { delete p.by; });
   }
   return d;
@@ -477,7 +487,7 @@ function rpData_(me, days) {
     const rs = (reps[p] || []).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.shift < b.shift ? -1 : 1); });
     const dd = rpDue_(c);
     const works = (c.works || []).map(function (w) {
-      return { c: w.c, n: w.n, u: w.u || '', t: +w.t || 0, done: rpCum_(c, rs, w.c, today),
+      return { c: w.c, n: w.n, u: w.u || '', t: +w.t || 0, p: +w.p || null, done: rpCum_(c, rs, w.c, today),
         d7: rs.filter(function (r) { return r.date > rpAddDays_(today, -8); }).reduce(function (a, r) { const x = r.works && r.works[w.c]; return a + (typeof x === 'number' ? x : 0); }, 0) };
     });
     const prog = works.filter(function (w) { return w.t > 0; });
@@ -795,10 +805,24 @@ function compute(data, opt) {
   const H10 = tot(r => r.BP), H11 = tot(r => r.BQ);
   const H12 = sumKs(ksMonths(ks, yStart, B20 < year + "-12" ? B20 : year + "-12"));
   const H13 = H11 === 0 ? 1 : H12 / H11;
-  const H14 = H12 + tot(r => r.BO) * H13;
   const live = (data.objects || []).filter(o => o.status !== "Завершён");
   const portf = live.filter(o => num(o.sum) > 0).reduce((a, o) => a + +o.sum, 0);
   const E17 = rows.filter(r => r.status !== "Завершён" && r.sum > 0).reduce((a, r) => a + r.remainEnd, 0);
+  // Прогноз года. Месяцы с планом — план × темп (как в Excel). Месяцы года, на которые план ещё не внесён
+  // (план сдаётся на месяц вперёд), — средний факт трёх последних закрытых месяцев. Незакрытый текущий месяц — не меньше
+  // уже внесённого факта. Всё будущее — не больше остатка по договорам.
+  const capPlan = m => (data.objects || []).reduce((acc, o) => {   // План_расч: план, урезанный остатком договора нарастающим итогом
+    const c = cap(o, yStart); const a = planOf(o.name, yStart, addM(m, -1)), b = a + planOf(o.name, m, m);
+    return acc + (Math.min(b, c) - Math.min(a, c));
+  }, 0);
+  const curMo = ym(today), planTot = m => (data.plan || []).filter(p => p.month === m).reduce((s, p) => s + num(p.sum), 0);
+  const rrM = [1, 2, 3].map(i => addM(curMo, -i)).filter(m => m >= BASE);
+  const RR = rrM.length ? rrM.reduce((a, m) => a + sumKs(ks.filter(k => k.month === m)), 0) / rrM.length : 0;
+  const yMonths = []; for (let i = 1; i <= 12; i++) yMonths.push(year + "-" + String(i).padStart(2, "0"));
+  const noPlan = yMonths.filter(m => m > B20 && m >= curMo && !planTot(m));
+  const curExtra = (B20 === curMo && +curMo.slice(0, 4) === year) ? Math.max(0, (planTot(curMo) ? capPlan(curMo) * H13 : RR) - sumKs(ks.filter(k => k.month === curMo))) : 0;
+  const futRaw = tot(r => r.BO) * H13 + noPlan.length * RR + curExtra;
+  const H14 = H12 + Math.min(futRaw, Math.max(0, E17));
 
   // деньги
   const AO = k => k.expect ? (k.expect > today ? k.expect : today) : "";
@@ -822,6 +846,7 @@ function compute(data, opt) {
     ksCount: pKs.length, objPlanned: rows.filter(r => r.planP > 0).length, objLive: live.length,
     planY: E10, factY: E11, pctY: E10 ? E11 / E10 : 0, devY: E11 - E10,
     planYear: H10, rate: H13, forecast: H14, gap: H14 - H10, forecastPct: H10 ? H14 / H10 : 0,
+    fcRunRate: RR, fcNoPlan: noPlan, planLast: yMonths.filter(m => planTot(m)).pop() || "",
     st: {
       review: { sum: sumKs(st("review")), n: st("review").length },
       agreed: { sum: sumKs(st("agreed")), n: st("agreed").length },
@@ -858,16 +883,16 @@ function compute(data, opt) {
   // графики: 12 месяцев года
   const cut = ym(B11 < eom(B20) ? B11 : eom(B20));
   const months = []; for (let i = 0; i < 12; i++) months.push(year + "-" + String(i + 1).padStart(2, "0"));
-  const capPlan = m => (data.objects || []).reduce((acc, o) => {   // План_расч: план, урезанный остатком договора нарастающим итогом
-    const c = cap(o, yStart); const a = planOf(o.name, yStart, addM(m, -1)), b = a + planOf(o.name, m, m);
-    return acc + (Math.min(b, c) - Math.min(a, c));
-  }, 0);
-  let cp = 0, cf = 0;
+  let cp = 0, cf = 0, fa0 = 0, fut = 0;
+  const futCap = Math.max(0, E17), addF = x => { const v = Math.max(0, Math.min(x, futCap - fut)); fut += v; return v; };
   out.chartMonths = months.map(m => {
     const pl = capPlan(m), fa = m <= cut ? sumKs(ks.filter(k => k.month === m)) : null;
     cp += pl;
-    const fc = m <= cut ? (cf += fa) : (cf += pl * H13);
-    return { m, label: MNs[+m.slice(5) - 1], plan: pl, fact: fa, cumPlan: cp, cumFact: m <= cut ? fc : null, cumFc: m >= cut ? fc : null };
+    let fc;
+    if (m <= cut) { fa0 += fa; cf += fa; if (m === cut && m === curMo && m === B20) cf += addF(curExtra); }
+    else cf += addF(planTot(m) ? pl * H13 : (m >= curMo ? RR : 0));
+    fc = cf;
+    return { m, label: MNs[+m.slice(5) - 1], plan: pl, fact: fa, cumPlan: cp, cumFact: m <= cut ? fa0 : null, cumFc: m >= cut ? fc : null };
   });
   // ожидаемые поступления: просрочено + 6 месяцев вперёд
   const exp = [{ label: "Просрочено", sum: H7, over: true }];

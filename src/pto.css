@@ -218,3 +218,24 @@ input:disabled,select:disabled,textarea:disabled,.seg button:disabled{opacity:.5
 .kpi-st{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin:10px 0 6px}
 nav.tabs{overflow-x:auto;scrollbar-width:none}nav.tabs::-webkit-scrollbar{display:none}nav.tabs button{flex:1 0 auto;white-space:nowrap;padding-inline:10px}
 .kpi-n b{font-family:var(--f-ui)}
+
+/* КС-2: строки и объёмы */
+@media (min-width:561px){dialog.ed.wide{width:min(1180px,calc(100vw - 24px))}}
+#k2 .eb>*{flex-shrink:0}
+.k2box{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+table.k2t{width:100%;min-width:920px;border-collapse:collapse;font-size:13px}
+table.k2t th{font-size:12px;font-weight:600;color:var(--muted);text-align:left;padding:4px;white-space:nowrap}
+table.k2t td{padding:2px;border-top:1px solid var(--line);vertical-align:middle}
+table.k2t td input{width:100%;min-height:36px;padding:4px 6px;font:inherit;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--fg)}
+table.k2t td.pos{width:70px}table.k2t td.rate{width:90px}table.k2t td.u{width:80px}table.k2t td.q{width:90px}table.k2t td.p{width:110px}
+table.k2t td.num{text-align:right;font-family:var(--f-num);white-space:nowrap;padding:0 6px}
+table.k2t td.rpq{color:var(--muted);font-size:12px}table.k2t td.rpq.bad{color:var(--bad);font-weight:600}
+.pill.fx{background:var(--warn);color:#000}
+@media (max-width:760px){
+  table.k2t,table.k2t tbody{display:block;min-width:0;width:100%}table.k2t thead{display:none}
+  table.k2t td input{min-width:0}
+  table.k2t tr{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:8px 0;border-top:1px solid var(--line)}
+  table.k2t td{border:0;padding:0;width:auto!important}table.k2t td:first-child{display:none}
+  table.k2t td.nm{grid-column:1 / span 3;order:-1}table.k2t td.num{text-align:left;padding:4px 2px;white-space:normal}
+  table.k2t td.sum::before{content:"Стоимость: ";color:var(--muted);font-family:var(--f-ui,inherit)}table.k2t td.rpq:not(:empty)::before{content:"По рапортам: "}
+}

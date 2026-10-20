@@ -193,10 +193,24 @@ function compute(data, opt) {
   const H10 = tot(r => r.BP), H11 = tot(r => r.BQ);
   const H12 = sumKs(ksMonths(ks, yStart, B20 < year + "-12" ? B20 : year + "-12"));
   const H13 = H11 === 0 ? 1 : H12 / H11;
-  const H14 = H12 + tot(r => r.BO) * H13;
   const live = (data.objects || []).filter(o => o.status !== "Завершён");
   const portf = live.filter(o => num(o.sum) > 0).reduce((a, o) => a + +o.sum, 0);
   const E17 = rows.filter(r => r.status !== "Завершён" && r.sum > 0).reduce((a, r) => a + r.remainEnd, 0);
+  // Прогноз года. Месяцы с планом — план × темп (как в Excel). Месяцы года, на которые план ещё не внесён
+  // (план сдаётся на месяц вперёд), — средний факт трёх последних закрытых месяцев. Незакрытый текущий месяц — не меньше
+  // уже внесённого факта. Всё будущее — не больше остатка по договорам.
+  const capPlan = m => (data.objects || []).reduce((acc, o) => {   // План_расч: план, урезанный остатком договора нарастающим итогом
+    const c = cap(o, yStart); const a = planOf(o.name, yStart, addM(m, -1)), b = a + planOf(o.name, m, m);
+    return acc + (Math.min(b, c) - Math.min(a, c));
+  }, 0);
+  const curMo = ym(today), planTot = m => (data.plan || []).filter(p => p.month === m).reduce((s, p) => s + num(p.sum), 0);
+  const rrM = [1, 2, 3].map(i => addM(curMo, -i)).filter(m => m >= BASE);
+  const RR = rrM.length ? rrM.reduce((a, m) => a + sumKs(ks.filter(k => k.month === m)), 0) / rrM.length : 0;
+  const yMonths = []; for (let i = 1; i <= 12; i++) yMonths.push(year + "-" + String(i).padStart(2, "0"));
+  const noPlan = yMonths.filter(m => m > B20 && m >= curMo && !planTot(m));
+  const curExtra = (B20 === curMo && +curMo.slice(0, 4) === year) ? Math.max(0, (planTot(curMo) ? capPlan(curMo) * H13 : RR) - sumKs(ks.filter(k => k.month === curMo))) : 0;
+  const futRaw = tot(r => r.BO) * H13 + noPlan.length * RR + curExtra;
+  const H14 = H12 + Math.min(futRaw, Math.max(0, E17));
 
   // деньги
   const AO = k => k.expect ? (k.expect > today ? k.expect : today) : "";
@@ -220,6 +234,7 @@ function compute(data, opt) {
     ksCount: pKs.length, objPlanned: rows.filter(r => r.planP > 0).length, objLive: live.length,
     planY: E10, factY: E11, pctY: E10 ? E11 / E10 : 0, devY: E11 - E10,
     planYear: H10, rate: H13, forecast: H14, gap: H14 - H10, forecastPct: H10 ? H14 / H10 : 0,
+    fcRunRate: RR, fcNoPlan: noPlan, planLast: yMonths.filter(m => planTot(m)).pop() || "",
     st: {
       review: { sum: sumKs(st("review")), n: st("review").length },
       agreed: { sum: sumKs(st("agreed")), n: st("agreed").length },
@@ -256,16 +271,16 @@ function compute(data, opt) {
   // графики: 12 месяцев года
   const cut = ym(B11 < eom(B20) ? B11 : eom(B20));
   const months = []; for (let i = 0; i < 12; i++) months.push(year + "-" + String(i + 1).padStart(2, "0"));
-  const capPlan = m => (data.objects || []).reduce((acc, o) => {   // План_расч: план, урезанный остатком договора нарастающим итогом
-    const c = cap(o, yStart); const a = planOf(o.name, yStart, addM(m, -1)), b = a + planOf(o.name, m, m);
-    return acc + (Math.min(b, c) - Math.min(a, c));
-  }, 0);
-  let cp = 0, cf = 0;
+  let cp = 0, cf = 0, fa0 = 0, fut = 0;
+  const futCap = Math.max(0, E17), addF = x => { const v = Math.max(0, Math.min(x, futCap - fut)); fut += v; return v; };
   out.chartMonths = months.map(m => {
     const pl = capPlan(m), fa = m <= cut ? sumKs(ks.filter(k => k.month === m)) : null;
     cp += pl;
-    const fc = m <= cut ? (cf += fa) : (cf += pl * H13);
-    return { m, label: MNs[+m.slice(5) - 1], plan: pl, fact: fa, cumPlan: cp, cumFact: m <= cut ? fc : null, cumFc: m >= cut ? fc : null };
+    let fc;
+    if (m <= cut) { fa0 += fa; cf += fa; if (m === cut && m === curMo && m === B20) cf += addF(curExtra); }
+    else cf += addF(planTot(m) ? pl * H13 : (m >= curMo ? RR : 0));
+    fc = cf;
+    return { m, label: MNs[+m.slice(5) - 1], plan: pl, fact: fa, cumPlan: cp, cumFact: m <= cut ? fa0 : null, cumFc: m >= cut ? fc : null };
   });
   // ожидаемые поступления: просрочено + 6 месяцев вперёд
   const exp = [{ label: "Просрочено", sum: H7, over: true }];

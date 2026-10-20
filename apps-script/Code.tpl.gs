@@ -19,7 +19,10 @@ const ROLE_NAMES = { spec: 'Специалист ПТО', head: 'Начальн�
 const ST = { draft: 'Черновик', sent: 'На проверке', ret: 'На доработке', ok: 'Согласован' };
 const TYPE = { plan: 'План', fact: 'Факт' };
 // Поля КС, которые можно менять и после согласования отчёта (движение КС: подписание, оплата)
-const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note', 'remarks', 'dsNeed', 'dsDate', 'letterDate'];
+const STATUS_FIELDS = ['agr', 'sign', 'pay', 'payDate', 'signDate', 'note', 'remarks', 'dsNeed', 'dsDate', 'letterDate', 'fixed'];
+// Режим исправлений КС (лист «Настройки KPI», параметр edit:ks = 1): специалисты и начальник ПТО правят любые КС,
+// в том числе в согласованных отчётах. Отчёт остаётся согласованным, правка — в журнале и с отметкой «исправлено после согласования».
+function editMode_() { const r = readSheet_('Q').filter(function (x) { return x.id === 'edit:ks'; }).pop(); return !!r && String(r.value) === '1'; }
 
 // Листы и столбцы базы (порядок столбцов в таблице можно менять — ищутся по заголовку).
 const SCHEMA = {{SCHEMA}};
@@ -105,12 +108,13 @@ function readAll_() {
   readSheet_('S').forEach(function (r) { if (r.resp) lists.resp.push(r.resp); if (r.pto) lists.pto.push(r.pto); });
   return {
     objects: readSheet_('O'), ks: readSheet_('K'), pays: readSheet_('P'), plan: readSheet_('L'),
-    gar: readSheet_('G'), notes: readSheet_('N'), kpi: readSheet_('Q'), lists: lists
+    gar: readSheet_('G'), notes: readSheet_('N'), kpi: readSheet_('Q'), firms: readSheet_('F'), lists: lists
   };
 }
 
 function rowIndex_(s) {
-  const n = s.sh.getLastRow(), col = s.hdr.indexOf('ID') + 1, map = {};
+  const idName = (s.cols.filter(function (c) { return c[0] === 'id'; })[0] || [0, 'ID'])[1];   // у «Настроек KPI» столбец ID называется «Параметр»
+  const n = s.sh.getLastRow(), col = s.hdr.indexOf(idName) + 1, map = {};
   if (n >= 2) s.sh.getRange(2, col, n - 1, 1).getValues().forEach(function (v, i) { if (v[0] !== '') map[String(v[0])] = i + 2; });
   return map;
 }
@@ -241,12 +245,13 @@ function reports_() { const m = {}; readSheet_('R').forEach(function (r) { m[r.i
 function stOf_(reps, type, obj, month) { const r = reps[repId_(type, obj, month)]; return r && r.status ? r.status : ST.draft; }
 
 /** '' — можно; иначе текст причины. statusOnly — меняются только поля движения КС. */
-function canEdit_(me, reps, type, obj, month, statusOnly) {
+function canEdit_(me, reps, type, obj, month, statusOnly, em) {
   if (!obj || !month) return 'не указан объект или месяц';
   if (me.role === 'admin') return '';
   if (me.role === 'dir') return 'только просмотр';
   if (!sees_(me, obj)) return 'объект «' + obj + '» не закреплён за вами';
   const st = stOf_(reps, type, obj, month);
+  if (em && type === 'fact') return '';
   if (st === ST.ok) return statusOnly ? '' : 'отчёт «' + (type === 'plan' ? 'План' : 'Факт') + ' ' + month + '» по объекту «' + obj + '» согласован — изменения закрыты';
   if (me.role === 'spec' && st === ST.sent) return statusOnly ? '' : 'отчёт отправлен на проверку — изменения закрыты до решения начальника ПТО';
   return '';
@@ -259,7 +264,9 @@ function filterRows_(me, t, rows, reps) {
   const ok = [], denied = [];
   if (t === 'K' || t === 'L') {
     const cur = {}; readSheet_(t).forEach(function (r) { cur[r.id] = r; });
+    const em = t === 'K' && editMode_(), stamp = Utilities.formatDate(new Date(), tz_(), 'dd.MM.yyyy HH:mm') + ' · ' + me.name;
     rows.forEach(function (r) {
+      if (t === 'K' && me.role === 'spec') delete r.fixed;   // отметку «исправлено» снимает только начальник ПТО
       const ex = cur[r.id];
       const obj = 'obj' in r ? r.obj : (ex && ex.obj), month = 'month' in r ? r.month : (ex && ex.month);
       let why = '';
@@ -269,8 +276,10 @@ function filterRows_(me, t, rows, reps) {
       } else {
         const changed = Object.keys(r).filter(function (f) { return f !== 'id' && f !== 'base' && f !== 'upd' && f !== 'by' && (!ex || !same_(ex[f], r[f])); });
         const statusOnly = !!ex && changed.every(function (f) { return STATUS_FIELDS.indexOf(f) >= 0; });
-        why = canEdit_(me, reps, 'fact', obj, month, statusOnly);
-        if (!why && ex && (ex.obj !== obj || ex.month !== month)) why = canEdit_(me, reps, 'fact', ex.obj, ex.month, false);
+        why = canEdit_(me, reps, 'fact', obj, month, statusOnly, em);
+        if (!why && ex && (ex.obj !== obj || ex.month !== month)) why = canEdit_(me, reps, 'fact', ex.obj, ex.month, false, em);
+        // правка суммы, номера, даты или строк КС-2 в согласованном отчёте — отметка для начальника ПТО
+        if (!why && !statusOnly && (stOf_(reps, 'fact', obj, month) === ST.ok || (ex && stOf_(reps, 'fact', ex.obj, ex.month) === ST.ok))) r.fixed = stamp;
       }
       if (why) denied.push({ id: r.id, why: why }); else ok.push(r);
     });
@@ -293,10 +302,10 @@ function filterRows_(me, t, rows, reps) {
 function filterDel_(me, t, ids, reps) {
   if (t !== 'K' && t !== 'L') return (me.role === 'head' || me.role === 'admin') ? { ok: ids, denied: [] } : { ok: [], denied: ids.map(function (id) { return { id: id, why: 'недостаточно прав' }; }) };
   const cur = {}; readSheet_(t).forEach(function (r) { cur[r.id] = r; });
-  const ok = [], denied = [];
+  const ok = [], denied = [], em = t === 'K' && editMode_();
   ids.forEach(function (id) {
     const ex = cur[id]; if (!ex) return;
-    const why = canEdit_(me, reps, t === 'L' ? 'plan' : 'fact', ex.obj, ex.month, false);
+    const why = canEdit_(me, reps, t === 'L' ? 'plan' : 'fact', ex.obj, ex.month, false, em);
     if (why) denied.push({ id: id, why: why }); else ok.push(id);
   });
   return { ok: ok, denied: denied };
@@ -392,11 +401,12 @@ function dataFor_(me) {
     d.objects = d.objects.filter(function (o) { return sees_(me, o.name); });
     d.ks = d.ks.filter(mine); d.plan = d.plan.filter(mine); d.reports = d.reports.filter(mine);
     d.pays = []; d.gar = [];
-    d.kpi = d.kpi.filter(function (r) { return String(r.id).indexOf('w:') === 0; });   // веса — да, деньги и доли — нет
+    d.kpi = d.kpi.filter(function (r) { return String(r.id).indexOf('w:') === 0 || String(r.id).indexOf('edit:') === 0; });   // веса и режим исправлений — да, деньги и доли — нет
   } else if (me.role === 'dir') {
     d.ks = d.ks.filter(function (k) { return stOf_(reps, 'fact', k.obj, k.month) === ST.ok; });
     d.plan = d.plan.filter(function (p) { return stOf_(reps, 'plan', p.obj, p.month) === ST.ok; });
-    d.reports = []; d.kpi = [];
+    d.reports = []; d.kpi = []; d.firms = [];
+    d.ks.forEach(function (k) { delete k.lines; delete k.fixed; });
     d.ks.forEach(function (k) { delete k.by; }); d.plan.forEach(function (p) { delete p.by; });
   }
   return d;
@@ -477,7 +487,7 @@ function rpData_(me, days) {
     const rs = (reps[p] || []).sort(function (a, b) { return a.date < b.date ? -1 : a.date > b.date ? 1 : (a.shift < b.shift ? -1 : 1); });
     const dd = rpDue_(c);
     const works = (c.works || []).map(function (w) {
-      return { c: w.c, n: w.n, u: w.u || '', t: +w.t || 0, done: rpCum_(c, rs, w.c, today),
+      return { c: w.c, n: w.n, u: w.u || '', t: +w.t || 0, p: +w.p || null, done: rpCum_(c, rs, w.c, today),
         d7: rs.filter(function (r) { return r.date > rpAddDays_(today, -8); }).reduce(function (a, r) { const x = r.works && r.works[w.c]; return a + (typeof x === 'number' ? x : 0); }, 0) };
     });
     const prog = works.filter(function (w) { return w.t > 0; });

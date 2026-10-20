@@ -109,11 +109,12 @@ html,body{margin:0}
         <label class="f">Объект<select id="ks-obj"></select></label>
         <label class="f">Статус<select id="ks-st">
           <option value="">Все КС</option><option value="open">Все неоплаченные</option><option value="review">На согласовании</option><option value="agreed">Согласована, не подписана</option>
-          <option value="signed">Подписана, ждёт оплаты</option><option value="paid">Оплачена</option><option value="overdue">Оплата просрочена</option><option value="ctrl">Ошибки заполнения</option></select></label>
+          <option value="signed">Подписана, ждёт оплаты</option><option value="paid">Оплачена</option><option value="overdue">Оплата просрочена</option><option value="ctrl">Ошибки заполнения</option><option value="fixed">Исправлены после согласования</option></select></label>
         <label class="f">Отчётный месяц<select id="ks-m"></select></label>
         <button type="button" class="btn primary" id="ks-add">+ Новая КС</button>
       </div>
       <div class="sumline" id="ks-sum"></div>
+      <div class="lockbar" id="ks-em" hidden style="margin-top:8px"></div>
     </section>
     <section class="card"><div class="list" id="ks-out"><div class="empty">Загрузка…</div></div>
       <button type="button" class="btn small" id="ks-more" hidden style="margin-top:8px">Показать ещё</button></section>
@@ -180,6 +181,13 @@ html,body{margin:0}
 
   <!-- ЕЩЁ -->
   <div id="v-more" hidden>
+    <section class="card" id="more-edit" hidden><h2>Режим исправлений КС</h2>
+      <div class="sumline" id="em-txt"></div>
+      <div style="margin-top:8px"><button type="button" class="btn" id="em-btn"></button></div></section>
+    <section class="card" id="more-firms" hidden><h2>Юрлица — подрядчик в КС-2 и КС-3</h2>
+      <div class="sumline">Наши юрлица, от которых подписываются акты. В карточке объекта выберите, какое юрлицо работает по договору. НДС юрлица добавляется к сумме строк КС-2.</div>
+      <div class="list" id="fm-out" style="margin-top:8px"></div>
+      <div style="margin-top:8px"><button type="button" class="btn primary" id="fm-add">+ Юрлицо</button></div></section>
     <section class="card" id="more-note"><h2>Главное за месяц — комментарий начальника ПТО</h2>
       <div class="row"><label class="f" style="flex:0 1 220px">Месяц<select id="nt-m"></select></label></div>
       <label class="f" style="margin-top:8px">Текст (выводится руководителю на «Сводке»)<textarea id="nt-t" rows="5" placeholder="Что главное за месяц: срывы, риски, договорённости с заказчиками…"></textarea></label>
@@ -190,7 +198,8 @@ html,body{margin:0}
       <div style="margin-top:8px"><button type="button" class="btn" id="ls-save">Сохранить списки</button></div></section>
     <section class="card"><h2>Как заполнять</h2>
       <ol style="margin:0;padding-left:20px;line-height:1.5">
-        <li><b>Порядок согласования.</b> Специалист вносит данные по своим объектам и на вкладке «Отчёты» нажимает «Отправить на проверку». Начальник ПТО согласует или возвращает на доработку с комментарием. Руководитель видит в сводке только согласованные отчёты. После согласования суммы и реквизиты КС закрыты, отмечать подписание и оплату можно и дальше.</li>
+        <li><b>Порядок согласования.</b> Специалист вносит данные по своим объектам и на вкладке «Отчёты» нажимает «Отправить на проверку». Начальник ПТО согласует или возвращает на доработку с комментарием. Руководитель видит в сводке только согласованные отчёты. После согласования суммы и реквизиты КС закрыты, отмечать подписание и оплату можно и дальше (кроме времени, когда администратор включил режим исправлений).</li>
+        <li><b>КС-2 по строкам.</b> В КС нажмите «📋 КС-2: работы и объёмы · печать»: работы, единицы, количество, цена — сумма посчитается сама, с НДС юрлица. Оттуда же печать КС-2 и КС-3.</li>
         <li><b>Раз в месяц</b> — вкладка «План»: план выполнения по каждому объекту на месяц.</li>
         <li><b>По каждой КС</b> — «Журнал КС» → «+ Новая КС»: дата, объект, № КС, сумма КС-2. Отчётный месяц подставится по дате сам; «К оплате КС-3» — если пусто, считается по % удержания договора.</li>
         <li><b>По мере движения КС</b> открывайте ту же КС и меняйте статусы: согласование → подписание → оплата, после оплаты — дата оплаты. Новую строку для той же КС не заводите — будет двойной счёт.</li>
@@ -217,6 +226,13 @@ html,body{margin:0}
   <div class="eh"><h3 id="rd-t"></h3><button type="button" id="rd-x" aria-label="Закрыть">×</button></div>
   <div class="eb" id="rd-b"></div>
   <div class="ef" id="rd-f"></div>
+</div></dialog>
+
+<dialog class="ed wide" id="k2"><div class="rdf">
+  <div class="eh"><h3 id="k2-t">КС-2</h3><button type="button" id="k2-x" aria-label="Закрыть">×</button></div>
+  <div class="eb" id="k2-b"></div>
+  <div class="ef"><button type="button" class="btn" id="k2-p2">Печать КС-2</button><button type="button" class="btn" id="k2-p3">Печать КС-3</button><span class="grow"></span>
+    <button type="button" class="btn" id="k2-c">Отмена</button><button type="button" class="btn primary" id="k2-ok">Готово</button></div>
 </div></dialog>
 
 <script>{{CALC}}</script>
@@ -250,7 +266,7 @@ function applyRole(){
   $("who-h").textContent=(ME.role==="admin"?"Администратор":ME.name+" · "+ROLE_RU[ME.role])+(ME.role==="spec"?" · объектов: "+(ME.objects||[]).length:"");
   const tabs=tabsFor();ALLTABS.forEach(x=>{$("tab-"+x).hidden=!tabs.includes(x);});
   $("logout").hidden=!viaLogin;document.querySelector(".tabs").hidden=false;$("login").hidden=true;
-  $("ob-add").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();
+  $("ob-add").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();$("more-firms").hidden=!isHead();$("more-edit").hidden=!isAdmin();
   if(!tabs.includes(view))show(tabs[0]);
   else ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==view;$("tab-"+x).setAttribute("aria-selected",String(x===view));});
 }
@@ -265,15 +281,15 @@ async function load(quiet){
   if(!db){status("Откройте страницу по своей ссылке (её выдаёт администратор).","bad");return;}
   if(!db.k){showLogin();return;}
   const CK="pto-cache-"+db.k.slice(0,8);
-  if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;RAW.kpi=RAW.kpi||[];RAW.reports=RAW.reports||[];ME=c.me;applyRole();render();}}catch(e){}}
+  if(!RAW){try{const c=JSON.parse(U.sget(CK)||"null");if(c&&c.me){RAW=c.data;RAW.kpi=RAW.kpi||[];RAW.firms=RAW.firms||[];RAW.reports=RAW.reports||[];ME=c.me;applyRole();render();}}catch(e){}}
   if(!quiet)status("Загрузка базы…");
   try{const j=await U.get(db,{a:"all"});
     if(j.role==="dir"){status("Это ссылка руководителя — она открывает сводку.","bad");location.replace("director.html"+location.hash);return;}
-    status("");ME=j.me;RAW=j.data;RAW.reports=RAW.reports||[];RAW.kpi=RAW.kpi||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
+    status("");ME=j.me;RAW=j.data;RAW.srv6=Array.isArray(RAW.firms);RAW.reports=RAW.reports||[];RAW.kpi=RAW.kpi||[];RAW.firms=RAW.firms||[];U.sset(CK,JSON.stringify({me:ME,data:RAW}));applyRole();$("foot").textContent="База загружена в "+new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})+" · КС в журнале: "+RAW.ks.length;render();}
   catch(e){if(/ключ/.test(e.message||"")&&viaLogin){db.k="";U.sset("pto-db",JSON.stringify(db));showLogin("Сеанс завершён (пароль сброшен или доступ отключён). Войдите снова.");return;}
     status("Не удалось загрузить базу: "+(e.message||"нет связи")+(RAW?" — показана сохранённая копия":""),"bad");}
 }
-const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects",Q:"kpi"};
+const TBL={K:"ks",P:"pays",L:"plan",G:"gar",N:"notes",O:"objects",Q:"kpi",F:"firms"};
 function cacheSave(){U.sset("pto-cache-"+db.k.slice(0,8),JSON.stringify({me:ME,data:RAW}));}
 async function save(t,rows,extra){
   const j=await U.post(db,Object.assign({a:"save",t,rows},extra||{}));
@@ -298,6 +314,7 @@ function lockInfo(type,obj,month){
   if(!obj||!month)return {full:true,status:true,st:RS.draft};
   const st=repOf(type,obj,month).status||RS.draft;
   if(ME.role==="admin")return {full:true,status:true,st};
+  if(type==="fact"&&editMode()&&(st===RS.ok||st===RS.sent))return {full:true,status:true,st,em:true,why:"Режим исправлений: КС можно править и после согласования. Правка попадёт в журнал изменений, а начальник ПТО увидит отметку «исправлено после согласования»."};
   if(st===RS.ok)return {full:false,status:type==="fact",st,why:type==="fact"?"Отчёт за этот месяц согласован — сумма и реквизиты КС закрыты. Можно отмечать согласование, подписание, оплату, замечания, ДС и письма заказчику.":"План согласован — изменения закрыты."};
   if(ME.role==="spec"&&st===RS.sent)return {full:false,status:false,st,why:"Отчёт на проверке у начальника ПТО — изменения закрыты до её решения."};
   return {full:true,status:true,st};
@@ -389,6 +406,7 @@ function ksEditor(k,preset){
   if(isNew&&preset){k.obj=preset.obj;k.month=preset.month;if(preset.month!==U.todayISO().slice(0,7))k.date=PTO.eom(preset.month);}
   const KL=isNew?{full:true,status:true}:lockInfo("fact",k.obj,k.month);
   let monthTouched=!!k.month&&k.month!==(k.date||"").slice(0,7);
+  const K2S={lines:parseLines(k.lines),docNum:k.docNum||"",pFrom:k.pFrom||"",pTo:k.pTo||""};
   openEd({title:isNew?"Новая КС":"КС: "+(k.num||k.obj),row:k,isNew,
     meta:isNew?"":"Изменено: "+(k.upd?new Date(k.upd).toLocaleString("ru-RU"):"при переносе из Excel")+(k.by?" · "+k.by:""),
     layout:[
@@ -409,6 +427,20 @@ function ksEditor(k,preset){
       ED.inp.month.addEventListener("change",()=>{monthTouched=val("month")!==(val("date")||"").slice(0,7);});
       if(!KL.full){Object.keys(ED.inp).forEach(f=>{if(!(KL.status&&STATUS_FIELDS.includes(f)))disableInp(ED.inp[f]);});
         ED.lockBox.textContent="🔒 "+KL.why;ED.lockBox.hidden=false;if(!KL.status)$("ed-s").hidden=true;$("ed-del").hidden=true;}
+      else if(KL.em){ED.lockBox.textContent="✎ "+KL.why;ED.lockBox.hidden=false;}
+      // КС-2: работы и объёмы
+      const box=el("div","k2box"),bt=el("button","btn","📋 КС-2: работы и объёмы · печать");if(RAW.srv6===false){bt.disabled=true;bt.title="Нужно обновить скрипт базы (версия 6)";}bt.type="button";const sm=el("span","hint");box.appendChild(bt);box.appendChild(sm);
+      const ks2Row=ED.inp.ks2.closest(".row");ks2Row.parentNode.insertBefore(box,ks2Row.nextSibling);
+      const sync=()=>{const o=RAW.objects.find(x=>x.name===val("obj")),f=firmOf(o);
+        if(K2S.lines.length){const T=k2Tot(K2S.lines,f?f.vat:0);ED.inp.ks2.value=U.rub(T.all);ED.inp.ks2.disabled=true;sm.textContent=" строк: "+K2S.lines.length+" · итого "+U.rub(T.net)+(T.vat?" + НДС "+T.vat+"%":"")+" = "+U.rub(T.all)+" руб";}
+        else{sm.textContent=" строки КС-2 не заполнены — сумма вводится вручную";if(KL.full)ED.inp.ks2.disabled=false;}};
+      bt.onclick=()=>{const kk=collectKs();if(!kk.obj){setWarn("Сначала выберите объект",true);return;}
+        openK2({k:kk,lines:K2S.lines,docNum:K2S.docNum,pFrom:K2S.pFrom,pTo:K2S.pTo},!KL.full,r=>{const was=val("ks2");Object.assign(K2S,r);sync();
+          if(was!==val("ks2")&&val("ks3")!==null){ED.inp.ks3.value="";status("Сумма КС-2 изменилась — «К оплате КС-3» посчитается заново по % удержания (или впишите вручную)","okb",5000);}ED.calc();});};
+      ED.inp.obj.addEventListener("change",sync);sync();
+      if(k.fixed){const fx=el("div","warnbox","✎ Исправлено после согласования: "+k.fixed+". Сумму видит генеральный уже исправленной.");
+        if(isHead()){const cb=el("button","btn small","Проверено — снять отметку");cb.type="button";cb.style.marginLeft="8px";cb.onclick=async()=>{cb.disabled=true;try{await save("K",[{id:k.id,fixed:"",base:k.upd||""}]);$("ed").close();status("Отметка снята","okb",2500);render();}catch(e){setWarn("Не сохранилось: "+e.message,true);cb.disabled=false;}};fx.appendChild(cb);}
+        ED.lockBox.parentNode.insertBefore(fx,ED.lockBox.nextSibling);}
     },
     calc(){
       const r=collectKs(true);const by=PTO.index(RAW);const e=PTO.enrichKs(r,by);const o=by[r.obj];
@@ -429,19 +461,23 @@ function ksEditor(k,preset){
     collect(){const r=collectKs(false);need(r.obj,"объект");need(r.ks2,"сумма КС-2");numOk(r.ks2,"КС-2");numOk(r.ks3,"КС-3");need(r.month,"отчётный месяц");
       if(isNew||r.obj!==k.obj||r.month!==k.month){const L=lockInfo("fact",r.obj,r.month);if(!L.full)throw new Error("«Факт за "+PTO.monthLabel(r.month).toLowerCase()+"» по объекту «"+r.obj+"»: "+L.why);}
       if(!KL.full){Object.keys(r).forEach(f=>{if(f!=="id"&&!STATUS_FIELDS.includes(f))r[f]=k[f];});}
-      return r;},
+      delete r.fixed;return r;},
     async onSave(r){r.base=k.upd||"";await save("K",[r]);},
     onDelete:isNew?null:async()=>{await del("K",k.id);}
   });
-  function collectKs(){return {id:k.id,date:val("date"),month:val("month"),obj:val("obj"),num:val("num"),period:val("period"),ks2:val("ks2"),ks3:val("ks3"),agr:val("agr"),sign:val("sign"),pay:val("pay"),payDate:val("payDate"),signDate:val("signDate"),remarks:val("remarks"),dsNeed:val("dsNeed"),dsDate:val("dsDate"),letterDate:val("letterDate"),note:val("note")};}
+  function collectKs(){const lines=K2S.lines.length?JSON.stringify(K2S.lines):"";
+    return {id:k.id,date:val("date"),month:val("month"),obj:val("obj"),num:val("num"),period:val("period")||(K2S.pFrom&&K2S.pTo?ruD(K2S.pFrom).slice(0,5)+"–"+ruD(K2S.pTo).slice(0,5):""),ks2:K2S.lines.length?(()=>{const o=RAW.objects.find(x=>x.name===val("obj"));return k2Tot(K2S.lines,(firmOf(o)||{}).vat).all;})():val("ks2"),
+      lines,docNum:K2S.docNum,pFrom:K2S.pFrom,pTo:K2S.pTo,ks3:val("ks3"),agr:val("agr"),sign:val("sign"),pay:val("pay"),payDate:val("payDate"),signDate:val("signDate"),remarks:val("remarks"),dsNeed:val("dsNeed"),dsDate:val("dsDate"),letterDate:val("letterDate"),note:val("note")};}
 }
 function renderKs(){
+  const em=editMode(),nf=RAW.ks.filter(k=>k.fixed).length;$("ks-em").hidden=!em&&!(isHead()&&nf);
+  $("ks-em").textContent=(em?"✎ Включён режим исправлений: КС можно править и в согласованных отчётах, все правки пишутся в журнал. ":"")+(isHead()&&nf?"Исправлено после согласования: "+nf+" КС — фильтр «Статус» → «Исправлены после согласования».":"");
   const fo=$("ks-obj"),fv=fo.value;objSelect(fo,fv,"Все объекты");
   const fm=$("ks-m"),mv=fm.value;fm.innerHTML="";fm.appendChild(Object.assign(el("option",null,"Все месяцы"),{value:""}));
   [...new Set(RAW.ks.map(k=>k.month).filter(Boolean))].sort().reverse().forEach(m=>fm.appendChild(Object.assign(el("option",null,PTO.monthLabel(m)),{value:m})));fm.value=mv;
   const by=PTO.index(RAW),today=U.todayISO(),q=$("ks-q").value.trim().toLowerCase(),st=$("ks-st").value;
   let list=RAW.ks.map(k=>PTO.enrichKs(k,by)).filter(k=>(!fv||k.obj===fv)&&(!mv||k.month===mv)&&(!q||(k.obj+" "+k.num+" "+k.note+" "+k.period).toLowerCase().includes(q)));
-  if(st==="open")list=list.filter(k=>k.st!=="paid");else if(st==="overdue")list=list.filter(k=>k.expect&&k.expect<today);else if(st==="ctrl")list=list.filter(k=>k.ctrl||(k.pay==="Оплачена"&&!k.payDate));else if(st)list=list.filter(k=>k.st===st);
+  if(st==="open")list=list.filter(k=>k.st!=="paid");else if(st==="overdue")list=list.filter(k=>k.expect&&k.expect<today);else if(st==="ctrl")list=list.filter(k=>k.ctrl||(k.pay==="Оплачена"&&!k.payDate));else if(st==="fixed")list=list.filter(k=>k.fixed);else if(st)list=list.filter(k=>k.st===st);
   list.sort((a,b)=>(b.wdate||"").localeCompare(a.wdate||"")||(b.upd||"").localeCompare(a.upd||""));
   const s2=list.reduce((a,k)=>a+(+k.ks2||0),0),tp=list.filter(k=>k.st!=="paid").reduce((a,k)=>a+(k.toPay||0),0);
   $("ks-sum").innerHTML="";const sl=$("ks-sum");
@@ -453,7 +489,7 @@ function renderKs(){
     const b=el("button","li");b.type="button";b.onclick=()=>ksEditor(RAW.ks.find(x=>x.id===k.id));
     const d=el("div","d",k.date?U.ru(k.date):"без даты");d.appendChild(el("small",null,k.month?PTO.monthLabel(k.month):"месяц не указан"));b.appendChild(d);
     const ob=el("div","o");ob.appendChild(el("b",null,k.obj||"— без объекта —"));ob.appendChild(el("small",null,[k.num,k.period].filter(Boolean).join(" · ")));b.appendChild(ob);
-    const x=el("div","x");x.appendChild(el("span","st "+k.st,k.stLabel));if(k.pay==="Частично")x.appendChild(el("span","pill","частично"));
+    const x=el("div","x");x.appendChild(el("span","st "+k.st,k.stLabel));if(k.pay==="Частично")x.appendChild(el("span","pill","частично"));if(k.fixed)x.appendChild(el("span","pill fx","исправлено"));if(k.lines)x.appendChild(el("span","pill","КС-2"));
     const warn=k.ctrl;if(warn){x.appendChild(document.createElement("br"));x.appendChild(el("span","flagtxt","⚠ "+warn));}b.appendChild(x);
     b.appendChild(el("div","v",U.rub(k.ks2)));
     const p=el("div","v",k.st==="paid"?"—":U.rub(k.toPay));const od=k.expect&&k.expect<today;
@@ -464,6 +500,197 @@ function renderKs(){
 ["ks-q","ks-obj","ks-st","ks-m"].forEach(id=>$(id).addEventListener(id==="ks-q"?"input":"change",()=>{ksLimit=150;renderKs();}));
 $("ks-more").onclick=()=>{ksLimit+=300;renderKs();};
 $("ks-add").onclick=()=>ksEditor(null);
+
+// ---------- КС-2: работы и объёмы, печать КС-2 и КС-3 ----------
+const editMode=()=>{const r=(RAW&&RAW.kpi||[]).filter(x=>x.id==="edit:ks").pop();return !!r&&String(r.value)==="1";};
+function firmOf(o){return o&&o.firm?(RAW.firms||[]).find(f=>f.id===o.firm)||null:null;}
+function parseLines(s){try{const a=JSON.parse(s||"[]");return Array.isArray(a)?a.filter(l=>l&&typeof l==="object"):[];}catch(e){return [];}}
+const r2=x=>Math.round((+x||0)*100)/100;
+function k2Tot(lines,vat){const net=r2(lines.reduce((a,l)=>a+r2((+l.q||0)*(+l.p||0)),0)),v=+vat||0,tax=r2(net*v/100);return {net,tax,all:r2(net+tax),vat:v};}
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const m2=v=>v===null||v===undefined||v===""||isNaN(v)?"":Number(v).toLocaleString("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2});
+const q3=v=>v===null||v===undefined||v===""||isNaN(v)?"":Number(v).toLocaleString("ru-RU",{maximumFractionDigits:3});
+const ruD=d=>d?d.slice(8,10)+"."+d.slice(5,7)+"."+d.slice(0,4):"";
+function splitSigner(s){s=String(s||"").trim();const i=s.lastIndexOf(",");return i>0?{pos:s.slice(0,i).trim(),name:s.slice(i+1).trim()}:{pos:"",name:s};}
+/** Работы паспорта объекта из «Рапорта прораба» и объём по рапортам за период. */
+function k2Works(o){const m={};rpOf(o).forEach(r=>(r.works||[]).forEach(w=>{if(!m[w.n])m[w.n]={c:w.c,n:w.n,u:w.u,p:w.p,pids:[]};m[w.n].pids.push([r,w.c]);}));return m;}
+function k2RpQty(W,name,from,to){const w=W[name];if(!w||!from||!to)return null;let s=0;w.pids.forEach(([r,c])=>(r.days||[]).forEach(d=>{if(d.date>=from&&d.date<=to){const x=d.works&&d.works[c];if(typeof x==="number")s+=x;}}));return s;}
+
+let K2=null;
+/** st: {k (КС из формы), lines, docNum, pFrom, pTo}; ro — только просмотр; done(st) — «Готово». */
+function openK2(st,ro,done){
+  K2={st:{lines:st.lines.map(l=>Object.assign({},l)),docNum:st.docNum||"",pFrom:st.pFrom||"",pTo:st.pTo||"",k:st.k},ro,done};
+  if(!K2.st.lines.length&&!ro)K2.st.lines.push({});
+  const o=RAW.objects.find(x=>x.name===st.k.obj);
+  if(o&&o.rp&&(!RP||!RP.objects||(K2.st.pFrom&&RP.from&&K2.st.pFrom<RP.from))){loadRp(366).then(()=>{if($("k2").open)k2Draw();});}
+  k2Draw();$("k2").showModal();
+}
+function k2Draw(){
+  const {st,ro}=K2,k=st.k,o=RAW.objects.find(x=>x.name===k.obj),f=firmOf(o),W=o?k2Works(o):{};
+  $("k2-t").textContent="КС-2 · "+(k.obj||"объект не выбран");
+  const b=$("k2-b");b.innerHTML="";
+  const info=el("div","calc");
+  [["Подрядчик:",f?(f.short||f.name):"не выбран"],["Заказчик:",o&&o.customer?o.customer.split("\n")[0]:"не указан"],["Договор:",o&&o.contract?"№ "+o.contract+(o.contractDate?" от "+U.ru(o.contractDate):""):"не указан"],["НДС:",f?(f.vat?f.vat+"%":"без НДС"):"—"]].forEach(([l,v])=>{const s=el("span",null,l+" ");s.appendChild(el("b",null,v));info.appendChild(s);});
+  b.appendChild(info);
+  const miss=[];if(!o)miss.push("объект");else{if(!f)miss.push("подрядчик (юрлицо)");if(!o.customer)miss.push("заказчик");if(!o.contract)miss.push("№ договора");}
+  if(miss.length){const w=el("div","warnbox","Для печати в карточке объекта не заполнено: "+miss.join(", ")+". Попросите начальника ПТО дополнить карточку (вкладка «Объекты»). Строки и сумму можно вносить уже сейчас.");b.appendChild(w);}
+  if(ro)b.appendChild(el("div","lockbar","🔒 Отчёт согласован — строки КС-2 только для просмотра и печати."));
+  const row=el("div","row");
+  const fld=(lab,key,type,ph)=>{const w=el("label","f"),i=el("input");w.appendChild(el("span",null,lab));i.type=type||"text";i.value=st[key]||"";if(ph)i.placeholder=ph;i.disabled=ro;i.oninput=i.onchange=()=>{st[key]=i.value.trim();if(key!=="docNum")k2Rp();};w.appendChild(i);row.appendChild(w);return i;};
+  const nm=/№\s*([\wА-Яа-я\-\/.]+)/.exec(k.num||"");fld("№ документа","docNum","text",nm?nm[1]:(k.num||""));fld("Период с","pFrom","date");fld("Период по","pTo","date");
+  b.appendChild(row);
+  const dl=el("datalist");dl.id="k2-works";Object.keys(W).forEach(n=>dl.appendChild(Object.assign(el("option"),{value:n})));b.appendChild(dl);
+  if(o&&o.rp)b.appendChild(el("div","hint",Object.keys(W).length?"Наименование можно выбрать из работ паспорта объекта — подставятся единица и цена. Справа — объём по рапортам прорабов за период, для сверки.":(RP?"В паспорте объекта нет работ.":"Загружаю работы паспорта…")));
+  const tw=el("div","tablewrap"),t=el("table","t k2t");tw.appendChild(t);b.appendChild(tw);
+  const hd=el("tr");["№","Поз. по смете","Наименование работ","№ расценки","Ед. изм.","Кол-во","Цена, руб","Стоимость, руб",o&&o.rp?"По рапортам":"",""].forEach(x=>hd.appendChild(el("th",null,x)));
+  const th=el("thead");th.appendChild(hd);t.appendChild(th);const tb=el("tbody");t.appendChild(tb);
+  const totBox=el("div","calc");
+  const recalc=()=>{const T=k2Tot(st.lines,f?f.vat:0);totBox.innerHTML="";[["Итого:",m2(T.net)+" руб"],[T.vat?"НДС "+T.vat+"%:":"НДС:",T.vat?m2(T.tax)+" руб":"без НДС"],["Всего по акту:",m2(T.all)+" руб"]].forEach(([l,v])=>{const s=el("span",null,l+" ");s.appendChild(el("b",null,v));totBox.appendChild(s);});
+    tb.querySelectorAll("tr").forEach((tr,i)=>{const l=st.lines[i];if(l)tr.querySelector(".sum").textContent=m2(r2((+l.q||0)*(+l.p||0)));});};
+  const k2Rp=()=>{tb.querySelectorAll("tr").forEach((tr,i)=>{const l=st.lines[i],c=tr.querySelector(".rpq");if(!c||!l)return;const q=k2RpQty(W,l.n,st.pFrom,st.pTo);c.textContent=q===null?"":q3(q)+(l.u?" "+l.u:"");c.classList.toggle("bad",q!==null&&l.q!==undefined&&l.q!==""&&Math.abs((+l.q||0)-q)>1e-6);c.title=q===null?"":"Объём по рапортам прорабов за "+ruD(st.pFrom)+"–"+ruD(st.pTo);});};
+  st.lines.forEach((l,i)=>{
+    const tr=el("tr");tr.appendChild(el("td","num",String(i+1)));
+    const PH={pos:"Поз. по смете",n:"Наименование работ",rate:"№ расценки",u:"Ед. изм.",q:"Кол-во",p:"Цена, руб"};
+    const cell=(key,cls,num,list)=>{const td=el("td",cls),inp=el("input");inp.disabled=ro;inp.placeholder=PH[key];inp.setAttribute("aria-label",PH[key]);
+      if(num){inp.inputMode="decimal";inp.value=l[key]==null||l[key]===""?"":String(l[key]).replace(".",",");inp.oninput=()=>{const n=U.parseNum(inp.value);l[key]=n===null||isNaN(n)?"":n;recalc();k2Rp();};}
+      else{inp.value=l[key]||"";if(list)inp.setAttribute("list",list);inp.oninput=()=>{l[key]=inp.value;if(key==="n"&&W[inp.value]){const w=W[inp.value];l.c=w.c;if(!l.u){l.u=w.u||"";tr.querySelector(".u input").value=l.u;}if((l.p===undefined||l.p==="")&&w.p){l.p=w.p;tr.querySelector(".p input").value=String(w.p).replace(".",",");recalc();}k2Rp();}};}
+      td.appendChild(inp);tr.appendChild(td);};
+    cell("pos","pos");cell("n","nm",false,"k2-works");cell("rate","rate");cell("u","u");cell("q","q",true);cell("p","p",true);
+    tr.appendChild(el("td","sum num",""));
+    if(o&&o.rp)tr.appendChild(el("td","rpq num",""));else tr.appendChild(el("td"));
+    const td=el("td");if(!ro){const x=el("button","btn small","×");x.type="button";x.title="Удалить строку";x.onclick=()=>{st.lines.splice(i,1);k2Draw();};td.appendChild(x);}tr.appendChild(td);
+    tb.appendChild(tr);});
+  if(!ro){const ad=el("button","btn small","+ Строка");ad.type="button";ad.onclick=()=>{st.lines.push({});k2Draw();const last=$("k2-b").querySelector("tbody tr:last-child .nm input");if(last)last.focus();};b.appendChild(ad);}
+  b.appendChild(totBox);
+  b.appendChild(el("div","hint","Цены — без НДС. «Всего по акту» с НДС станет суммой «Выполнение КС-2» в журнале. Сметная (договорная) стоимость в акте — сумма договора с ДС из карточки объекта."));
+  recalc();k2Rp();
+  $("k2-ok").hidden=ro;$("k2-c").textContent=ro?"Закрыть":"Отмена";
+}
+function k2Clean(lines){return lines.filter(l=>String(l.n||"").trim()||+l.q||+l.p).map(l=>{const r={};["pos","n","rate","u","c"].forEach(f=>{if(l[f])r[f]=String(l[f]).trim();});["q","p"].forEach(f=>{if(l[f]!==""&&l[f]!=null&&!isNaN(l[f]))r[f]=+l[f];});return r;});}
+$("k2-x").onclick=$("k2-c").onclick=()=>$("k2").close();
+$("k2-ok").onclick=()=>{const st=K2.st;const lines=k2Clean(st.lines);
+  const bad=lines.find(l=>!l.n||!(l.q>0));if(bad){status("В каждой строке нужны наименование работ и количество","bad",4000);return;}
+  if(st.pFrom&&st.pTo&&st.pFrom>st.pTo){status("Период: дата «с» позже даты «по»","bad",4000);return;}
+  K2.done({lines,docNum:st.docNum,pFrom:st.pFrom,pTo:st.pTo});$("k2").close();};
+$("k2-p2").onclick=()=>{const st=K2.st;printKs2(Object.assign({},st.k,{docNum:st.docNum,pFrom:st.pFrom,pTo:st.pTo}),k2Clean(st.lines));};
+$("k2-p3").onclick=()=>{const st=K2.st;printKs3(Object.assign({},st.k,{docNum:st.docNum,pFrom:st.pFrom,pTo:st.pTo}),k2Clean(st.lines));};
+
+// ---------- печатные формы ----------
+const PRINT_CSS=`@page{size:A4 landscape;margin:10mm 10mm 10mm 12mm}
+body{font-family:"Times New Roman",Times,serif;font-size:10pt;color:#000;margin:0}
+.r{text-align:right}.c{text-align:center}.small{font-size:7.5pt}.b{font-weight:bold}
+.top{display:flex;justify-content:flex-end}.top div{text-align:right;font-size:8pt;line-height:1.25}
+.hd{display:grid;grid-template-columns:1fr 210px;gap:0 10px;margin-top:4px}
+.ln{display:grid;grid-template-columns:150px 1fr;align-items:end;min-height:19px}
+.ln .v{border-bottom:1px solid #000;padding:0 4px 1px;min-height:15px}.ln .u{grid-column:2;font-size:7pt;text-align:center;line-height:1}
+table{border-collapse:collapse}td,th{border:1px solid #000;padding:2px 4px;vertical-align:top}
+.codes td{height:17px;font-size:9pt}.codes td.l{border:0;text-align:right;padding-right:6px;font-size:8.5pt}
+.codes td.k{width:96px;text-align:center}
+.doc{margin:8px 0 0 auto;margin-right:12%}.doc th{font-weight:normal;font-size:8pt}.doc td{text-align:center;min-width:70px}
+h1{font-size:12pt;text-align:center;margin:2px 0 6px}
+.lst{width:100%;margin-top:6px;font-size:9pt}.lst th{font-weight:normal;font-size:8.5pt;text-align:center;vertical-align:middle}
+.lst td.n{text-align:right;white-space:nowrap}.lst tr.num td{text-align:center;font-size:8pt}
+.lst tr.tot td{font-weight:bold}.lst thead{display:table-header-group}.lst tr{page-break-inside:avoid}
+.sig{display:grid;grid-template-columns:150px 1fr 20px 140px 20px 1fr;gap:0 6px;align-items:end;margin-top:14px}
+.sig .v{border-bottom:1px solid #000;min-height:16px;padding:0 4px;text-align:center}.sig .u{font-size:7pt;text-align:center}
+.mp{margin:2px 0 0 190px;font-size:9pt}
+.noprint{position:fixed;top:8px;right:8px}.noprint button{font-size:14px;padding:8px 16px;cursor:pointer}
+@media print{.noprint{display:none}}`;
+function printDoc(title,body){
+  const w=window.open("","_blank");
+  if(!w){status("Браузер не открыл окно печати — разрешите всплывающие окна для этого сайта","bad",6000);return;}
+  w.document.write('<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>'+esc(title)+'</title><style>'+PRINT_CSS+'</style></head><body>'+body+
+    '<div class="noprint"><button onclick="print()">Печать</button></div><script>setTimeout(function(){print()},400)<\/script></body></html>');
+  w.document.close();
+}
+function pLn(lab,v,u){return '<div class="ln"><div>'+lab+'</div><div class="v">'+esc(v)+'</div>'+(u?'<div class="u">'+u+'</div>':'')+'</div>';}
+function pCodes(rows){return '<table class="codes">'+rows.map(([l,v,raw])=>'<tr><td class="l">'+l+'</td><td class="k">'+(raw?v:esc(v))+'</td></tr>').join("")+'</table>';}
+function pSig(lab,s,u){const x=splitSigner(s);return '<div class="sig"><div class="b">'+lab+'</div><div class="v">'+esc(x.pos)+'</div><div></div><div class="v"></div><div></div><div class="v">'+esc(x.name)+'</div>'+
+  '<div></div><div class="u">должность</div><div></div><div class="u">подпись</div><div></div><div class="u">расшифровка подписи</div></div><div class="mp">'+(u||"М. П.")+'</div>';}
+function ksDocBase(k){
+  const o=RAW.objects.find(x=>x.name===k.obj)||{},f=firmOf(o)||{};
+  const m=/№\s*([\wА-Яа-я\-\/.]+)/.exec(k.num||"");
+  return {o,f,num:k.docNum||(m?m[1]:k.num||""),date:k.date||"",from:k.pFrom||(k.month?k.month+"-01":""),to:k.pTo||(k.month?PTO.eom(k.month):"")};
+}
+function printKs2(k,lines){
+  const {o,f,num,date,from,to}=ksDocBase(k),T=k2Tot(lines,f.vat);
+  if(!lines.length){status("Нет строк КС-2 — добавьте работы","bad",4000);return;}
+  let h='<div class="top"><div>Унифицированная форма № КС-2<br>Утверждена постановлением Госкомстата России<br>от 11.11.99 № 100</div></div>';
+  h+='<div class="hd"><div style="padding-top:34px">'+pLn("Инвестор",o.investor||"","организация, адрес, телефон, факс")+pLn("Заказчик (Генподрядчик)",o.customer||"","организация, адрес, телефон, факс")+
+    pLn("Подрядчик (Субподрядчик)",[f.name||f.short||"",f.inn?"ИНН "+f.inn:""].filter(Boolean).join(", "),"организация, адрес, телефон, факс")+pLn("Стройка",o.site||"","наименование, адрес")+pLn("Объект",k.obj||"","наименование")+'</div>';
+  h+='<div>'+pCodes([["","<b>Код</b>",1],["Форма по ОКУД","0322005"],["по ОКПО",""],["по ОКПО",""],["по ОКПО",f.okpo||""],["",""],["",""],["Вид деятельности по ОКДП",""],["Договор подряда (контракт) номер",o.contract||""],["дата",ruD(o.contractDate)],["Вид операции",""]])+'</div></div>';
+  h+='<table class="doc"><tr><th rowspan="2">Номер документа</th><th rowspan="2">Дата составления</th><th colspan="2">Отчетный период</th></tr><tr><th>с</th><th>по</th></tr><tr><td>'+esc(num)+'</td><td>'+ruD(date)+'</td><td>'+ruD(from)+'</td><td>'+ruD(to)+'</td></tr></table>';
+  h+='<h1>АКТ<br>О ПРИЕМКЕ ВЫПОЛНЕННЫХ РАБОТ</h1>';
+  h+='<div style="display:flex;justify-content:space-between;align-items:end"><span>Сметная (договорная) стоимость в соответствии с договором подряда (субподряда)</span><span style="border-bottom:1px solid #000;min-width:180px;text-align:right;padding:0 4px">'+(o.sum?m2(o.sum):"")+'</span>&nbsp;руб.</div>';
+  h+='<table class="lst"><thead><tr><th colspan="2">Номер</th><th rowspan="2" style="width:38%">Наименование работ</th><th rowspan="2">Номер единичной расценки</th><th rowspan="2">Единица измерения</th><th colspan="3">Выполнено работ</th></tr>'+
+    '<tr><th>по порядку</th><th>позиции по смете</th><th>количество</th><th>цена за единицу, руб.</th><th>стоимость, руб.</th></tr>'+
+    '<tr class="num"><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td><td>7</td><td>8</td></tr></thead><tbody>';
+  lines.forEach((l,i)=>{h+='<tr><td class="c">'+(i+1)+'</td><td class="c">'+esc(l.pos)+'</td><td>'+esc(l.n)+'</td><td class="c">'+esc(l.rate)+'</td><td class="c">'+esc(l.u)+'</td><td class="n">'+q3(l.q)+'</td><td class="n">'+m2(l.p)+'</td><td class="n">'+m2(r2((+l.q||0)*(+l.p||0)))+'</td></tr>';});
+  h+='<tr class="tot"><td colspan="5" class="r" style="border-left:0;border-bottom:0"></td><td colspan="2" class="r">Итого</td><td class="n">'+m2(T.net)+'</td></tr>';
+  if(T.vat)h+='<tr><td colspan="5" style="border:0"></td><td colspan="2" class="r">НДС '+T.vat+'%</td><td class="n">'+m2(T.tax)+'</td></tr>';
+  h+='<tr class="tot"><td colspan="5" style="border:0"></td><td colspan="2" class="r">Всего по акту'+(T.vat?" с НДС":"")+'</td><td class="n">'+m2(T.all)+'</td></tr></tbody></table>';
+  h+=pSig("Сдал",o.ourSigner||f.signer||"")+pSig("Принял",o.custSigner||"");
+  printDoc("КС-2 "+num+" "+(k.obj||""),h);
+}
+/** Стоимость КС без НДС: по строкам КС-2, иначе — сумма КС-2 из журнала без НДС юрлица. */
+function ksNet(x,vat,lines){if(lines&&lines.length)return k2Tot(lines,0).net;return r2((+x.ks2||0)/(1+(+vat||0)/100));}
+function printKs3(k,lines){
+  const {o,f,num,date,from,to}=ksDocBase(k),v=+f.vat||0;
+  const cur=lines.length?k2Tot(lines,0).net:ksNet(k,v);
+  if(!cur){status("Нет суммы КС — заполните строки КС-2 или сумму","bad",4000);return;}
+  const kd=x=>x.date||(x.month?PTO.eom(x.month):"");const myD=kd(k)||"9999";
+  const others=RAW.ks.filter(x=>x.obj===k.obj&&x.id!==k.id&&kd(x)&&kd(x)<=myD);
+  const all=r2(cur+others.reduce((a,x)=>a+ksNet(x,v,parseLines(x.lines)),0)+(+o.done0||0)/(1+v/100));
+  const yr=myD.slice(0,4),year=r2(cur+others.filter(x=>kd(x).startsWith(yr)).reduce((a,x)=>a+ksNet(x,v,parseLines(x.lines)),0));
+  const tax=r2(cur*v/100);
+  let h='<div class="top"><div>Унифицированная форма № КС-3<br>Утверждена постановлением Госкомстата России<br>от 11.11.99 № 100</div></div>';
+  h+='<div class="hd"><div style="padding-top:34px">'+pLn("Инвестор",o.investor||"","организация, адрес, телефон, факс")+pLn("Заказчик (Генподрядчик)",o.customer||"","организация, адрес, телефон, факс")+
+    pLn("Подрядчик (Субподрядчик)",[f.name||f.short||"",f.inn?"ИНН "+f.inn:""].filter(Boolean).join(", "),"организация, адрес, телефон, факс")+pLn("Стройка",o.site||"","наименование, адрес")+'</div>';
+  h+='<div>'+pCodes([["","<b>Код</b>",1],["Форма по ОКУД","0322001"],["по ОКПО",""],["по ОКПО",""],["по ОКПО",f.okpo||""],["",""],["Вид деятельности по ОКДП",""],["Договор подряда (контракт) номер",o.contract||""],["дата",ruD(o.contractDate)],["Вид операции",""]])+'</div></div>';
+  h+='<table class="doc"><tr><th rowspan="2">Номер документа</th><th rowspan="2">Дата составления</th><th colspan="2">Отчетный период</th></tr><tr><th>с</th><th>по</th></tr><tr><td>'+esc(num)+'</td><td>'+ruD(date)+'</td><td>'+ruD(from)+'</td><td>'+ruD(to)+'</td></tr></table>';
+  h+='<h1>СПРАВКА<br>О СТОИМОСТИ ВЫПОЛНЕННЫХ РАБОТ И ЗАТРАТ</h1>';
+  h+='<table class="lst"><thead><tr><th rowspan="2">Номер по порядку</th><th rowspan="2" style="width:42%">Наименование пусковых комплексов, этапов, объектов, видов выполненных работ, оборудования, затрат</th><th rowspan="2">Код</th><th colspan="3">Стоимость выполненных работ и затрат, руб.</th></tr>'+
+    '<tr><th>с начала проведения работ</th><th>с начала года</th><th>в том числе за отчетный период</th></tr><tr class="num"><td>1</td><td>2</td><td>3</td><td>4</td><td>5</td><td>6</td></tr></thead><tbody>';
+  h+='<tr><td></td><td>Всего работ и затрат, включаемых в стоимость работ</td><td></td><td class="n">'+m2(all)+'</td><td class="n">'+m2(year)+'</td><td class="n">'+m2(cur)+'</td></tr>';
+  h+='<tr><td></td><td>в том числе:</td><td></td><td></td><td></td><td></td></tr>';
+  h+='<tr><td class="c">1</td><td>'+esc(k.obj)+(o.contract?" (договор № "+esc(o.contract)+(o.contractDate?" от "+ruD(o.contractDate):"")+")":"")+'</td><td></td><td class="n">'+m2(all)+'</td><td class="n">'+m2(year)+'</td><td class="n">'+m2(cur)+'</td></tr>';
+  h+='<tr class="tot"><td colspan="3" style="border:0"></td><td colspan="2" class="r">Итого</td><td class="n">'+m2(cur)+'</td></tr>';
+  h+='<tr><td colspan="3" style="border:0"></td><td colspan="2" class="r">Сумма НДС'+(v?" "+v+"%":"")+'</td><td class="n">'+(v?m2(tax):"без НДС")+'</td></tr>';
+  h+='<tr class="tot"><td colspan="3" style="border:0"></td><td colspan="2" class="r">Всего с учетом НДС</td><td class="n">'+m2(r2(cur+tax))+'</td></tr></tbody></table>';
+  h+=pSig("Заказчик (Генподрядчик)",o.custSigner||"")+pSig("Подрядчик (Субподрядчик)",o.ourSigner||f.signer||"");
+  printDoc("КС-3 "+num+" "+(k.obj||""),h);
+}
+
+// ---------- юрлица и режим исправлений (вкладка «Ещё») ----------
+function firmEditor(f){
+  const isNew=!f;f=f||{id:U.uid("f"),vat:22};
+  openEd({title:isNew?"Новое юрлицо":(f.short||f.name),row:Object.assign({},f,{vat:f.vat==null?"":String(f.vat)}),isNew,
+    layout:[[{f:"short",label:"Краткое название",req:1,ph:"ООО «…»"}],[{f:"name",label:"Полное наименование, адрес, телефон — как в шапке КС-2",type:"textarea",rows:3}],
+      [{f:"inn",label:"ИНН"},{f:"okpo",label:"ОКПО"},{f:"vat",label:"НДС",type:"select",opts:["22","20","10","7","5","0"],blank:false}],
+      [{f:"signer",label:"Подписывает «Сдал» (должность, ФИО)",ph:"Генеральный директор, Петров П.П."}]],
+    init(){ED.inp.vat.querySelectorAll("option").forEach(op=>op.textContent=op.value==="0"?"без НДС":op.value+"%");if(!isHead()){Object.values(ED.inp).forEach(disableInp);$("ed-s").hidden=true;$("ed-del").hidden=true;}},
+    collect(){return {id:f.id,short:need(val("short"),"краткое название"),name:val("name"),inn:val("inn"),okpo:val("okpo"),vat:+val("vat")||0,signer:val("signer")};},
+    async onSave(r){r.base=f.upd||"";await save("F",[r]);},
+    onDelete:isNew?null:async()=>{if(RAW.objects.some(o=>o.firm===f.id))throw new Error("это юрлицо выбрано в карточках объектов — сначала поменяйте его там");await del("F",f.id);}});
+}
+function renderFirms(){
+  const o=$("fm-out");o.innerHTML="";const list=(RAW.firms||[]).slice().sort((a,b)=>(a.short||"").localeCompare(b.short||"","ru"));
+  if(!list.length)o.appendChild(el("div","empty","Юрлиц пока нет. Нажмите «+ Юрлицо»."));
+  list.forEach(f=>{const b=el("button","li");b.type="button";b.onclick=()=>firmEditor(f);
+    b.appendChild(el("div","d",f.inn?"ИНН "+f.inn:"ИНН —"));
+    const ob=el("div","o");ob.appendChild(el("b",null,f.short||f.name));ob.appendChild(el("small",null,[f.signer].filter(Boolean).join(" · ")));b.appendChild(ob);
+    b.appendChild(el("div","x",f.vat?"НДС "+f.vat+"%":"без НДС"));
+    const n=RAW.objects.filter(x=>x.firm===f.id).length;b.appendChild(el("div","v","объектов: "+n));b.appendChild(el("div","v",""));o.appendChild(b);});
+}
+$("fm-add").onclick=()=>firmEditor(null);
+function renderEditMode(){
+  const on=editMode();
+  $("em-txt").textContent=on?"Включён. Специалисты и начальник ПТО могут править любые КС, в том числе в согласованных отчётах. Каждая правка — в журнале изменений, у КС появляется отметка «исправлено после согласования» для начальника ПТО.":"Выключен. Согласованные отчёты закрыты: в КС можно менять только согласование, подписание, оплату, замечания, ДС и письма.";
+  $("em-btn").textContent=on?"Выключить режим исправлений":"Включить режим исправлений";$("em-btn").className="btn"+(on?"":" primary");
+  if(RAW.srv6===false){$("em-txt").textContent="Сначала обновите скрипт базы до версии 6 (Развернуть → Управление развертываниями → Новая версия).";$("em-btn").disabled=true;}
+}
+$("em-btn").onclick=async()=>{const on=editMode();if(on&&!confirm("Выключить режим исправлений? Согласованные КС снова закроются для правки."))return;
+  try{await save("Q",[{id:"edit:ks",value:on?"0":"1"}]);status(on?"Режим исправлений выключен":"Режим исправлений включён","okb",3000);render();}catch(e){status("Не сохранилось: "+e.message,"bad");}};
 
 // ---------- ДЕНЬГИ ----------
 function payEditor(p){
@@ -567,9 +794,14 @@ function objEditor(o){
       [{f:"start",label:"Начало работ по договору",type:"date"},{f:"due",label:"Окончание по договору",type:"date"}],
       [{f:"ret",label:"% удержания",type:"pct"},{f:"payDays",label:"Срок оплаты, дней",type:"select",opts:[10,15,30,45,60],blank:false}],
       [{f:"rp",label:"Объект в «Рапорте прораба»",type:"select",opts:(RPOBJ||[]).map(x=>x.pid)}],
+      [{f:"firm",label:"Подрядчик в КС-2 (наше юрлицо)",type:"select",opts:(RAW.firms||[]).map(f=>f.id)}],
+      [{f:"customer",label:"Заказчик для КС-2 (организация, адрес, телефон)",type:"textarea",rows:2}],
+      [{f:"investor",label:"Инвестор (если есть)"},{f:"site",label:"Стройка (наименование, адрес)"}],
+      [{f:"ourSigner",label:"Сдал от подрядчика (должность, ФИО)",ph:"если пусто — подписант юрлица"},{f:"custSigner",label:"Принял от заказчика (должность, ФИО)",ph:"Главный инженер, Иванов И.И."}],
       [{f:"sched",label:"График подачи КС заказчику",type:"select",opts:SCHED,blank:false}],
       [{f:"note",label:"Примечание",type:"textarea"}]],
-    init(){const rs=ED.inp.rp;rs.querySelectorAll("option").forEach(op=>{if(!op.value){op.textContent="— не связан —";return;}const x=(RPOBJ||[]).find(r=>r.pid===op.value);op.textContent=x?x.name+(x.closed?" (закрыт)":""):op.value+(RPOBJ?" (нет в рапортах)":"");});
+    init(){ED.inp.firm.querySelectorAll("option").forEach(op=>{if(!op.value){op.textContent="— не выбран —";return;}const f=(RAW.firms||[]).find(x=>x.id===op.value);op.textContent=f?(f.short||f.name):op.value;});
+      const rs=ED.inp.rp;rs.querySelectorAll("option").forEach(op=>{if(!op.value){op.textContent="— не связан —";return;}const x=(RPOBJ||[]).find(r=>r.pid===op.value);op.textContent=x?x.name+(x.closed?" (закрыт)":""):op.value+(RPOBJ?" (нет в рапортах)":"");});
       if(!RPOBJ&&isHead())loadRpObj().then(()=>{if(ED&&ED.inp.rp===rs){const cur=rs.value;rs.innerHTML="";const o0=el("option",null,"— не связан —");o0.value="";rs.appendChild(o0);RPOBJ.forEach(x=>{const op=el("option",null,x.name+(x.closed?" (закрыт)":""));op.value=x.pid;rs.appendChild(op);});if(cur&&!RPOBJ.some(x=>x.pid===cur)){const op=el("option",null,cur+" (нет в рапортах)");op.value=cur;rs.appendChild(op);}rs.value=cur;}}).catch(()=>{});
       if(!isHead()){Object.values(ED.inp).forEach(disableInp);$("ed-s").hidden=true;$("ed-del").hidden=true;ED.lockBox.textContent="Справочник объектов ведёт начальник ПТО.";ED.lockBox.hidden=false;}},
     calc(){const nm=val("name");const wr=[];
@@ -578,7 +810,8 @@ function objEditor(o){
       setWarn(wr.join(" "),wr.length&&wr[0].startsWith("Объект с таким"));
       if(!isNew){const r=PTO.objectRows(RAW,U.todayISO()).find(x=>x.id===o.id);if(r)setCalc([["Выполнено всего:",U.rub0(r.doneAll)],["Остаток:",r.remain==null?"—":U.rub0(r.remain)],["% выполнения:",U.pct(r.pct,1)],["Не оплачено по КС:",U.rub0(r.unpaid)],["Долг заказчика (подписано):",U.rub0(r.debt)],["Получено денег:",U.rub0(r.got)]]);}},
     collect(){const nm=need(val("name"),"название");if(RAW.objects.some(x=>x.id!==o.id&&x.name.trim().toLowerCase()===nm.toLowerCase()))throw new Error("Объект с таким названием уже есть.");
-      return {id:o.id,name:nm,resp:val("resp"),pto:val("pto"),status:val("status"),sum:numOk(val("sum"),"сумма договора"),done0:numOk(val("done0"),"выполнено до 01.01.2026")||0,ret:numOk(val("ret"),"% удержания")||0,payDays:+val("payDays"),due:val("due"),sched:val("sched"),contract:val("contract"),contractDate:val("contractDate"),start:val("start"),rp:val("rp"),note:val("note")};},
+      return {id:o.id,name:nm,resp:val("resp"),pto:val("pto"),status:val("status"),sum:numOk(val("sum"),"сумма договора"),done0:numOk(val("done0"),"выполнено до 01.01.2026")||0,ret:numOk(val("ret"),"% удержания")||0,payDays:+val("payDays"),due:val("due"),sched:val("sched"),contract:val("contract"),contractDate:val("contractDate"),start:val("start"),rp:val("rp"),
+        firm:val("firm"),customer:val("customer"),investor:val("investor"),site:val("site"),ourSigner:val("ourSigner"),custSigner:val("custSigner"),note:val("note")};},
     async onSave(r){r.base=o.upd||"";await save("O",[r],!isNew&&r.name!==o.name?{rename:{from:o.name,to:r.name}}:null);if(r.rp!==(o.rp||""))RP=null;},
     onDelete:isNew?null:async()=>{if(used)throw new Error("по объекту есть КС, план или поступления — удалять нельзя. Закройте объект статусом «Завершён».");await del("O",o.id);}});
 }
@@ -821,6 +1054,7 @@ function renderMore(){
   const mv=$("nt-m").value;const lastM=PTO.periods("month",RAW,U.todayISO()).length?(RAW.ks.map(k=>k.month).filter(Boolean).sort().pop()||U.todayISO().slice(0,7)):U.todayISO().slice(0,7);
   monthSelect($("nt-m"),mv||lastM);noteFill();
   $("ls-r").value=RAW.lists.resp.join("\n");$("ls-p").value=RAW.lists.pto.join("\n");
+  if(isHead())renderFirms();if(isAdmin())renderEditMode();
 }
 function noteFill(){const n=RAW.notes.find(x=>x.month===$("nt-m").value);$("nt-t").value=n?n.text:"";}
 $("nt-m").onchange=noteFill;
@@ -1024,7 +1258,7 @@ function render(){
   if($("rd").open)repDraw();
 }
 document.querySelectorAll(".tabs button").forEach(b=>b.onclick=()=>show(b.dataset.v));
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&RAW&&!$("ed").open&&!$("rd").open&&!Object.keys(planCh).length)load(true);});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&RAW&&!$("ed").open&&!$("rd").open&&!$("k2").open&&!Object.keys(planCh).length)load(true);});
 ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==view;});load();
 })();
 </script>

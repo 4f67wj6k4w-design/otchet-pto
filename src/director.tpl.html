@@ -159,10 +159,11 @@ function drawSum(){
   pctTile(h,m.week?"Выполнение плана месяца":"Выполнение плана",m.pct,["отклонение",{v:(m.dev>0?"+":"")+M_(m.dev)+" млн",cls:m.dev<0?"bad":"ok"}]);
   tile(h,"КС оформлено за период",String(m.ksCount),"шт.",["объектов в работе",{v:String(m.objLive)}]);
   h=$("t-ytd");h.innerHTML="";
-  tile(h,"План с начала года",M_(m.planY),"млн",["план года всего",{v:M_(m.planYear)+" млн"}],"",R_(m.planY));
+  const np=m.fcNoPlan||[],npL=np.map(x=>PTO.MN[+x.slice(5)-1].slice(0,3).toLowerCase()).join(", ");
+  tile(h,"План с начала года",M_(m.planY),"млн",[np.length&&m.planLast?"план внесён по "+PTO.monthLabel(m.planLast).toLowerCase():"план года всего",{v:M_(m.planYear)+" млн"}],"",R_(m.planY));
   tile(h,"Факт с начала года",M_(m.factY),"млн",["отклонение",{v:(m.devY>0?"+":"")+M_(m.devY)+" млн",cls:m.devY<0?"bad":"ok"}],"",R_(m.factY));
   pctTile(h,"Выполнение с начала года",m.pctY,["темп для прогноза",{v:U.pct(m.rate,1)}]);
-  tile(h,"Прогноз выполнения "+m.year+" года",M_(m.forecast),"млн",["разрыв с планом года",{v:(m.gap>0?"+":"")+M_(m.gap)+" млн",cls:m.gap<0?"bad":"ok"}],"",R_(m.forecast));
+  tile(h,"Прогноз выполнения "+m.year+" года",M_(m.forecast),"млн",np.length?["плана ещё нет ("+npL+") — по среднему факту",{v:M_(m.fcRunRate)+" млн/мес"}]:["разрыв с планом года",{v:(m.gap>0?"+":"")+M_(m.gap)+" млн",cls:m.gap<0?"bad":"ok"}],"",R_(m.forecast));
   h=$("t-st");h.innerHTML="";
   tile(h,"На согласовании у заказчика",M_(m.st.review.sum),"млн",["КС",{v:m.st.review.n+" шт."}]);
   tile(h,"Согласовано, не подписано",M_(m.st.agreed.sum),"млн",["КС",{v:m.st.agreed.n+" шт."}]);
@@ -182,7 +183,7 @@ function drawSum(){
   U.chart($("c1"),{cats:cm.map(x=>x.label),series:[{name:"План",color:plan,values:cm.map(x=>x.plan)},{name:"Факт (КС-2)",color:fact,values:cm.map(x=>x.fact)}],
     tipTitle:i=>PTO.monthLabel(cm[i].m),extraTip:i=>cm[i].plan&&cm[i].fact!=null?[{name:"Выполнение",color:"transparent",val:U.pct(cm[i].fact/cm[i].plan,0)}]:[]});
   $("c2-t").textContent="Накопительно за "+m.year+" г.: план, факт и прогноз, млн руб";
-  U.chart($("c2"),{cats:cm.map(x=>x.label),series:[{name:"План нарастающим",color:plan,kind:"line",values:cm.map(x=>x.cumPlan)},{name:"Факт нарастающим",color:fact,kind:"line",values:cm.map(x=>x.cumFact)},{name:"Прогноз (план × темп)",color:fact,kind:"line",dash:true,values:cm.map(x=>x.cumFc)}],tipTitle:i=>PTO.monthLabel(cm[i].m)});
+  U.chart($("c2"),{cats:cm.map(x=>x.label),series:[{name:"План нарастающим",color:plan,kind:"line",values:cm.map(x=>x.cumPlan)},{name:"Факт нарастающим",color:fact,kind:"line",values:cm.map(x=>x.cumFact)},{name:(m.fcNoPlan&&m.fcNoPlan.length)?"Прогноз (план × темп; без плана — средний факт)":"Прогноз (план × темп)",color:fact,kind:"line",dash:true,values:cm.map(x=>x.cumFc)}],tipTitle:i=>PTO.monthLabel(cm[i].m)});
   const ex=m.chartExpect;
   U.chart($("c3"),{cats:ex.map(x=>x.label),series:[{name:"По КС (просрочено — красным)",color:fact,colors:ex.map(x=>x.over?bad:fact),values:ex.map(x=>x.over?x.sum:x.ks)},{name:"По плану работ (оценка)",color:plan,values:ex.map(x=>x.over?null:x.plan)}]});
   const rt=$("resp-t");rt.innerHTML="";
@@ -239,7 +240,7 @@ function text(){
   const m=M,mo=m.money,L=[];
   L.push("ОТЧЁТ ПТО — "+m.period.label);
   L.push("План: "+M_(m.plan)+" млн, факт: "+M_(m.fact)+" млн, выполнение "+U.pct(m.pct,1)+" ("+(m.dev>0?"+":"")+M_(m.dev)+" млн)");
-  L.push("С начала года: план "+M_(m.planY)+", факт "+M_(m.factY)+" млн ("+U.pct(m.pctY,1)+"). Прогноз года: "+M_(m.forecast)+" млн при плане "+M_(m.planYear)+" млн");
+  L.push("С начала года: план "+M_(m.planY)+", факт "+M_(m.factY)+" млн ("+U.pct(m.pctY,1)+"). Прогноз года: "+M_(m.forecast)+" млн при плане "+M_(m.planYear)+" млн"+((m.fcNoPlan||[]).length?" (план внесён не на все месяцы; остальные — по среднему факту "+M_(m.fcRunRate)+" млн/мес)":""));
   L.push("КС периода: на согласовании "+M_(m.st.review.sum)+" млн ("+m.st.review.n+"), не подписаны "+M_(m.st.agreed.sum)+" млн ("+m.st.agreed.n+"), ждут оплаты "+M_(m.st.signed.sum)+" млн ("+m.st.signed.n+"), оплачены "+M_(m.st.paid.sum)+" млн ("+m.st.paid.n+")");
   L.push("Просрочено оплат на сегодня: "+M_(mo.overdue)+" млн. Поступило за период: "+M_(mo.got)+" млн. Остаток по договорам: "+M_(mo.remain)+" млн");
   const low=m.rows.filter(r=>r.planP>0&&r.pct!==null&&r.pct<0.8).sort((a,b)=>a.dev-b.dev).slice(0,5);
