@@ -363,6 +363,87 @@ table.k2t td.rpq{color:var(--muted);font-size:12px}table.k2t td.rpq.bad{color:va
   table.k2t td.sum::before{content:"Стоимость: ";color:var(--muted);font-family:var(--f-ui,inherit)}table.k2t td.rpq:not(:empty)::before{content:"По рапортам: "}
 }
 
+/* --- сводка руководителя (director.html, класс dir у body) --- */
+.dir .tiles.dark .tile{background:#1e4a15;color:#fff}
+.dir .tiles.dark .tile small{color:rgba(255,255,255,.8)}
+.dir .tiles.dark .tile b{color:#fff;font-size:26px}
+.dir .tiles.dark .tile b u{color:rgba(255,255,255,.75)}
+.dir .tiles.dark .tile .s{color:rgba(255,255,255,.8)}
+.dir .tiles.dark .tile .s em{color:#fff}
+.dir .tiles.dark .tile .s em.bad,.dir .tiles.dark .tile b.bad{color:#ffb4a8}
+.dir .tiles.dark .tile .s em.ok,.dir .tiles.dark .tile b.ok{color:#b9f2a8}
+.dir .tiles.dark .tile b.warnc{color:#ffd88a}
+.dir .sumline b.bad{color:var(--bad)}
+.chart .vlab{font:600 12px var(--f-num);fill:var(--fg)}
+/* вкладка «Объекты»: главное — % плана */
+.objsum{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;margin:6px 0 10px;font-size:14px}
+.objsum .pill-n{font-weight:600;padding:4px 10px;border-radius:999px;background:var(--sunk)}
+.objsum .pill-n.bad{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--surface))}
+.objsum .pill-n.ok{color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}
+.objsum .muted-n{color:var(--muted);font-size:13px}
+.objbar{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-bottom:8px}
+.objbar .chk{display:inline-flex;align-items:center;gap:6px;font-size:14px;cursor:pointer}
+.objbar .chk input{width:18px;height:18px}
+.objt:not(.full) .x{display:none}
+.objt th.pc,.objt td.pc{width:150px;min-width:130px}
+.objt td.nm b,.objt td.nm{font-size:15px}
+.objt td.n{font-size:15px}
+.objt td.dv{font-weight:600}
+.pb{position:relative;height:26px;background:var(--sunk);border-radius:6px;overflow:hidden}
+.pb i{position:absolute;left:0;top:0;bottom:0;opacity:.32}
+.pb.bad i{background:var(--bad)}.pb.warnc i{background:var(--warn)}.pb.ok i{background:var(--ok)}
+.pb b{position:relative;display:block;text-align:right;padding:0 9px;height:26px;line-height:26px;font:700 15px/26px var(--f-num)}
+.pb.bad b{color:var(--bad)}.pb.warnc b{color:var(--warn)}.pb.ok b{color:var(--ok)}
+/* статусы КС — крупно и контрастно */
+.dir .st{font-size:14px;font-weight:700;padding:5px 12px;line-height:1.25;white-space:nowrap;text-align:center;color:#fff;background:#6b7a6a}
+.dir .st.review{background:#c2570c;color:#fff}
+.dir .st.agreed{background:#1d5fb8;color:#fff}
+.dir .st.signed{background:#6a3fb5;color:#fff}
+.dir .st.paid{background:#2E671F;color:#fff}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .dir .st.review{background:#f0a05c;color:#1a1206}:root:not([data-theme="light"]) .dir .st.agreed{background:#6fa8f0;color:#06182e}:root:not([data-theme="light"]) .dir .st.signed{background:#b79af0;color:#160a30}:root:not([data-theme="light"]) .dir .st.paid{background:#7fc06a;color:#0b1f06}}
+:root[data-theme="dark"] .dir .st.review{background:#f0a05c;color:#1a1206}:root[data-theme="dark"] .dir .st.agreed{background:#6fa8f0;color:#06182e}:root[data-theme="dark"] .dir .st.signed{background:#b79af0;color:#160a30}:root[data-theme="dark"] .dir .st.paid{background:#7fc06a;color:#0b1f06}
+.dir .li{grid-template-columns:96px minmax(0,1.4fr) 250px 120px 140px}
+.dir .li .x{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.dir .li .x .st{align-self:center}
+.dir .li .x .pill{margin-left:6px}
+.dir .li .o b{font-size:15px}
+@media (max-width:760px){.dir .li{grid-template-columns:1fr auto}.dir .li .x{grid-column:1/-1}}
+
+/* KPI в сводке руководителя */
+.kpi-n small.kpi-why{color:var(--fg);opacity:.8;font-size:13px;line-height:1.35;margin-top:3px}
+.kpi-n small.kpi-share{font-family:var(--f-num);font-size:12px;margin-top:3px;color:var(--muted)}
+.kpi-intro ol{margin:8px 0 0;padding-left:20px;font-size:15px;line-height:1.5}
+.kpi-intro li{margin:6px 0}
+.kpi-formula{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch;margin:14px 0 4px}
+.kpi-formula .fx{flex:1 1 170px;background:var(--sunk);border-radius:8px;padding:10px 12px;min-width:0}
+.kpi-formula .fx small{display:block;color:var(--muted);font-size:12px}
+.kpi-formula .fx b{display:block;font-family:var(--f-num);font-size:22px;margin-top:2px}
+.kpi-formula .fx.res{background:#1e4a15;color:#fff}.kpi-formula .fx.res small{color:rgba(255,255,255,.8)}
+.kpi-formula .op{align-self:center;font-size:22px;color:var(--muted);font-weight:600}
+.kset .row{display:grid;grid-template-columns:minmax(0,1fr) 190px;gap:6px 14px;align-items:center;margin:10px 0}
+.kset .row label{font-size:15px;font-weight:600}
+.kset .row .sub{display:block;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.kset input,.kset select{min-height:40px;font-size:16px;text-align:right}
+.kset select{text-align:left}
+.kset .wt{display:grid;grid-template-columns:minmax(0,1fr) 84px;gap:6px 10px;align-items:center;font-size:14px;margin-top:6px}
+.kset .wt .tot{font-weight:700;border-top:1px solid var(--line);padding-top:6px}
+.kset .wt .tot.bad{color:var(--bad)}.kset .wt .tot.ok{color:var(--ok)}
+.kset h3{font-size:14px;margin:16px 0 2px}
+.kset .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:16px}
+.kset .msg{font-size:14px}.kset .msg.bad{color:var(--bad)}.kset .msg.ok{color:var(--ok)}
+@media (max-width:620px){.kset .row{grid-template-columns:1fr}}
+@media (max-width:560px){
+  .objt .dvc{display:none}
+  .objt{font-size:13px}
+  .objt td,.objt th{padding:6px 3px!important}
+  .objt td.nm{min-width:96px!important;max-width:120px!important;font-size:14px}
+  .objt td.n{font-size:14px}
+  .objt th.pc,.objt td.pc{width:84px;min-width:84px}
+  .pb{height:24px}.pb b{padding:0 6px;height:24px;line-height:24px;font-size:14px}
+}
+.objt .mobdv{display:none}
+@media (max-width:560px){.objt .mobdv{display:inline}.objt .mobdv.bad{color:var(--bad)}.objt .mobdv.ok{color:var(--ok)}}
+
 .who{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
 .login{max-width:420px;margin-inline:auto;margin-top:28px}.login form{display:flex;flex-direction:column;gap:12px}.login h2{text-transform:none;letter-spacing:0;font-size:18px;color:var(--fg)}
 .lo{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:6px;font:12px var(--f-ui);padding:2px 8px;margin-left:8px;cursor:pointer;vertical-align:1px}
@@ -916,15 +997,27 @@ const yes = v => /^да$/i.test(String(v || "").trim());
 const badRemark = v => /замеч|возврат/i.test(String(v || ""));
 const msk = iso => iso ? new Date(Date.parse(iso) + 3 * 3600e3).toISOString().slice(0, 10) : "";
 function workDays(a, b) { let n = 0; for (let d = addDays(a, 1); d <= b; d = addDays(d, 1)) { const w = new Date(D(d)).getUTCDay(); if (w !== 0 && w !== 6) n++; } return n; }   // рабочие дни после a до b включительно, пн–пт
+// Настройки: «fund» и «w:набор.показатель» — действуют всегда; «fund@2026-11», «w:набор.показатель@2026-11» — действуют с этого месяца и позже (их задаёт руководитель).
 function kpiSettings(data) {
-  const s = { w: {}, fund: 0, share: {} };
+  const s = { w: {}, fund: 0, share: {}, fundV: [], wV: {} };
   (data.kpi || []).forEach(r => {
     if (!r || !r.id) return; let v = r.value; try { v = JSON.parse(r.value); } catch (e) {}
-    if (r.id.indexOf("share:") === 0) s.share[r.id.slice(6)] = +v || 0;
-    else if (r.id.indexOf("w:") === 0) s.w[r.id.slice(2)] = +v;
-    else if (r.id === "fund") s.fund = +v || 0;
+    const id = String(r.id);
+    if (id.indexOf("share:") === 0) { s.share[id.slice(6)] = +v || 0; return; }
+    const at = id.indexOf("@"), base = at < 0 ? id : id.slice(0, at), from = at < 0 ? "" : id.slice(at + 1);
+    if (base.indexOf("w:") === 0) { const k = base.slice(2); if (at < 0) s.w[k] = +v; else (s.wV[k] = s.wV[k] || []).push({ from, v: +v }); }
+    else if (base === "fund") { if (at < 0) s.fund = +v || 0; else s.fundV.push({ from, v: +v || 0 }); }
   });
   return s;
+}
+const kpiPick = (list, m, dflt) => { let r = dflt; (list || []).slice().sort((a, b) => a.from < b.from ? -1 : 1).forEach(x => { if (x.from <= m) r = x.v; }); return r; };
+const kpiFundAt = (S, m) => kpiPick(S.fundV, m, S.fund);
+const kpiWeightAt = (S, wk, m, def) => { const v = kpiPick(S.wV[wk], m, (wk in S.w && isFinite(S.w[wk])) ? S.w[wk] : def); return isFinite(v) ? v : def; };
+/** Что действует в месяце m: фонд на месяц и веса показателей (для окна настроек руководителя). */
+function kpiCfg(data, m) {
+  const S = kpiSettings(data), w = {};
+  ["dept", "head"].forEach(set => KPI_SETS[set].forEach(d => { w[set + "." + d.k] = kpiWeightAt(S, set + "." + d.k, m, d.w); }));
+  return { month: m, fund: kpiFundAt(S, m), w };
 }
 /** opt: { today, kind, period, act: { "Объект": ["2026-09", …] } — месяцы с работами по рапортам (не обязательно) } */
 function kpi(data, opt) {
@@ -1065,7 +1158,7 @@ function kpi(data, opt) {
   const FN = { ksTime, close, ds, remarks, disc, plan, hang, review, planOnTime, overdue, reopen, note };
   function build(set, os) {
     const items = KPI_SETS[set].map(def => {
-      const r = FN[def.k](os), wk = set + "." + def.k, w = (wk in S.w && isFinite(S.w[wk])) ? S.w[wk] : def.w;
+      const r = FN[def.k](os), wk = set + "." + def.k, w = kpiWeightAt(S, wk, b, def.w);
       const ach = r.value === null ? null : (def.t === 0 ? Math.max(0, 1 - r.value) : r.value / def.t);
       return Object.assign({}, def, r, { w, ach, coef: ach === null ? null : Math.max(0, Math.min(1.2, ach)), issues: r.issues.slice(0, 30), more: Math.max(0, r.issues.length - 30) });
     });
@@ -1075,7 +1168,7 @@ function kpi(data, opt) {
   const names = []; objs.forEach(o => { if (o.pto && names.indexOf(o.pto) < 0) names.push(o.pto); });
   const people = names.map(nm => { const os = objs.filter(o => o.pto === nm); return Object.assign({ name: nm, objects: os.length }, build("spec", os)); });
   const dept = build("dept", objs), head = build("head", objs);
-  const n = months.length, fund = S.fund * n;
+  const n = months.length, fund = months.reduce((s, m) => s + kpiFundAt(S, m), 0);
   const money = fund > 0 ? {
     fund, dept: dept.coef === null ? null : fund * dept.coef,
     people: people.map(p => { const sh = p.name in S.share ? S.share[p.name] : 0; return { name: p.name, share: sh, pay: p.coef === null ? 0 : fund * sh * p.coef }; }),
@@ -1085,7 +1178,7 @@ function kpi(data, opt) {
   return { period: P, list, months: n, done: done.length, hasAct: !!act, dept, head, people, money, settings: S };
 }
 
-const api = { BASE, compute, kpi, kpiSettings, KPI_SETS, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
+const api = { BASE, compute, kpi, kpiSettings, kpiCfg, KPI_SETS, periods, defaultPeriod, objectRows, enrichKs, index, ksStatus, STATUS_LABEL, monthLabel, ru, ym, eom, addM, addDays, MN };
 root.PTO = api;
 if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
@@ -1161,7 +1254,8 @@ U.chart = function (host, cfg) {
   const W = Math.max(280, host.clientWidth || 600), H = cfg.height || 220, padL = 44, padR = 8, padT = 10, padB = 24;
   const cats = cfg.cats, n = cats.length, bars = cfg.series.filter(s => s.kind !== "line"), lines = cfg.series.filter(s => s.kind === "line");
   let mx = 0; cfg.series.forEach(s => s.values.forEach(v => { if (v != null && v > mx) mx = v; }));
-  mx = niceMax(mx * 1.05);
+  if (cfg.stack) cats.forEach((c, i) => { const t = bars.reduce((a, s) => a + Math.max(0, s.values[i] || 0), 0); if (t > mx) mx = t; });
+  mx = niceMax(mx * (cfg.labels ? 1.15 : 1.05));
   const iw = W - padL - padR, ih = H - padT - padB, band = iw / n;
   const y = v => padT + ih - (v / mx) * ih;
   const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H, role: "img", "aria-label": cfg.title || "" });
@@ -1172,12 +1266,26 @@ U.chart = function (host, cfg) {
   }
   const every = band < 30 ? Math.ceil(30 / band) : 1;
   cats.forEach((c, i) => { if (i % every) return; const t = svgEl("text", { x: padL + band * i + band / 2, y: H - 6, class: "tick", "text-anchor": "middle" }); t.textContent = c; svg.appendChild(t); });
-  const bw = Math.min(24, (band - 6) / Math.max(1, bars.length) - 2);
-  bars.forEach((s, j) => s.values.forEach((v, i) => {
+  const bw = cfg.stack ? Math.min(46, band - 10) : Math.min(24, (band - 6) / Math.max(1, bars.length) - 2);
+  const barPath = (x, top, h, rr) => { const r = Math.min(rr, h, bw / 2); return r > 0 ? `M${x},${top + h}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${top + h}Z` : `M${x},${top + h}V${top}H${x + bw}V${top + h}Z`; };
+  const fl = cfg.fmtLabel || (v => U.mln(v, 0));
+  if (cfg.stack) {
+    cats.forEach((c, i) => {
+      const x = padL + band * i + band / 2 - bw / 2; let cum = 0, last = -1;
+      bars.forEach((s, j) => { if (s.values[i] != null && s.values[i] > 0) last = j; });
+      bars.forEach((s, j) => {
+        const v = s.values[i]; if (v == null || v <= 0) return;
+        const top = y(cum + v), h = y(cum) - top; cum += v;
+        svg.appendChild(svgEl("path", { d: barPath(x, top, h, j === last ? 4 : 0), fill: s.color, "fill-opacity": s.opacity || 1 }));
+      });
+      if (cfg.labels && cum > 0) { const t = svgEl("text", { x: x + bw / 2, y: y(cum) - 5, class: "vlab", "text-anchor": "middle" }); t.textContent = fl(cum); svg.appendChild(t); }
+    });
+  } else bars.forEach((s, j) => s.values.forEach((v, i) => {
     if (v == null || v <= 0) return;
-    const x = padL + band * i + band / 2 - (bars.length * (bw + 2) - 2) / 2 + j * (bw + 2), top = y(v), h = padT + ih - top, r = Math.min(4, h, bw / 2);
+    const x = padL + band * i + band / 2 - (bars.length * (bw + 2) - 2) / 2 + j * (bw + 2), top = y(v), h = padT + ih - top;
     const col = (s.colors && s.colors[i]) || s.color;
-    svg.appendChild(svgEl("path", { d: `M${x},${top + h}V${top + r}Q${x},${top} ${x + r},${top}H${x + bw - r}Q${x + bw},${top} ${x + bw},${top + r}V${top + h}Z`, fill: col }));
+    svg.appendChild(svgEl("path", { d: barPath(x, top, h, 4), fill: col }));
+    if (cfg.labels) { const t = svgEl("text", { x: x + bw / 2, y: top - 5, class: "vlab", "text-anchor": "middle" }); t.textContent = fl(v); svg.appendChild(t); }
   }));
   lines.forEach(s => {
     let d = "", pen = false;
@@ -1228,9 +1336,12 @@ U.kpiCard = function (title, block, opt) {
   sec.appendChild(h);
   if (opt.money) sec.appendChild(el("div", "kpi-money", opt.money));
   const list = el("div", "kpi-list"); sec.appendChild(list);
+  const ws = block.items.filter(i => i.coef !== null).reduce((s, i) => s + i.w, 0);
   block.items.forEach(it => {
     const row = el("button", "kpi-r" + (it.coef === null ? " na" : "")); row.type = "button";
     const n = el("div", "kpi-n"); n.appendChild(el("b", null, it.n)); n.appendChild(el("small", null, "вес " + Math.round(it.w * 100) + "%" + (it.den ? " · " + U.kpiFact(it) : "")));
+    if (opt.plainOf) n.appendChild(el("small", "kpi-why", opt.plainOf(it)));
+    if (opt.plainOf) n.appendChild(el("small", "kpi-share", it.coef === null ? "Нет данных за период — в расчёт не входит" : "Вклад в итог: " + U.pct(it.coef) + " × " + (ws ? Math.round(it.w / ws * 100) : 0) + "% = " + (ws ? (it.coef * it.w / ws * 100).toFixed(1).replace(".", ",") : "0") + "%" + (ws && ws < 0.995 ? " (вес пересчитан без показателей, по которым нет данных)" : "")));
     row.appendChild(n);
     const bar = el("div", "kpi-bar"); const fill = el("i", U.kpiCls(it.coef)); fill.style.width = Math.min(100, (it.coef || 0) / 1.2 * 100) + "%"; bar.appendChild(fill); const mk = el("u"); mk.style.left = (100 / 1.2) + "%"; bar.appendChild(mk); row.appendChild(bar);
     row.appendChild(el("div", "kpi-v " + U.kpiCls(it.coef), it.coef === null ? "нет данных" : U.pct(it.coef)));
