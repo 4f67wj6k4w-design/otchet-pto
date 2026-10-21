@@ -443,8 +443,11 @@ table.k2t td.rpq{color:var(--muted);font-size:12px}table.k2t td.rpq.bad{color:va
 }
 .objt .mobdv{display:none}
 @media (max-width:560px){.objt .mobdv{display:inline}.objt .mobdv.bad{color:var(--bad)}.objt .mobdv.ok{color:var(--ok)}}
+.themebar{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:13px;color:var(--muted)}
+.themebar .seg button{padding:0 12px;min-height:36px;font-size:13px}
 
 </style>
+<script>try{var th=localStorage.getItem("pto-d-theme");if(th==="light"||th==="dark")document.documentElement.setAttribute("data-theme",th);}catch(e){}</script>
 </head>
 <body class="dir">
 <div class="wrap">
@@ -461,6 +464,13 @@ table.k2t td.rpq{color:var(--muted);font-size:12px}table.k2t td.rpq.bad{color:va
     </nav>
   </header>
   <div id="status" class="banner" hidden></div>
+  <div class="themebar"><span>Оформление:</span>
+    <div class="seg" id="theme" role="group" aria-label="Тема оформления">
+      <button type="button" data-t="auto" aria-pressed="true">Авто</button>
+      <button type="button" data-t="light" aria-pressed="false">Светлая</button>
+      <button type="button" data-t="dark" aria-pressed="false">Тёмная</button>
+    </div>
+  </div>
   <section class="card">
     <div class="per">
       <div class="seg" id="kind" role="group" aria-label="Вид периода">
@@ -1486,6 +1496,13 @@ function text(){
 }
 $("copy").onclick=()=>{if(!M)return;const t=text();const done=ok=>status(ok?"Текст сводки скопирован":"Не удалось скопировать",ok?"okb":"bad");
   try{navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));}catch(e){done(false);}setTimeout(()=>status(""),2500);};
+function applyTheme(th,save){
+  const r=document.documentElement;if(th==="light"||th==="dark")r.setAttribute("data-theme",th);else r.removeAttribute("data-theme");
+  document.querySelectorAll("#theme button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===th)));
+  if(save)U.sset("pto-d-theme",th);if(M)draw();
+}
+document.querySelectorAll("#theme button").forEach(b=>b.onclick=()=>applyTheme(b.dataset.t,true));
+applyTheme(U.sget("pto-d-theme")==="light"||U.sget("pto-d-theme")==="dark"?U.sget("pto-d-theme"):"auto",false);
 document.querySelectorAll("#kind button").forEach(b=>b.onclick=()=>{kind=b.dataset.k;U.sset("pto-d-kind",kind);period=null;if(RAW)recalc();});
 document.querySelectorAll("#ks-f button").forEach(b=>b.onclick=()=>{ksF=b.dataset.f;document.querySelectorAll("#ks-f button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));drawKs();});
 $("p-sel").onchange=()=>{period=$("p-sel").value;recalc();};
