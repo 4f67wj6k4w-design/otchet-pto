@@ -472,10 +472,12 @@ nav.tabs button[aria-selected="true"]{opacity:1;border-bottom-width:4px}
 :root[data-eff="light"][data-bg="neutral"]{--bg:#eceef0;--sunk:#e1e4e8;--line:#d3d8dd}
 :root[data-eff="light"][data-bg="warm"]{--bg:#f6f1e7;--sunk:#ece5d6;--line:#ddd3bf}
 :root[data-eff="light"][data-bg="cool"]{--bg:#e9eff6;--sunk:#dde6f0;--line:#c9d6e4}
+:root[data-eff="light"][data-bg="pink"]{--bg:#fbe9f0;--sunk:#f5d8e4;--line:#ecc3d4}
 :root[data-eff="light"][data-bg="white"]{--bg:#ffffff;--sunk:#f1f3f0;--line:#d9dfd6}
 :root[data-eff="dark"][data-bg="neutral"]{--bg:#17191d;--surface:#1f2227;--sunk:#2a2d33;--line:#3a3e46}
 :root[data-eff="dark"][data-bg="warm"]{--bg:#1a1713;--surface:#241f19;--sunk:#2e2821;--line:#463e33}
 :root[data-eff="dark"][data-bg="cool"]{--bg:#0f1620;--surface:#172130;--sunk:#1f2c3f;--line:#304258}
+:root[data-eff="dark"][data-bg="pink"]{--bg:#1f1218;--surface:#2a1a22;--sunk:#35222c;--line:#52333f}
 :root[data-eff="dark"][data-bg="white"]{--bg:#000;--surface:#0d0d0d;--sunk:#1b1b1b;--line:#303030}
 /* --- кнопка и панель «Оформление» --- */
 .lookpanel{position:fixed;z-index:30;width:min(340px,calc(100vw - 16px));background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:12px 14px;display:flex;flex-direction:column;gap:12px}
@@ -1287,7 +1289,7 @@ U.pwa = function (btn) {
 };
 
 // ---- Оформление: тема, фон, вид списка — у каждого пользователя своё, хранится в браузере ----
-U.LOOK_BG = [["def", "Зелёный", "#f3f5f2", "#111612"], ["neutral", "Серый", "#eceef0", "#17191d"], ["warm", "Тёплый", "#f6f1e7", "#1a1713"], ["cool", "Голубой", "#e9eff6", "#0f1620"], ["white", "Контрастный", "#ffffff", "#000000"]];
+U.LOOK_BG = [["def", "Зелёный", "#f3f5f2", "#111612"], ["neutral", "Серый", "#eceef0", "#17191d"], ["warm", "Тёплый", "#f6f1e7", "#1a1713"], ["cool", "Голубой", "#e9eff6", "#0f1620"], ["pink", "Розовый", "#fbe9f0", "#1f1218"], ["white", "Контрастный", "#ffffff", "#000000"]];
 U.lookGet = () => {
   let o = {}; try { o = JSON.parse(U.sget("pto-look") || "{}") || {}; } catch (e) {}
   if (!o.theme) { const t = U.sget("pto-d-theme"); if (t === "light" || t === "dark") o.theme = t; }
