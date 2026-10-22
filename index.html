@@ -488,6 +488,7 @@ nav.tabs button[aria-selected="true"]{opacity:1;border-bottom-width:4px}
 .sw{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
 .sw[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
 header.top .lo{font-size:13px;padding:3px 10px;border-color:rgba(255,255,255,.6)}
+.lk-note{font-size:14px;line-height:1.4;color:var(--fg)}
 
 .who{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
 .login{max-width:420px;margin-inline:auto;margin-top:28px}.login form{display:flex;flex-direction:column;gap:12px}.login h2{text-transform:none;letter-spacing:0;font-size:18px;color:var(--fg)}
@@ -1400,9 +1401,9 @@ U.kpiFact = it => {
 U.pwa = function (btn) {
   try { if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) navigator.serviceWorker.register("sw.js").catch(() => {}); } catch (e) {}
   let ev = null;
-  addEventListener("beforeinstallprompt", e => { e.preventDefault(); ev = e; if (btn) btn.hidden = false; });
-  addEventListener("appinstalled", () => { ev = null; if (btn) btn.hidden = true; });
-  if (btn) btn.onclick = async () => { if (!ev) return; ev.prompt(); try { await ev.userChoice; } catch (e) {} ev = null; btn.hidden = true; };
+  addEventListener("beforeinstallprompt", e => { e.preventDefault(); ev = e; U.pwaEv = e; if (btn) btn.hidden = false; });
+  addEventListener("appinstalled", () => { ev = null; U.pwaEv = null; if (btn) btn.hidden = true; });
+  if (btn) btn.onclick = async () => { if (!ev) return; ev.prompt(); try { await ev.userChoice; } catch (e) {} ev = null; U.pwaEv = null; btn.hidden = true; };
 };
 
 // ---- Оформление: тема, фон, вид списка — у каждого пользователя своё, хранится в браузере ----
@@ -1429,6 +1430,18 @@ U.look = function (btn, opts) {
     row("Тема", seg([["auto", "Авто"], ["light", "Светлая"], ["dark", "Тёмная"]], o.theme, "theme"));
     const sw = U.el("div", "swatches"); U.LOOK_BG.forEach(([k, n, l, d]) => { const b = U.el("button", "sw"); b.type = "button"; b.title = n; b.setAttribute("aria-label", "Фон: " + n); b.setAttribute("aria-pressed", String(k === o.bg)); b.style.background = dark ? d : l; b.onclick = () => upd({ bg: k }); sw.appendChild(b); });
     row("Фон", sw);
+    { const box = U.el("div", "lk-app"), ua = navigator.userAgent, ios = /iPhone|iPad|iPod/.test(ua), android = /Android/.test(ua);
+      const standalone = (matchMedia("(display-mode: standalone)").matches || navigator.standalone === true);
+      if (standalone) box.appendChild(U.el("div", "lk-note", "Вы уже работаете в установленном приложении."));
+      else if (U.pwaEv) { const b = U.el("button", "btn small", "Установить как приложение"); b.type = "button"; b.onclick = async () => { const e = U.pwaEv; U.pwaEv = null; try { e.prompt(); await e.userChoice; } catch (x) {} pan.hidden = true; }; box.appendChild(b); }
+      else {
+        let t = "Нажмите значок установки справа в адресной строке браузера или меню (три точки) → «Установить…». Если значка нет, приложение, скорее всего, уже установлено: откройте его с рабочего стола или из меню «Пуск».";
+        if (ios) t = "На iPhone: откройте эту ссылку в Safari, нажмите «Поделиться» → «На экран Домой».";
+        else if (android) t = "На Android: меню браузера (три точки) → «Установить приложение» или «Добавить на главный экран».";
+        else if (/Firefox/.test(ua)) t = "Firefox на компьютере не умеет устанавливать приложения. Откройте ссылку в Chrome, Edge или Яндекс Браузере.";
+        box.appendChild(U.el("div", "lk-note", t));
+      }
+      row("Приложение", box); }
     if (opts.view) row("Список объектов", seg([["cards", "Карточки"], ["table", "Таблица"]], o.view, "view"));
   }
   const place = () => { const r = btn.getBoundingClientRect(), w = Math.min(340, innerWidth - 16); pan.style.top = Math.round(r.bottom + 8) + "px"; pan.style.left = Math.max(8, Math.min(Math.round(r.left), innerWidth - w - 8)) + "px"; };
