@@ -12,7 +12,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Сводка ПТО">
 <title>Отчёт ПТО — ГК КРАШМАШ</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
 <style>
 [hidden]{display:none!important}
 html,body{margin:0}
@@ -24,8 +23,8 @@ html,body{margin:0}
   --bg:#eef1ec; --surface:#ffffff; --sunk:#e2e8df; --line:#cbd4c7;
   --fg:#18221a; --muted:#5a6758; --accent:#2E671F; --accent-ink:#ffffff;
   --steel:#2E671F; --ok:#2E671F; --warn:#b26b00; --bad:#b3362c;
-  --f-ui:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
-  --f-num:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --f-ui:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+  --f-num:"Segoe UI",system-ui,-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
   --r:10px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -37,7 +36,7 @@ html,body{margin:0}
   --fg:#e6ede5; --muted:#9aa898; --accent:#5f9e4b; --accent-ink:#0c1709;
   --steel:#8cc47a; --ok:#7fc06a; --warn:#e3a33c; --bad:#ec6a5e; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.35}
+body{font-variant-numeric:tabular-nums;background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:16px;line-height:1.35}
 .wrap{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:0 96px}
 header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--brand);color:#fff;margin-inline:-16px;padding:10px 16px 0}
 .brandrow{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -433,8 +432,63 @@ nav.tabs{overflow-x:auto;scrollbar-width:none}nav.tabs::-webkit-scrollbar{displa
 .themebar{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:13px;color:var(--muted)}
 .themebar .seg button{padding:0 12px;min-height:36px;font-size:13px}
 
+/* === Оформление v2: корпоративный зелёный сохранён, шире и крупнее === */
+:root{--f-ui:"IBM Plex Sans","Segoe UI",system-ui,Arial,sans-serif;--bg:#f3f5f2;--line:#d9dfd6;--sunk:#eaeee8}
+body{font-size:17px}
+.wrap,.savebar .in{max-width:1560px}
+.wrap{padding-inline:28px}
+header.top{margin-inline:-28px;padding:14px 28px 0;box-shadow:0 0 0 100vmax var(--brand);clip-path:inset(0 -100vmax)}
+header.top h1{font-size:24px}
+nav.tabs button{font-size:16px;opacity:.85;padding:12px 10px 13px}
+nav.tabs button[aria-selected="true"]{opacity:1;border-bottom-width:4px}
+.pill{display:inline-block;font-size:14px;line-height:1.3;padding:5px 11px;border-radius:8px;background:var(--sunk)}
+.pill.bad{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
+.pill.warn{background:color-mix(in srgb,var(--warn) 18%,transparent);color:var(--warn)}
+.pill.ok{background:color-mix(in srgb,var(--ok) 14%,transparent);color:var(--ok)}
+.pill.info{background:color-mix(in srgb,var(--c-plan) 14%,transparent);color:color-mix(in srgb,var(--c-plan) 65%,var(--fg))}
+.more{font-size:13px;color:var(--muted)}
+/* вариант Б: просторная таблица */
+.my2{display:grid;grid-template-columns:minmax(0,2fr) 130px 150px 130px minmax(0,2.2fr);gap:6px 22px;align-items:center;padding:16px 14px;border:0;border-top:1px solid var(--line);border-left:5px solid transparent;background:none;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.my2:hover{background:var(--sunk)}
+.my2.l-bad{border-left-color:var(--bad)}.my2.l-warn{border-left-color:var(--warn)}
+.my2 .o b{display:block;font-size:18px;font-weight:600}.my2 .o small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.my2 .v{font-family:var(--f-num);font-size:18px;text-align:right}.my2 .v small{display:block;font:13px var(--f-ui);color:var(--muted)}
+.my2 .v.bad{color:var(--bad)}
+.my2 .stc{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}
+.my2.hd{cursor:default;padding-block:8px;font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:600;border-top:0}.my2.hd:hover{background:none}
+@media (max-width:900px){.my2{grid-template-columns:1fr 1fr 1fr}.my2 .o,.my2 .stc{grid-column:1/-1}.my2 .v{text-align:left}.my2.hd{display:none}.wrap{padding-inline:14px}header.top{margin-inline:-14px;padding-inline:14px}}
+/* вариант А: карточки */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,400px),1fr));gap:14px;margin-top:12px}
+.mycard{display:flex;flex-direction:column;gap:12px;text-align:left;font:inherit;color:inherit;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--line);border-radius:12px;padding:16px 18px;cursor:pointer}
+.mycard:hover{box-shadow:0 2px 10px rgba(0,0,0,.1)}
+.mycard.l-bad{border-left-color:var(--bad)}.mycard.l-warn{border-left-color:var(--warn)}.mycard.l-ok,.mycard.l-info{border-left-color:var(--ok)}
+.mycard .ch b{display:block;font-size:19px;font-weight:600}.mycard .ch small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.cst{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cs .k{display:block;text-transform:uppercase;letter-spacing:.05em;font-size:12px;color:var(--muted)}
+.cs b{display:block;font:600 22px var(--f-num);margin:2px 0}.cs small{display:block;font-size:13px;color:var(--muted)}.cs.bad b{color:var(--bad)}
+.mycard .pill{align-self:flex-start}
+.my2.hd .v{font-family:var(--f-ui)}
+/* --- выбор фона (светлая / тёмная палитры) --- */
+:root[data-eff="light"][data-bg="neutral"]{--bg:#eceef0;--sunk:#e1e4e8;--line:#d3d8dd}
+:root[data-eff="light"][data-bg="warm"]{--bg:#f6f1e7;--sunk:#ece5d6;--line:#ddd3bf}
+:root[data-eff="light"][data-bg="cool"]{--bg:#e9eff6;--sunk:#dde6f0;--line:#c9d6e4}
+:root[data-eff="light"][data-bg="white"]{--bg:#ffffff;--sunk:#f1f3f0;--line:#d9dfd6}
+:root[data-eff="dark"][data-bg="neutral"]{--bg:#17191d;--surface:#1f2227;--sunk:#2a2d33;--line:#3a3e46}
+:root[data-eff="dark"][data-bg="warm"]{--bg:#1a1713;--surface:#241f19;--sunk:#2e2821;--line:#463e33}
+:root[data-eff="dark"][data-bg="cool"]{--bg:#0f1620;--surface:#172130;--sunk:#1f2c3f;--line:#304258}
+:root[data-eff="dark"][data-bg="white"]{--bg:#000;--surface:#0d0d0d;--sunk:#1b1b1b;--line:#303030}
+/* --- кнопка и панель «Оформление» --- */
+.lookpanel{position:fixed;z-index:30;width:min(340px,calc(100vw - 16px));background:var(--surface);color:var(--fg);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.22);padding:12px 14px;display:flex;flex-direction:column;gap:12px}
+.lookpanel[hidden]{display:none}
+.lk-t{font-size:13px;color:var(--muted);margin-bottom:6px;font-weight:600}
+.lookpanel .seg button{min-height:38px;font-size:14px;padding:0 6px}
+.swatches{display:flex;gap:10px}
+.sw{width:40px;height:40px;border-radius:50%;border:2px solid var(--line);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
+header.top .lo{font-size:13px;padding:3px 10px;border-color:rgba(255,255,255,.6)}
+
 </style>
-<script>try{var th=localStorage.getItem("pto-d-theme");if(th==="light"||th==="dark")document.documentElement.setAttribute("data-theme",th);}catch(e){}</script>
+<script>try{var o=JSON.parse(localStorage.getItem("pto-look")||"{}"),r=document.documentElement,t=o.theme||localStorage.getItem("pto-d-theme");if(t==="light"||t==="dark")r.setAttribute("data-theme",t);r.setAttribute("data-eff",t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light");if(o.bg)r.setAttribute("data-bg",o.bg);}catch(e){}</script>
 </head>
 <body class="dir">
 <div class="wrap">
@@ -451,12 +505,7 @@ nav.tabs{overflow-x:auto;scrollbar-width:none}nav.tabs::-webkit-scrollbar{displa
     </nav>
   </header>
   <div id="status" class="banner" hidden></div>
-  <div class="themebar"><button type="button" class="btn small" id="install" hidden>Установить как приложение</button><span>Оформление:</span>
-    <div class="seg" id="theme" role="group" aria-label="Тема оформления">
-      <button type="button" data-t="auto" aria-pressed="true">Авто</button>
-      <button type="button" data-t="light" aria-pressed="false">Светлая</button>
-      <button type="button" data-t="dark" aria-pressed="false">Тёмная</button>
-    </div>
+  <div class="themebar"><button type="button" class="btn small" id="install" hidden>Установить как приложение</button><button type="button" class="btn small" id="lookbtn">Оформление</button>
   </div>
   <section class="card">
     <div class="per">
@@ -1235,6 +1284,40 @@ U.pwa = function (btn) {
   addEventListener("appinstalled", () => { ev = null; if (btn) btn.hidden = true; });
   if (btn) btn.onclick = async () => { if (!ev) return; ev.prompt(); try { await ev.userChoice; } catch (e) {} ev = null; btn.hidden = true; };
 };
+
+// ---- Оформление: тема, фон, вид списка — у каждого пользователя своё, хранится в браузере ----
+U.LOOK_BG = [["def", "Зелёный", "#f3f5f2", "#111612"], ["neutral", "Серый", "#eceef0", "#17191d"], ["warm", "Тёплый", "#f6f1e7", "#1a1713"], ["cool", "Голубой", "#e9eff6", "#0f1620"], ["white", "Контрастный", "#ffffff", "#000000"]];
+U.lookGet = () => {
+  let o = {}; try { o = JSON.parse(U.sget("pto-look") || "{}") || {}; } catch (e) {}
+  if (!o.theme) { const t = U.sget("pto-d-theme"); if (t === "light" || t === "dark") o.theme = t; }
+  return { theme: o.theme === "light" || o.theme === "dark" ? o.theme : "auto", bg: U.LOOK_BG.some(x => x[0] === o.bg) ? o.bg : "def", view: o.view === "table" ? "table" : "cards" };
+};
+U.lookApply = o => {
+  o = o || U.lookGet(); const r = document.documentElement;
+  if (o.theme === "auto") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", o.theme);
+  const dark = o.theme === "dark" || (o.theme === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+  r.setAttribute("data-eff", dark ? "dark" : "light"); r.setAttribute("data-bg", o.bg);
+};
+U.look = function (btn, opts) {
+  opts = opts || {}; if (!btn) return; U.lookApply();
+  const pan = U.el("div", "lookpanel"); pan.hidden = true; document.body.appendChild(pan);
+  const upd = patch => { const o = Object.assign(U.lookGet(), patch); U.sset("pto-look", JSON.stringify(o)); U.lookApply(o); build(); if (opts.onChange) opts.onChange(o); };
+  const seg = (items, cur, key) => { const d = U.el("div", "seg"); items.forEach(([v, t]) => { const b = U.el("button", null, t); b.type = "button"; b.setAttribute("aria-pressed", String(v === cur)); b.onclick = () => upd({ [key]: v }); d.appendChild(b); }); return d; };
+  const row = (t, body) => { const r = U.el("div", "lk-row"); r.appendChild(U.el("div", "lk-t", t)); r.appendChild(body); pan.appendChild(r); };
+  function build() {
+    const o = U.lookGet(), dark = document.documentElement.getAttribute("data-eff") === "dark"; pan.innerHTML = "";
+    row("Тема", seg([["auto", "Авто"], ["light", "Светлая"], ["dark", "Тёмная"]], o.theme, "theme"));
+    const sw = U.el("div", "swatches"); U.LOOK_BG.forEach(([k, n, l, d]) => { const b = U.el("button", "sw"); b.type = "button"; b.title = n; b.setAttribute("aria-label", "Фон: " + n); b.setAttribute("aria-pressed", String(k === o.bg)); b.style.background = dark ? d : l; b.onclick = () => upd({ bg: k }); sw.appendChild(b); });
+    row("Фон", sw);
+    if (opts.view) row("Список объектов", seg([["cards", "Карточки"], ["table", "Таблица"]], o.view, "view"));
+  }
+  const place = () => { const r = btn.getBoundingClientRect(), w = Math.min(340, innerWidth - 16); pan.style.top = Math.round(r.bottom + 8) + "px"; pan.style.left = Math.max(8, Math.min(Math.round(r.left), innerWidth - w - 8)) + "px"; };
+  pan.addEventListener("click", e => e.stopPropagation());
+  btn.onclick = e => { e.stopPropagation(); if (pan.hidden) { build(); place(); pan.hidden = false; } else pan.hidden = true; };
+  document.addEventListener("click", e => { if (!pan.hidden && !pan.contains(e.target) && e.target !== btn) pan.hidden = true; });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") pan.hidden = true; });
+  try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { U.lookApply(); if (opts.onChange) opts.onChange(U.lookGet()); }); } catch (e) {}
+};
 root.U = U;
 })(window);
 </script>
@@ -1492,13 +1575,7 @@ function text(){
 }
 $("copy").onclick=()=>{if(!M)return;const t=text();const done=ok=>status(ok?"Текст сводки скопирован":"Не удалось скопировать",ok?"okb":"bad");
   try{navigator.clipboard.writeText(t).then(()=>done(true),()=>done(false));}catch(e){done(false);}setTimeout(()=>status(""),2500);};
-function applyTheme(th,save){
-  const r=document.documentElement;if(th==="light"||th==="dark")r.setAttribute("data-theme",th);else r.removeAttribute("data-theme");
-  document.querySelectorAll("#theme button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.t===th)));
-  if(save)U.sset("pto-d-theme",th);if(M)draw();
-}
-document.querySelectorAll("#theme button").forEach(b=>b.onclick=()=>applyTheme(b.dataset.t,true));
-applyTheme(U.sget("pto-d-theme")==="light"||U.sget("pto-d-theme")==="dark"?U.sget("pto-d-theme"):"auto",false);
+U.look($("lookbtn"),{onChange:()=>{if(M)draw();}});
 document.querySelectorAll("#kind button").forEach(b=>b.onclick=()=>{kind=b.dataset.k;U.sset("pto-d-kind",kind);period=null;if(RAW)recalc();});
 document.querySelectorAll("#ks-f button").forEach(b=>b.onclick=()=>{ksF=b.dataset.f;document.querySelectorAll("#ks-f button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));drawKs();});
 $("p-sel").onchange=()=>{period=$("p-sel").value;recalc();};
