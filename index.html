@@ -564,6 +564,33 @@ section.card,.mycard,details.how{box-shadow:0 2px 10px rgba(20,40,20,.08)}
 .pf-leg{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:8px;font-size:12px;color:var(--muted)}
 .pf-leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .pf-leg i.g{background:var(--ok)}.pf-leg i.y{background:var(--warn)}.pf-leg i.r{background:var(--bad)}.pf-leg i.c{background:#4a86e8}.pf-leg i.n{background:var(--muted)}
+
+/* план: таблица прокручивается на месте, шапка с месяцами всегда на виду */
+.plan-wrap{max-height:calc(100vh - 380px);min-height:300px;overflow:auto;overscroll-behavior:contain}
+.plan-t thead th{position:sticky;top:0;z-index:3;background:var(--surface);box-shadow:0 1px 0 var(--line)}
+.plan-t thead th:first-child{z-index:4;left:0}
+@media (max-width:700px){.plan-wrap{max-height:calc(100vh - 150px)}}
+
+/* план: чёткая цветовая оценка — белые ячейки, яркая плашка с % и толстая полоска */
+:root{--pg:#2a7d2e;--py:#f2a900;--pr:#cf2f26;--pc:#2f6fd6}
+:root[data-eff="dark"]{--pg:#3fae45;--py:#f5b81c;--pr:#e5493f;--pc:#4a86e8}
+.plan-t td.pf-g,.plan-t td.pf-y,.plan-t td.pf-r,.plan-t td.pf-c,.plan-t td.pf-n{background:transparent}
+.plan-t td.pf-n .pct{display:none}
+.plan-t td .pct{padding:2px 8px;border-radius:999px;font:700 13px var(--f-num);color:#fff;margin-left:6px;letter-spacing:0}
+.plan-t td .pct:empty{display:none}
+.plan-t td.pf-g .pct{background:var(--pg);color:#fff}
+.plan-t td.pf-y .pct{background:var(--py);color:#2b1d00}
+.plan-t td.pf-r .pct{background:var(--pr);color:#fff}
+.plan-t td.pf-c .pct{background:var(--pc);color:#fff}
+.plan-t .pfb{height:6px;border-radius:3px;margin-top:5px}
+.plan-t .pfb i{border-radius:3px}
+.plan-t td.pf-g .pfb i{background:var(--pg)}.plan-t td.pf-y .pfb i{background:var(--py)}.plan-t td.pf-r .pfb i{background:var(--pr)}.plan-t td.pf-c .pfb i{background:var(--pc)}
+.plan-t td.pf-g,.plan-t td.pf-y,.plan-t td.pf-r,.plan-t td.pf-c{box-shadow:inset 0 4px 0 -0px transparent}
+.plan-t td.pf-g{border-top:3px solid var(--pg)}.plan-t td.pf-y{border-top:3px solid var(--py)}.plan-t td.pf-r{border-top:3px solid var(--pr)}.plan-t td.pf-c{border-top:3px solid var(--pc)}
+.pf-leg{gap:8px 18px;font-size:13px;color:var(--fg)}
+.pf-leg span{display:inline-flex;align-items:center;gap:6px}
+.pf-leg i{width:auto;height:auto;margin:0;padding:1px 9px;border-radius:999px;font:700 12px var(--f-num);font-style:normal;color:#fff;vertical-align:baseline}
+.pf-leg i.g{background:var(--pg)}.pf-leg i.y{background:var(--py);color:#2b1d00}.pf-leg i.r{background:var(--pr)}.pf-leg i.c{background:var(--pc)}.pf-leg i.n{background:var(--muted)}
 </style>
 </head>
 <body>
@@ -679,9 +706,9 @@ section.card,.mycard,details.how{box-shadow:0 2px 10px rgba(20,40,20,.08)}
         <label class="f">Объекты<select id="pl-f"><option value="live">В работе и с планом</option><option value="all">Все</option></select></label>
       </div>
       <div class="hint">Одна ячейка = план выполнения объекта на месяц, руб. Под ячейкой — факт КС-2 за месяц и % выполнения плана. Изменённые ячейки подсвечены, сохраняются кнопкой внизу.</div>
-      <div class="pf-leg"><span><i class="g"></i>100% и больше</span><span><i class="y"></i>80–99%</span><span><i class="r"></i>меньше 80%</span><span><i class="c"></i>текущий месяц (идёт)</span><span><i class="n"></i>факт без плана</span></div>
+      <div class="pf-leg"><span><i class="g">100%+</i>план выполнен</span><span><i class="y">80–99%</i>почти</span><span><i class="r">&lt;80%</i>отстаём</span><span><i class="c">идёт</i>текущий месяц</span><span><i class="n">ф</i>факт без плана</span></div>
     </section>
-    <section class="card"><div class="tablewrap"><table class="t plan-t" id="pl-t"></table></div></section>
+    <section class="card"><div class="tablewrap plan-wrap" id="pl-w"><table class="t plan-t" id="pl-t"></table></div></section>
   </div>
 
   <!-- ОБЪЕКТЫ -->
@@ -2197,6 +2224,7 @@ function show(v){
   if(!tabsFor().includes(v))v=tabsFor()[0];
   if(view==="plan"&&v!=="plan"&&Object.keys(planCh).length&&!confirm("План не сохранён. Уйти без сохранения?"))return;
   if(v!=="plan"){planCh={};$("pl-bar").hidden=true;}
+  if(v==="plan"&&view!=="plan")planScrolled=false;
   view=v;ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-tab2",v);render();}
 
 // ---------- загрузка / запись ----------
@@ -2502,6 +2530,7 @@ $("pay-add").onclick=()=>payEditor(null);$("gar-add").onclick=()=>garEditor(null
 // ---------- ПЛАН ----------
 let planCh={};
 function planVal(obj,m){const p=RAW.plan.find(x=>x.obj===obj&&x.month===m);return p?+p.sum:null;}
+let planScrolled=false;
 function renderPlan(){
   const ys=new Set();const y0=+U.todayISO().slice(0,4);[y0-1,y0,y0+1].forEach(y=>ys.add(y));RAW.plan.forEach(p=>ys.add(+p.month.slice(0,4)));
   const sy=$("pl-y"),yv=sy.value||String(y0);sy.innerHTML="";[...ys].sort().forEach(y=>sy.appendChild(Object.assign(el("option",null,y+" год"),{value:String(y)})));sy.value=yv;
@@ -2541,6 +2570,10 @@ function renderPlan(){
     const td=el("td","tot");td.appendChild(el("div",null,fm?U.mln(fm)+" млн":"—"));const pc=el("span","pct");td.appendChild(pc);pfPaint(td,pm,fm,m);fr2.appendChild(td);});
   fr2.appendChild(el("td","tot",""));fr2.appendChild(el("td","tot",""));fr2.appendChild(el("td","tot",""));tf.appendChild(fr2);
   t.appendChild(tf);
+  /* при открытии вкладки сразу показываем прошлый, текущий и следующий месяцы */
+  if(!planScrolled){planScrolled=true;const w=$("pl-w"),ths=[...t.querySelectorAll("thead th")];
+    const idx=U.todayISO().slice(0,4)===year?Math.max(1,+curM.slice(5)-1):1,th=ths[idx];
+    if(th&&w.scrollWidth>w.clientWidth)w.scrollLeft=Math.max(0,th.getBoundingClientRect().left-t.getBoundingClientRect().left-ths[0].offsetWidth-4);}
   planBar();
 }
 /* % выполнения плана: цвет ячейки по проценту. Прошедший месяц — итог, текущий — «в процессе», будущий — без оценки */
