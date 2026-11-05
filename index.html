@@ -591,6 +591,16 @@ section.card,.mycard,details.how{box-shadow:0 2px 10px rgba(20,40,20,.08)}
 .pf-leg span{display:inline-flex;align-items:center;gap:6px}
 .pf-leg i{width:auto;height:auto;margin:0;padding:1px 9px;border-radius:999px;font:700 12px var(--f-num);font-style:normal;color:#fff;vertical-align:baseline}
 .pf-leg i.g{background:var(--pg)}.pf-leg i.y{background:var(--py);color:#2b1d00}.pf-leg i.r{background:var(--pr)}.pf-leg i.c{background:var(--pc)}.pf-leg i.n{background:var(--muted)}
+
+/* правка сумм договоров списком */
+.obb-t{width:100%;border-collapse:separate;border-spacing:0}
+.obb-t th,.obb-t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:middle}
+.obb-t th.r,.obb-t td.r{text-align:right}
+.obb-t td small{display:block;color:var(--muted);font-size:12px}
+.obb-t input{width:100%;min-width:150px;max-width:220px;text-align:right;font-family:var(--f-num);font-size:15px;min-height:40px;background:color-mix(in srgb,#ffe066 22%,var(--bg))}
+.obb-t input.ch{outline:2px solid var(--warn)}
+.obb-t td.obb-rem{font-family:var(--f-num);font-weight:600;white-space:nowrap}
+.obb-t td.obb-rem.bad{color:var(--bad)}
 </style>
 </head>
 <body>
@@ -717,6 +727,7 @@ section.card,.mycard,details.how{box-shadow:0 2px 10px rgba(20,40,20,.08)}
       <div class="toolbar">
         <label class="f">Поиск<input id="ob-q" type="search" placeholder="название, ответственный"></label>
         <label class="f">Статус<select id="ob-st"><option value="live">Все, кроме завершённых</option><option value="">Все</option><option>В работе</option><option>Нет ДС</option><option>Нет договора</option><option>Приостановлен</option><option>Завершён</option><option value="ctrl">С замечаниями</option></select></label>
+        <button type="button" class="btn" id="ob-bulk" hidden>Править суммы списком</button>
         <button type="button" class="btn primary" id="ob-add">+ Объект</button>
       </div>
       <div class="sumline" id="ob-sum"></div>
@@ -775,6 +786,8 @@ section.card,.mycard,details.how{box-shadow:0 2px 10px rgba(20,40,20,.08)}
   <div class="foot"><button type="button" class="btn small" id="install" hidden>Установить как приложение</button></div>
 </div>
 
+<div class="savebar" id="ob-bar" hidden><div class="in"><div class="msg" id="ob-msg"></div>
+  <button type="button" class="btn" id="ob-undo">Отменить</button><button type="button" class="btn primary" id="ob-save">Сохранить суммы</button></div></div>
 <div class="savebar" id="pl-bar" hidden><div class="in"><div class="msg" id="pl-msg"></div>
   <button type="button" class="btn" id="pl-undo">Отменить</button><button type="button" class="btn primary" id="pl-save">Сохранить план</button></div></div>
 
@@ -2216,14 +2229,16 @@ function applyRole(){
   $("who-h").textContent=(ME.role==="admin"?"Администратор":ME.name+" · "+ROLE_RU[ME.role])+(ME.role==="spec"?" · объектов: "+(ME.objects||[]).length:"");
   const tabs=tabsFor();ALLTABS.forEach(x=>{$("tab-"+x).hidden=!tabs.includes(x);});
   $("logout").hidden=!viaLogin;document.querySelector(".tabs").hidden=false;$("login").hidden=true;
-  $("ob-add").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();$("more-edit").hidden=!isAdmin();
+  $("ob-add").hidden=!isHead();$("ob-bulk").hidden=!isHead();$("more-note").hidden=!isHead();$("more-lists").hidden=!isHead();$("more-edit").hidden=!isAdmin();
   if(!tabs.includes(view))show(tabs[0]);
   else ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==view;$("tab-"+x).setAttribute("aria-selected",String(x===view));});
 }
 function show(v){
   if(!tabsFor().includes(v))v=tabsFor()[0];
   if(view==="plan"&&v!=="plan"&&Object.keys(planCh).length&&!confirm("План не сохранён. Уйти без сохранения?"))return;
+  if(view==="obj"&&v!=="obj"&&Object.keys(obCh).length&&!confirm("Суммы объектов не сохранены. Уйти без сохранения?"))return;
   if(v!=="plan"){planCh={};$("pl-bar").hidden=true;}
+  if(v!=="obj"){obCh={};obBulk=false;$("ob-bar").hidden=true;$("ob-bulk").textContent="Править суммы списком";}
   if(v==="plan"&&view!=="plan")planScrolled=false;
   view=v;ALLTABS.forEach(x=>{$("v-"+x).hidden=x!==v;$("tab-"+x).setAttribute("aria-selected",String(x===v));});U.sset("pto-tab2",v);render();}
 
@@ -2634,12 +2649,44 @@ function objEditor(o){
     async onSave(r){r.base=o.upd||"";await save("O",[r],!isNew&&r.name!==o.name?{rename:{from:o.name,to:r.name}}:null);if(r.rp!==(o.rp||""))RP=null;},
     onDelete:isNew?null:async()=>{if(used)throw new Error("по объекту есть КС, план или поступления — удалять нельзя. Закройте объект статусом «Завершён».");await del("O",o.id);}});
 }
+let obBulk=false,obCh={};
+function obBar(){const n=Object.keys(obCh).length;$("ob-bar").hidden=!n||view!=="obj";$("ob-msg").textContent="Изменено объектов: "+n;}
+/* Правка сумм договоров списком: сумма договора с ДС и «выполнено до 01.01» по всем объектам сразу */
+function renderObjBulk(list,rows,out){
+  out.appendChild(el("div","hint","Внесите сумму договора с учётом всех дополнительных соглашений и, если нужно, сумму, выполненную до 01.01.2026. Изменённые ячейки подсвечены, сохраняются кнопкой внизу. Остаток пересчитывается сразу."));
+  const wrap=el("div","tablewrap"),t=el("table","t obb-t"),th=el("thead"),hr=el("tr");
+  ["Объект","Сумма договора с ДС, руб","Выполнено до 01.01.2026, руб","Остаток по договору, руб"].forEach((x,i)=>hr.appendChild(el("th",i?"r":null,x)));th.appendChild(hr);t.appendChild(th);
+  const tb=el("tbody");
+  list.forEach(r=>{const o=RAW.objects.find(x=>x.id===r.id);if(!o)return;
+    const tr=el("tr"),n=el("td");n.appendChild(el("b",null,o.name));n.appendChild(el("small",null,[o.resp,o.contract?"№ "+o.contract:"",o.status].filter(Boolean).join(" · ")));tr.appendChild(n);
+    const rem=el("td","r obb-rem");
+    const base={sum:o.sum===undefined||o.sum===""?null:+o.sum,done0:+o.done0||0};
+    const cur=()=>{const c=obCh[o.id]||{};return {sum:"sum" in c?c.sum:base.sum,done0:"done0" in c?c.done0:base.done0};};
+    const paintRem=()=>{const c=cur();rem.classList.remove("bad");
+      if(c.sum==null){rem.textContent="нет суммы";return;}
+      const v=c.sum-((r.doneAll||0)+(c.done0-base.done0));
+      rem.textContent=U.rub0(v);if(v<0)rem.classList.add("bad");};
+    const mk=(f)=>{const td=el("td","r"),inp=el("input");inp.inputMode="decimal";inp.setAttribute("aria-label",o.name+": "+(f==="sum"?"сумма договора":"выполнено до 01.01.2026"));
+      const shown=()=>{const c=obCh[o.id]||{};return f in c?c[f]:base[f];};
+      const v0=shown();inp.value=v0?U.rub0(v0):"";if(obCh[o.id]&&f in obCh[o.id])inp.classList.add("ch");
+      inp.onchange=()=>{const nv=U.parseNum(inp.value);if(nv!==null&&isNaN(nv)){inp.value=shown()?U.rub0(shown()):"";return;}
+        const val2=f==="sum"?nv:(nv||0),orig=base[f];const c=obCh[o.id]||(obCh[o.id]={});
+        if((val2||0)===(orig||0)&&!(f==="sum"&&(val2===null)!==(orig===null)))delete c[f];else c[f]=val2;
+        if(!Object.keys(c).length)delete obCh[o.id];
+        inp.classList.toggle("ch",!!(obCh[o.id]&&f in obCh[o.id]));inp.value=nv?U.rub0(nv):"";paintRem();obBar();};
+      td.appendChild(inp);return td;};
+    tr.appendChild(mk("sum"));tr.appendChild(mk("done0"));paintRem();tr.appendChild(rem);tb.appendChild(tr);});
+  t.appendChild(tb);wrap.appendChild(t);out.appendChild(wrap);
+  if(!list.length)out.appendChild(el("div","empty","Ничего не найдено."));
+}
 function renderObj(){
   const rows=PTO.objectRows(RAW,U.todayISO()),q=$("ob-q").value.trim().toLowerCase(),st=$("ob-st").value;
   const list=rows.filter(o=>(!q||(o.name+" "+o.resp+" "+o.pto).toLowerCase().includes(q))&&(st==="live"?o.status!=="Завершён":st==="ctrl"?!!o.ctrl:!st||o.status===st));
   const s=f=>list.reduce((a,o)=>a+(+f(o)||0),0);
   $("ob-sum").innerHTML="";const sl=$("ob-sum");[["Объектов: ",String(list.length)],[" · договоры: ",U.mln(s(o=>o.sum))+" млн"],[" · остаток: ",U.mln(s(o=>o.status!=="Завершён"&&o.remain>0?o.remain:0))+" млн"],[" · долг заказчиков (подписано): ",U.mln(s(o=>o.debt))+" млн"]].forEach(([l,v])=>{sl.appendChild(document.createTextNode(l));sl.appendChild(el("b",null,v));});
   const out=$("ob-out");out.innerHTML="";
+  obBar();
+  if(obBulk&&isHead()){renderObjBulk(list,rows,out);return;}
   const hd=el("div","objrow hd");["Объект","Договор","Выполнено","Остаток","Не оплачено"].forEach((t,i)=>hd.appendChild(el("div",i?"v":null,t)));out.appendChild(hd);
   list.forEach(o=>{const b=el("button","objrow");b.type="button";b.onclick=()=>objEditor(RAW.objects.find(x=>x.id===o.id));
     const n=el("div","o");n.appendChild(el("b",null,o.name));n.appendChild(el("small",null,[o.resp,o.pto,o.status].filter(Boolean).join(" · ")));if(o.ctrl)n.appendChild(el("span","flagtxt","⚠ "+o.ctrl));b.appendChild(n);
@@ -2651,6 +2698,14 @@ function renderObj(){
     out.appendChild(b);});
   if(!list.length)out.appendChild(el("div","empty","Ничего не найдено."));
 }
+$("ob-bulk").onclick=()=>{if(obBulk&&Object.keys(obCh).length&&!confirm("Суммы не сохранены. Сбросить изменения?"))return;obBulk=!obBulk;obCh={};$("ob-bulk").textContent=obBulk?"Вернуться к списку":"Править суммы списком";renderObj();};
+$("ob-undo").onclick=()=>{obCh={};renderObj();};
+$("ob-save").onclick=async()=>{const b=$("ob-save");b.disabled=true;b.textContent="Сохраняю…";
+  try{const rows=Object.keys(obCh).map(id=>{const o=RAW.objects.find(x=>x.id===id),c=obCh[id];
+      return {id:o.id,name:o.name,resp:o.resp||"",pto:o.pto||"",status:o.status,sum:"sum" in c?c.sum:(o.sum===undefined||o.sum===""?null:o.sum),done0:("done0" in c?c.done0:o.done0)||0,ret:+o.ret||0,payDays:+o.payDays||30,due:o.due||"",sched:o.sched||"",contract:o.contract||"",contractDate:o.contractDate||"",start:o.start||"",rp:o.rp||"",note:o.note||"",base:o.upd||""};});
+    await save("O",rows);const n=rows.length;obCh={};status("Суммы сохранены: объектов — "+n+". Журнал изменений это записал.","okb",6000);renderObj();}
+  catch(e){status("Суммы сохранены не полностью: "+e.message,"bad");obCh={};renderObj();}finally{b.disabled=false;b.textContent="Сохранить суммы";}};
+addEventListener("beforeunload",e=>{if(Object.keys(obCh).length){e.preventDefault();e.returnValue="";}});
 $("ob-q").oninput=renderObj;$("ob-st").onchange=renderObj;$("ob-add").onclick=()=>objEditor(null);
 
 // ---------- МОИ ОБЪЕКТЫ (договор, сроки, план/факт, рапорты прорабов — только чтение) ----------
